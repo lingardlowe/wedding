@@ -1,25 +1,1578 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
-    <title>I &amp; E Wedding</title>
-    <meta name="description" content="I &amp; E Wedding — built on Replit. Update this description to reflect the app." />
-    <meta name="robots" content="index, follow" />
-    <meta property="og:title" content="I &amp; E Wedding" />
-    <meta property="og:description" content="I &amp; E Wedding — built on Replit. Update this description to reflect the app." />
-    <meta property="og:type" content="website" />
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="I &amp; E Wedding" />
-    <meta name="twitter:description" content="I &amp; E Wedding — built on Replit. Update this description to reflect the app." />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <script type="module" crossorigin src="/assets/index-RgtwhhjH.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-Bxh1KvRW.css">
-  </head>
-  <body>
-    <div id="root"></div>
-  </body>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+  <title>I &amp; E Wedding</title>
+  <meta name="description" content="Ian &amp; Emma's Wedding — 17th July 2027 · The Oak Tree of Peover, Knutsford" />
+  <meta name="robots" content="index, follow" />
+  <meta property="og:title" content="I &amp; E Wedding" />
+  <meta property="og:description" content="Ian &amp; Emma's Wedding — 17th July 2027" />
+  <meta property="og:type" content="website" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: hsl(40,20%,98%);
+      --fg: hsl(210,20%,20%);
+      --primary: hsl(150,20%,50%);
+      --primary-light: hsl(150,20%,95%);
+      --secondary: hsl(210,15%,45%);
+      --border: hsl(150,10%,80%);
+      --muted: hsl(150,10%,92%);
+      --white: #fff;
+      --red: #ef4444;
+      --amber: #d97706;
+      --font-sans: 'Inter', sans-serif;
+      --font-serif: 'Cormorant Garamond', serif;
+    }
+
+    body { font-family: var(--font-sans); background: var(--bg); color: var(--fg); min-height: 100vh; }
+    h1,h2,h3,h4,h5,h6 { font-family: var(--font-serif); font-weight: 500; }
+
+    /* ── PAGES ── */
+    .page { display: none; min-height: 100vh; }
+    .page.active { display: block; }
+    .admin-page { display: none; min-height: 100vh; }
+    .admin-page.active { display: flex; }
+
+    /* ── NAVBAR ── */
+    nav.main-nav {
+      width: 100%; background: var(--bg); border-bottom: 1px solid rgba(150,160,150,0.2);
+      padding: 1.5rem 0; position: sticky; top: 0; z-index: 50;
+    }
+    .nav-inner { max-width: 64rem; margin: 0 auto; padding: 0 1.5rem; display: flex; justify-content: space-between; align-items: center; }
+    .nav-logo { font-family: var(--font-serif); font-size: 1.5rem; letter-spacing: 0.1em; color: var(--primary); cursor: pointer; text-decoration: none; }
+    .nav-links { display: flex; gap: 2rem; }
+    .nav-link { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.2em; color: var(--secondary); cursor: pointer; transition: color 0.2s; text-decoration: none; background: none; border: none; font-family: var(--font-sans); }
+    .nav-link:hover { color: var(--primary); }
+
+    /* ── BUTTONS ── */
+    .btn { display: inline-flex; align-items: center; justify-content: center; padding: 0.75rem 2rem; font-size: 0.75rem; font-family: var(--font-sans); text-transform: uppercase; letter-spacing: 0.2em; border: none; cursor: pointer; transition: all 0.2s; font-weight: 500; }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-primary:hover { background: hsl(150,20%,44%); }
+    .btn-outline { background: transparent; color: var(--secondary); border: 1px solid var(--border); }
+    .btn-outline:hover { border-color: var(--primary); color: var(--primary); }
+    .btn-ghost { background: transparent; color: var(--secondary); border: none; }
+    .btn-ghost:hover { background: var(--muted); }
+    .btn-sm { padding: 0.35rem 0.75rem; font-size: 0.7rem; }
+    .btn-danger { background: transparent; color: var(--red); border: none; font-size: 0.7rem; font-family: var(--font-sans); text-transform: uppercase; letter-spacing: 0.1em; cursor: pointer; transition: color 0.2s; }
+    .btn-danger:hover { color: hsl(0,70%,40%); }
+    .btn-full { width: 100%; padding: 1.25rem; }
+
+    /* ── INPUTS ── */
+    input, textarea, select {
+      font-family: var(--font-sans); font-size: 0.875rem; border: 1px solid var(--border);
+      padding: 0.5rem 0.75rem; background: var(--white); color: var(--fg);
+      outline: none; transition: border-color 0.2s; width: 100%;
+    }
+    input:focus, textarea:focus, select:focus { border-color: var(--primary); }
+    input.error, textarea.error { border-color: var(--red); }
+    label.radio-option {
+      display: flex; align-items: center; justify-content: center;
+      border: 1px solid var(--border); padding: 0.5rem; cursor: pointer;
+      font-size: 0.875rem; transition: all 0.2s; flex: 1;
+    }
+    label.radio-option:has(input:checked) { border-color: var(--primary); background: var(--primary-light); color: var(--primary); }
+    label.radio-option input { display: none; }
+
+    /* ── HOME PAGE ── */
+    .hero { min-height: 80vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 4rem 1.5rem; }
+    .hero-eyebrow { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.3em; color: var(--secondary); margin-bottom: 1.5rem; }
+    .hero-title { font-family: var(--font-serif); font-size: clamp(5rem,15vw,9rem); color: var(--primary); letter-spacing: 0.05em; margin-bottom: 2rem; }
+    .hero-names { font-family: var(--font-serif); font-size: clamp(1.1rem,3vw,1.75rem); color: var(--fg); line-height: 1.8; }
+    .hero-names em { font-size: 0.85em; color: var(--secondary); }
+    .divider { width: 1px; background: hsl(150,20%,70%); margin: 2rem auto; }
+    .hero-date { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.2em; color: var(--secondary); margin-bottom: 0.5rem; }
+
+    /* countdown */
+    .countdown { display: flex; align-items: flex-start; gap: 1.5rem; flex-wrap: wrap; justify-content: center; }
+    .countdown-unit { display: flex; flex-direction: column; align-items: center; min-width: 2.5rem; }
+    .countdown-num { font-family: var(--font-serif); font-size: clamp(2.5rem,8vw,4rem); color: var(--primary); font-variant-numeric: tabular-nums; line-height: 1; }
+    .countdown-label { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.15em; color: var(--secondary); margin-top: 0.5rem; }
+    .countdown-sep { font-family: var(--font-serif); font-size: 2rem; color: hsl(150,20%,75%); margin-top: 0.5rem; }
+
+    /* cal buttons */
+    .cal-section { display: flex; flex-direction: column; align-items: center; gap: 1rem; }
+    .cal-eyebrow { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.2em; color: var(--secondary); }
+    .cal-type-btns { display: flex; gap: 0.75rem; flex-wrap: wrap; justify-content: center; }
+    .cal-type-btn { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; border: 1px solid var(--border); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.15em; background: none; cursor: pointer; color: var(--secondary); transition: all 0.2s; font-family: var(--font-sans); }
+    .cal-type-btn.active, .cal-type-btn:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-light); }
+    .cal-options { display: flex; gap: 0.5rem; flex-wrap: wrap; justify-content: center; animation: fadeIn 0.3s; }
+    .cal-opt-btn { padding: 0.5rem 1rem; border: 1px solid var(--border); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.15em; background: none; cursor: pointer; color: var(--secondary); transition: all 0.2s; font-family: var(--font-sans); }
+    .cal-opt-btn:hover { border-color: var(--primary); color: var(--primary); }
+
+    /* story */
+    .story { padding: 4rem 1.5rem; background: var(--white); }
+    .story-inner { max-width: 40rem; margin: 0 auto; text-align: center; }
+    .story h2 { font-family: var(--font-serif); font-size: 2.5rem; color: var(--primary); margin-bottom: 2rem; }
+    .story p { color: var(--secondary); line-height: 1.8; margin-bottom: 1rem; }
+
+    /* ── DETAILS PAGE ── */
+    .details-main { max-width: 48rem; margin: 0 auto; padding: 4rem 1.5rem; }
+    .page-title { font-family: var(--font-serif); font-size: 3rem; color: var(--primary); text-align: center; margin-bottom: 3rem; }
+    .venue-section { text-align: center; margin-bottom: 4rem; }
+    .section-eyebrow { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.2em; color: var(--secondary); margin-bottom: 1rem; }
+    .venue-name { font-family: var(--font-serif); font-size: 2rem; margin-bottom: 0.5rem; }
+    .venue-addr { color: var(--secondary); margin-bottom: 1rem; font-size: 0.9rem; }
+    .venue-desc { color: var(--secondary); line-height: 1.8; max-width: 36rem; margin: 0 auto; }
+    .timeline-list { max-width: 28rem; margin: 0 auto; }
+    .timeline-item { display: flex; gap: 1.5rem; }
+    .timeline-item + .timeline-item { margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid hsl(150,10%,88%); }
+    .timeline-time { width: 5rem; text-align: right; flex-shrink: 0; padding-top: 0.125rem; font-weight: 500; font-size: 0.875rem; color: var(--primary); }
+    .timeline-content p { font-weight: 500; }
+    .timeline-notes { list-style: none; margin-top: 0.5rem; }
+    .timeline-notes li { display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; color: var(--secondary); margin-top: 0.25rem; }
+    .timeline-notes li::before { content: ''; width: 4px; height: 4px; border-radius: 50%; background: hsl(150,20%,65%); flex-shrink: 0; }
+
+    /* ── RSVP PAGE ── */
+    .rsvp-main { max-width: 40rem; margin: 0 auto; padding: 4rem 1.5rem; }
+    .step-indicator { display: flex; align-items: center; justify-content: center; gap: 0.5rem; margin-bottom: 3rem; flex-wrap: wrap; }
+    .step-dot { width: 1.5rem; height: 1.5rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; transition: all 0.3s; }
+    .step-dot.done { background: var(--primary); color: #fff; }
+    .step-dot.current { background: var(--primary); color: #fff; }
+    .step-dot.future { background: var(--border); color: var(--secondary); }
+    .step-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.15em; }
+    .step-label.current { color: var(--primary); }
+    .step-label.other { color: hsl(210,15%,65%); }
+    .step-line { width: 2rem; height: 1px; }
+    .step-line.done { background: var(--primary); }
+    .step-line.future { background: var(--border); }
+
+    .type-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    .type-card { background: var(--white); border: 1px solid var(--border); padding: 2.5rem; text-align: center; cursor: pointer; transition: all 0.2s; }
+    .type-card:hover { border-color: var(--primary); background: var(--primary-light); }
+    .type-card h3 { font-family: var(--font-serif); font-size: 1.75rem; margin-bottom: 0.5rem; transition: color 0.2s; }
+    .type-card:hover h3 { color: var(--primary); }
+    .type-card p { font-size: 0.8rem; color: var(--secondary); }
+
+    .form-card { background: var(--white); border: 1px solid var(--border); padding: 2.5rem; }
+    .form-card-header { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem; }
+    .back-btn { background: none; border: none; cursor: pointer; color: var(--secondary); transition: color 0.2s; display: flex; align-items: center; }
+    .back-btn:hover { color: var(--primary); }
+    .form-eyebrow { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.15em; color: var(--secondary); }
+
+    .guest-block { border: 1px solid var(--border); padding: 1.25rem; margin-bottom: 1rem; position: relative; }
+    .guest-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+    .guest-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.15em; color: var(--secondary); }
+    .remove-guest-btn { background: none; border: none; cursor: pointer; color: var(--secondary); transition: color 0.2s; font-size: 1rem; line-height: 1; }
+    .remove-guest-btn:hover { color: var(--red); }
+    .guest-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+    .field-label { font-size: 0.75rem; color: var(--secondary); display: block; margin-bottom: 0.25rem; }
+    .attend-row { display: flex; gap: 0.5rem; }
+    .add-guest-btn { background: none; border: none; cursor: pointer; color: var(--primary); font-size: 0.875rem; display: flex; align-items: center; gap: 0.35rem; transition: color 0.2s; font-family: var(--font-sans); margin-top: 0.5rem; }
+    .add-guest-btn:hover { color: hsl(150,20%,40%); }
+
+    .error-box { background: hsl(0,100%,97%); border: 1px solid hsl(0,70%,80%); color: var(--red); padding: 0.75rem; font-size: 0.8rem; margin-top: 1rem; }
+    .error-box ul { list-style: none; }
+    .error-box li { margin-top: 0.25rem; }
+
+    .meal-guest-block { border: 1px solid var(--border); margin-bottom: 0.75rem; overflow: hidden; }
+    .meal-guest-header { padding: 0.75rem 1rem; background: var(--muted); border-bottom: 1px solid var(--border); font-weight: 500; font-size: 0.875rem; }
+    .meal-guest-body { padding: 1rem; }
+    .course-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.15em; color: var(--secondary); margin-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center; }
+    .course-error { color: var(--red); font-size: 0.65rem; }
+    .option-pills { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem; }
+    .option-pill { display: inline-flex; align-items: center; padding: 0.375rem 0.75rem; border: 1px solid var(--border); cursor: pointer; font-size: 0.8rem; transition: all 0.2s; }
+    .option-pill:has(input:checked) { border-color: var(--primary); background: var(--primary-light); color: var(--primary); font-weight: 500; }
+    .option-pill.has-error { border-color: hsl(0,70%,80%); }
+    .option-pill input { display: none; }
+
+    .done-card { background: var(--white); border: 1px solid var(--border); padding: 3rem; text-align: center; }
+    .done-card h2 { font-family: var(--font-serif); font-size: 2rem; margin-bottom: 1rem; }
+    .done-card p { color: var(--secondary); }
+
+    /* ── ADMIN LOGIN ── */
+    #adminLoginPage { display: none; min-height: 100vh; background: var(--bg); align-items: center; justify-content: center; padding: 1rem; }
+    #adminLoginPage.active { display: flex; }
+    .login-card { background: var(--white); border: 1px solid var(--border); padding: 3rem; max-width: 24rem; width: 100%; text-align: center; }
+    .login-card h1 { font-family: var(--font-serif); font-size: 1.75rem; color: var(--primary); margin-bottom: 0.5rem; }
+    .login-card p { color: var(--secondary); font-size: 0.875rem; margin-bottom: 2rem; }
+    .login-card input { text-align: center; margin-bottom: 1rem; }
+    .login-error { color: var(--red); font-size: 0.8rem; margin-top: 0.5rem; }
+
+    /* ── ADMIN LAYOUT ── */
+    .admin-sidebar { width: 16rem; background: var(--white); border-right: 1px solid var(--border); padding: 1.5rem; display: flex; flex-direction: column; flex-shrink: 0; }
+    .sidebar-brand { font-family: var(--font-serif); font-size: 1.5rem; color: var(--primary); cursor: pointer; margin-bottom: 0.25rem; }
+    .sidebar-sub { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.15em; color: var(--secondary); margin-bottom: 2.5rem; }
+    .sidebar-nav { flex: 1; display: flex; flex-direction: column; gap: 0.25rem; }
+    .sidebar-link { padding: 0.5rem 1rem; font-size: 0.875rem; color: var(--secondary); cursor: pointer; transition: all 0.2s; background: none; border: none; text-align: left; font-family: var(--font-sans); }
+    .sidebar-link:hover, .sidebar-link.active { background: var(--muted); color: var(--fg); }
+    .admin-content { flex: 1; padding: 2rem; overflow-y: auto; }
+
+    /* ── ADMIN DASHBOARD ── */
+    .stat-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 1.5rem; margin-bottom: 3rem; }
+    .stat-card { background: var(--white); border: 1px solid var(--border); padding: 1.5rem; }
+    .stat-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.15em; color: var(--secondary); margin-bottom: 0.5rem; }
+    .stat-num { font-family: var(--font-serif); font-size: 2.5rem; }
+    .recent-card { background: var(--white); border: 1px solid var(--border); padding: 1.5rem; }
+    .recent-card h2 { font-family: var(--font-serif); font-size: 1.5rem; margin-bottom: 1rem; }
+    .rsvp-row { padding: 1rem 0; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: start; }
+    .rsvp-row:first-child { border-top: none; }
+    .rsvp-row-name { font-weight: 500; font-size: 0.875rem; }
+    .rsvp-row-sub { font-size: 0.75rem; color: var(--secondary); text-transform: capitalize; margin-top: 0.125rem; }
+    .badge { display: inline-block; padding: 0.125rem 0.5rem; font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.1em; }
+    .badge-attending { background: var(--primary-light); color: var(--primary); }
+    .badge-declined { background: var(--muted); color: var(--secondary); }
+    .badge-day { background: var(--primary-light); color: var(--primary); }
+    .badge-evening { background: var(--muted); color: var(--secondary); }
+
+    /* ── ADMIN RSVPs ── */
+    .filter-bar { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; }
+    .rsvp-card { background: var(--white); border: 1px solid var(--border); margin-bottom: 0.75rem; overflow: hidden; }
+    .rsvp-card-header { width: 100%; display: flex; align-items: center; justify-content: space-between; padding: 1.25rem; text-align: left; background: none; border: none; cursor: pointer; transition: background 0.15s; font-family: var(--font-sans); }
+    .rsvp-card-header:hover { background: hsl(150,10%,97%); }
+    .rsvp-card-left { display: flex; align-items: center; gap: 1rem; }
+    .rsvp-card-name { font-weight: 500; font-size: 0.875rem; }
+    .rsvp-card-sub { font-size: 0.75rem; color: var(--secondary); margin-top: 0.125rem; }
+    .rsvp-card-right { display: flex; align-items: center; gap: 1rem; }
+    .rsvp-detail { border-top: 1px solid var(--border); }
+    .rsvp-guest-row { padding: 1.25rem; display: grid; grid-template-columns: repeat(3,1fr); gap: 1rem; border-bottom: 1px solid var(--border); }
+    .rsvp-guest-row:last-child { border-bottom: none; }
+    .rsvp-field-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--secondary); margin-bottom: 0.25rem; }
+    .rsvp-field-val { font-size: 0.875rem; }
+    .rsvp-notes { padding: 1.25rem; border-top: 1px solid var(--border); font-size: 0.875rem; }
+
+    /* ── ADMIN MEALS ── */
+    .meal-course-card { background: var(--white); border: 1px solid var(--border); margin-bottom: 1.5rem; overflow: hidden; }
+    .meal-course-header { display: flex; align-items: center; justify-content: space-between; padding: 1.25rem; border-bottom: 1px solid var(--border); gap: 1rem; }
+    .course-name-edit { font-family: var(--font-serif); font-size: 1.25rem; flex: 1; }
+    .course-name-btn { font-family: var(--font-serif); font-size: 1.25rem; background: none; border: none; cursor: pointer; text-align: left; transition: color 0.2s; }
+    .course-name-btn:hover { color: var(--primary); }
+    .guest-type-toggles { display: flex; gap: 0.5rem; }
+    .type-toggle { padding: 0.25rem 0.75rem; font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.1em; border: 1px solid var(--border); background: none; cursor: pointer; transition: all 0.2s; font-family: var(--font-sans); }
+    .type-toggle.active { background: var(--primary-light); border-color: var(--primary); color: var(--primary); }
+    .meal-options-body { padding: 1.25rem; }
+    .option-row { display: flex; align-items: center; gap: 0.75rem; padding: 0.6rem 0; border-bottom: 1px solid hsl(150,10%,92%); }
+    .option-row:last-child { border-bottom: none; }
+    .option-name { flex: 1; font-size: 0.875rem; font-weight: 500; }
+    .option-desc { font-size: 0.75rem; color: var(--secondary); margin-left: 0.5rem; }
+    .option-edit-btn { background: none; border: none; cursor: pointer; font-size: 0.875rem; text-align: left; flex: 1; transition: color 0.2s; font-family: var(--font-sans); }
+    .option-edit-btn:hover { color: var(--primary); }
+    .add-option-btn { background: none; border: none; cursor: pointer; color: var(--primary); font-size: 0.75rem; display: flex; align-items: center; gap: 0.25rem; margin-top: 0.75rem; transition: color 0.2s; font-family: var(--font-sans); }
+    .add-option-btn:hover { color: hsl(150,20%,40%); }
+    .inline-edit { display: flex; align-items: center; gap: 0.5rem; flex: 1; }
+    .inline-edit input { height: 1.75rem; padding: 0.25rem 0.5rem; font-size: 0.8rem; }
+    .icon-btn { background: none; border: none; cursor: pointer; color: var(--secondary); transition: color 0.2s; display: flex; align-items: center; padding: 0.25rem; }
+    .icon-btn.confirm:hover { color: var(--primary); }
+    .icon-btn.cancel:hover { color: var(--red); }
+    .icon-btn.delete:hover { color: var(--red); }
+
+    /* ── ADMIN CHECKLIST ── */
+    .checklist-add { background: var(--white); border: 1px solid var(--border); padding: 1.5rem; margin-bottom: 1.5rem; }
+    .checklist-add h2 { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.15em; color: var(--secondary); margin-bottom: 1rem; }
+    .checklist-add-row { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+    .checklist-add-row input[name=text] { flex: 2; min-width: 10rem; }
+    .checklist-add-row input[name=dueDate] { width: 9rem; flex-shrink: 0; }
+    .checklist-add-row select { width: 9rem; flex-shrink: 0; }
+    .filter-chips { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1rem; overflow-x: auto; padding-bottom: 0.5rem; }
+    .checklist-list { background: var(--white); border: 1px solid var(--border); }
+    .checklist-item { display: flex; align-items: center; gap: 1rem; padding: 1rem; border-bottom: 1px solid var(--border); transition: background 0.15s; }
+    .checklist-item:last-child { border-bottom: none; }
+    .checklist-item.done { background: hsl(150,10%,97%); opacity: 0.6; }
+    .checklist-item:hover:not(.done) { background: hsl(150,10%,98%); }
+    .check-box { width: 1.1rem; height: 1.1rem; border: 1px solid var(--primary); cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.2s; background: none; }
+    .check-box.checked { background: var(--primary); border-color: var(--primary); }
+    .check-box.checked::after { content: '✓'; color: #fff; font-size: 0.65rem; }
+    .checklist-text { flex: 1; }
+    .checklist-text p { font-weight: 500; font-size: 0.875rem; }
+    .checklist-text p.strikethrough { text-decoration: line-through; }
+    .checklist-meta { display: flex; gap: 0.75rem; font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--secondary); margin-top: 0.25rem; }
+
+    /* ── ADMIN BUDGET ── */
+    .budget-summary { display: grid; grid-template-columns: repeat(4,1fr); gap: 1rem; margin-bottom: 2rem; }
+    .budget-stat { background: var(--white); border: 1px solid var(--border); padding: 1.25rem; }
+    .budget-stat.warning { border-color: hsl(38,90%,65%); }
+    .budget-stat-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--secondary); margin-bottom: 0.25rem; }
+    .budget-stat-val { font-family: var(--font-serif); font-size: 1.5rem; }
+    .budget-stat-sub { font-size: 0.7rem; color: var(--secondary); margin-top: 0.25rem; }
+    .budget-stat-val.primary { color: var(--primary); }
+    .budget-stat-val.amber { color: var(--amber); }
+    .cat-card { background: var(--white); border: 1px solid var(--border); margin-bottom: 1rem; overflow: hidden; }
+    .cat-header { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1.25rem; border-bottom: 1px solid var(--border); background: hsl(150,10%,98%); flex-wrap: wrap; }
+    .cat-name-btn { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 500; flex: 1; background: none; border: none; cursor: pointer; text-align: left; transition: color 0.2s; font-family: var(--font-sans); }
+    .cat-name-btn:hover { color: var(--primary); }
+    .cat-stats { display: flex; gap: 1rem; font-size: 0.7rem; color: var(--secondary); flex-shrink: 0; flex-wrap: wrap; }
+    .cat-stats span span { color: var(--fg); font-weight: 500; }
+    .cat-stats span span.primary { color: var(--primary); }
+    .cat-stats span span.red { color: var(--red); }
+    .actual-row { display: flex; align-items: center; gap: 0.75rem; padding: 0.625rem 1.25rem; border-bottom: 1px solid hsl(150,10%,94%); transition: background 0.15s; font-size: 0.875rem; }
+    .actual-row:last-child { border-bottom: none; }
+    .actual-row.paid { background: hsl(150,20%,99%); }
+    .paid-badge { flex-shrink: 0; padding: 0.125rem 0.5rem; font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.1em; border: 1px solid; cursor: pointer; transition: all 0.2s; background: none; font-family: var(--font-sans); }
+    .paid-badge.is-paid { border-color: hsl(150,20%,65%); color: var(--primary); background: var(--primary-light); }
+    .paid-badge.is-paid:hover { background: hsl(150,20%,88%); }
+    .paid-badge.due-soon { border-color: hsl(0,65%,70%); color: hsl(0,60%,45%); background: hsl(0,100%,97%); }
+    .paid-badge.due-soon:hover { background: hsl(0,100%,94%); }
+    .paid-badge.due-amber { border-color: hsl(38,85%,65%); color: var(--amber); background: hsl(38,100%,97%); }
+    .paid-badge.due-amber:hover { background: hsl(38,100%,93%); }
+    .paid-badge.scheduled { border-color: var(--border); color: var(--secondary); background: var(--muted); }
+    .paid-badge.scheduled:hover { background: hsl(150,10%,85%); }
+    .actual-name { flex: 1; color: hsl(210,20%,30%); cursor: pointer; transition: color 0.2s; }
+    .actual-name:hover { color: var(--primary); }
+    .actual-date { font-size: 0.75rem; color: var(--secondary); flex-shrink: 0; cursor: pointer; transition: color 0.2s; }
+    .actual-date:hover { color: var(--primary); }
+    .actual-amount { font-weight: 500; text-align: right; width: 5rem; flex-shrink: 0; cursor: pointer; transition: color 0.2s; text-decoration: underline; text-decoration-style: dotted; text-underline-offset: 2px; }
+    .actual-amount:hover { color: var(--primary); }
+    .no-actuals { padding: 0.75rem 1.25rem; font-size: 0.75rem; color: hsl(210,10%,60%); font-style: italic; }
+    .add-section { background: var(--white); border: 1px solid var(--border); margin-top: 1.5rem; overflow: hidden; }
+    .add-tabs { display: flex; border-bottom: 1px solid var(--border); }
+    .add-tab { flex: 1; padding: 0.75rem; font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.15em; background: none; border: none; cursor: pointer; transition: all 0.2s; color: var(--secondary); font-family: var(--font-sans); }
+    .add-tab.active { color: var(--primary); border-bottom: 2px solid var(--primary); background: var(--white); }
+    .add-tab:not(.active) { background: hsl(150,10%,97%); }
+    .add-panel { padding: 1.5rem; display: none; }
+    .add-panel.active { display: block; }
+    .add-row { display: grid; grid-template-columns: auto 1fr auto auto auto auto; gap: 0.75rem; align-items: end; }
+    .add-row-cat { grid-column: span 2; display: grid; grid-template-columns: 1fr 1fr auto; gap: 0.75rem; align-items: end; }
+
+    /* ── ADMIN TIMELINE ── */
+    .timeline-add { background: var(--white); border: 1px solid var(--border); padding: 1.5rem; margin-bottom: 1.5rem; }
+    .timeline-add h2 { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.15em; color: var(--secondary); margin-bottom: 1rem; }
+    .timeline-add-row { display: flex; gap: 0.75rem; }
+    .timeline-admin-list { background: var(--white); border: 1px solid var(--border); }
+    .timeline-admin-item { border-bottom: 1px solid var(--border); }
+    .timeline-admin-item:last-child { border-bottom: none; }
+    .timeline-admin-row { display: flex; align-items: center; gap: 1rem; padding: 1rem; }
+    .reorder-btns { display: flex; flex-direction: column; gap: 0.25rem; flex-shrink: 0; }
+    .reorder-btn { background: none; border: none; cursor: pointer; color: var(--secondary); font-size: 0.6rem; padding: 0.25rem; line-height: 1; transition: color 0.2s; }
+    .reorder-btn:hover:not(:disabled) { color: var(--primary); }
+    .reorder-btn:disabled { opacity: 0.25; cursor: default; }
+    .timeline-admin-time { font-weight: 500; color: var(--primary); font-size: 0.875rem; width: 5.5rem; flex-shrink: 0; cursor: pointer; text-decoration: underline; text-decoration-style: dotted; text-underline-offset: 2px; }
+    .timeline-admin-desc { flex: 1; font-size: 0.875rem; cursor: pointer; transition: color 0.2s; }
+    .timeline-admin-desc:hover { color: var(--primary); }
+    .notes-count { font-size: 0.75rem; color: var(--secondary); margin-left: 0.5rem; }
+    .expand-btn { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--primary); background: none; border: none; cursor: pointer; flex-shrink: 0; font-family: var(--font-sans); transition: color 0.2s; padding: 0 0.5rem; }
+    .expand-btn:hover { color: hsl(150,20%,40%); }
+    .timeline-notes-panel { background: hsl(150,10%,98%); border-top: 1px solid hsl(150,10%,90%); padding: 1rem 1.5rem; }
+    .notes-panel-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--secondary); margin-bottom: 0.75rem; }
+    .note-item { display: flex; align-items: center; gap: 0.75rem; font-size: 0.875rem; margin-bottom: 0.5rem; }
+    .note-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--primary); flex-shrink: 0; }
+    .note-text { flex: 1; }
+    .note-remove-btn { background: none; border: none; cursor: pointer; font-size: 0.7rem; color: var(--red); transition: color 0.2s; font-family: var(--font-sans); }
+    .note-add-row { display: flex; gap: 0.5rem; margin-top: 0.75rem; }
+    .note-add-row input { flex: 1; height: 2rem; font-size: 0.8rem; }
+
+    /* ── UTILS ── */
+    .flex { display: flex; }
+    .items-center { align-items: center; }
+    .gap-2 { gap: 0.5rem; }
+    .gap-3 { gap: 0.75rem; }
+    .gap-4 { gap: 1rem; }
+    .justify-between { justify-content: space-between; }
+    .mb-2 { margin-bottom: 0.5rem; }
+    .mb-4 { margin-bottom: 1rem; }
+    .mb-6 { margin-bottom: 1.5rem; }
+    .mb-8 { margin-bottom: 2rem; }
+    .mt-2 { margin-top: 0.5rem; }
+    .mt-4 { margin-top: 1rem; }
+    .text-sm { font-size: 0.875rem; }
+    .text-xs { font-size: 0.75rem; }
+    .text-secondary { color: var(--secondary); }
+    .text-primary { color: var(--primary); }
+    .empty-state { padding: 2rem; text-align: center; color: var(--secondary); font-size: 0.875rem; }
+    .page-header { font-family: var(--font-serif); font-size: 2.5rem; color: var(--primary); margin-bottom: 2rem; }
+    .page-header-row { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 2rem; }
+    .page-header-sub { font-size: 0.8rem; color: var(--secondary); margin-top: 0.25rem; }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+
+    @media (max-width: 640px) {
+      .type-grid { grid-template-columns: 1fr; }
+      .guest-grid { grid-template-columns: 1fr; }
+      .stat-grid { grid-template-columns: 1fr; }
+      .budget-summary { grid-template-columns: 1fr 1fr; }
+      .rsvp-guest-row { grid-template-columns: 1fr; }
+      .admin-sidebar { display: none; }
+      .add-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ████ HOME PAGE ████ -->
+<div id="homePage" class="page active">
+  <nav class="main-nav">
+    <div class="nav-inner">
+      <a class="nav-logo" onclick="showPage('home')">I &amp; E</a>
+      <div class="nav-links">
+        <a class="nav-link" onclick="showPage('details')">Details</a>
+        <a class="nav-link" onclick="showPage('rsvp')">RSVP</a>
+      </div>
+    </div>
+  </nav>
+  <main>
+    <section class="hero">
+      <p class="hero-eyebrow">Please join us for the wedding of</p>
+      <h1 class="hero-title">I &amp; E</h1>
+      <p class="hero-names">
+        Ian James Lowe<br>
+        <em>and</em><br>
+        Emma Charlotte Lingard
+      </p>
+      <div class="divider" style="height:3rem;"></div>
+      <p class="hero-date">17th July 2027</p>
+      <p class="hero-date">The Oak Tree of Peover, Knutsford</p>
+      <div class="divider" style="height:3rem;"></div>
+      <div class="countdown" id="countdown">
+        <div class="countdown-unit"><span class="countdown-num" id="cd-days">000</span><span class="countdown-label">Days</span></div>
+        <span class="countdown-sep">·</span>
+        <div class="countdown-unit"><span class="countdown-num" id="cd-hours">00</span><span class="countdown-label">Hours</span></div>
+        <span class="countdown-sep">·</span>
+        <div class="countdown-unit"><span class="countdown-num" id="cd-mins">00</span><span class="countdown-label">Minutes</span></div>
+        <span class="countdown-sep">·</span>
+        <div class="countdown-unit"><span class="countdown-num" id="cd-secs">00</span><span class="countdown-label">Seconds</span></div>
+      </div>
+      <div class="divider" style="height:3rem;"></div>
+      <div class="cal-section">
+        <p class="cal-eyebrow">Add to Calendar</p>
+        <div class="cal-type-btns">
+          <button class="cal-type-btn" id="calDayBtn" onclick="toggleCalType('day')">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            Day Guest
+          </button>
+          <button class="cal-type-btn" id="calEveningBtn" onclick="toggleCalType('evening')">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            Evening Guest
+          </button>
+        </div>
+        <div id="calOptions" style="display:none;" class="cal-options">
+          <a id="calGoogle" href="#" target="_blank" class="cal-opt-btn">Google</a>
+          <button class="cal-opt-btn" onclick="downloadICS()">Apple</button>
+          <button class="cal-opt-btn" onclick="downloadICS()">Outlook</button>
+          <button class="cal-opt-btn" onclick="downloadICS()">Other (.ics)</button>
+        </div>
+      </div>
+      <div style="margin-top:3rem;">
+        <button class="btn btn-primary btn-full" style="min-width:12rem;" onclick="showPage('rsvp')">RSVP</button>
+      </div>
+    </section>
+    <section class="story">
+      <div class="story-inner">
+        <h2>Our Story</h2>
+        <p>It started with a chance meeting and grew into a lifetime of shared moments, quiet Sunday mornings, and adventures around the world. We are thrilled to invite our closest family and friends to celebrate the next chapter of our story.</p>
+        <p>We can't wait to share this beautiful day with you.</p>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- ████ DETAILS PAGE ████ -->
+<div id="detailsPage" class="page">
+  <nav class="main-nav">
+    <div class="nav-inner">
+      <a class="nav-logo" onclick="showPage('home')">I &amp; E</a>
+      <div class="nav-links">
+        <a class="nav-link" onclick="showPage('details')">Details</a>
+        <a class="nav-link" onclick="showPage('rsvp')">RSVP</a>
+      </div>
+    </div>
+  </nav>
+  <main class="details-main">
+    <h1 class="page-title">The Details</h1>
+    <section class="venue-section">
+      <p class="section-eyebrow">The Venue</p>
+      <h2 class="venue-name">The Oak Tree of Peover</h2>
+      <p class="venue-addr">Plumley Moor Road, Lower Peover, Knutsford WA16 9RX</p>
+      <p class="venue-desc">A beautiful rustic venue set in the heart of the Cheshire countryside. The ceremony and reception will both be held here.</p>
+    </section>
+    <section>
+      <p class="section-eyebrow" style="text-align:center;margin-bottom:2rem;">Order of the Day</p>
+      <div class="timeline-list" id="publicTimeline"></div>
+    </section>
+  </main>
+</div>
+
+<!-- ████ RSVP PAGE ████ -->
+<div id="rsvpPage" class="page">
+  <nav class="main-nav">
+    <div class="nav-inner">
+      <a class="nav-logo" onclick="showPage('home')">I &amp; E</a>
+      <div class="nav-links">
+        <a class="nav-link" onclick="showPage('details')">Details</a>
+        <a class="nav-link" onclick="showPage('rsvp')">RSVP</a>
+      </div>
+    </div>
+  </nav>
+  <main class="rsvp-main">
+    <h1 class="page-title">RSVP</h1>
+    <div id="rsvpStepIndicator" class="step-indicator"></div>
+    <div id="rsvpContent"></div>
+  </main>
+</div>
+
+<!-- ████ ADMIN LOGIN PAGE ████ -->
+<div id="adminLoginPage">
+  <div class="login-card">
+    <h1>Planning Dashboard</h1>
+    <p>Please enter the administrative password.</p>
+    <input type="password" id="adminPwdInput" placeholder="Password" onkeydown="if(event.key==='Enter')doLogin()" />
+    <div id="loginError" class="login-error" style="display:none;">Incorrect password.</div>
+    <button class="btn btn-primary btn-full" onclick="doLogin()" style="margin-top:1rem;">Enter</button>
+  </div>
+</div>
+
+<!-- ████ ADMIN PAGES ████ -->
+<div id="adminPage" class="admin-page">
+  <aside class="admin-sidebar">
+    <div>
+      <div class="sidebar-brand" onclick="showPage('home')">I &amp; E</div>
+      <div class="sidebar-sub">Admin</div>
+    </div>
+    <nav class="sidebar-nav">
+      <button class="sidebar-link" id="nav-dashboard" onclick="showAdmin('dashboard')">Overview</button>
+      <button class="sidebar-link" id="nav-rsvps" onclick="showAdmin('rsvps')">RSVPs</button>
+      <button class="sidebar-link" id="nav-meals" onclick="showAdmin('meals')">Meal Options</button>
+      <button class="sidebar-link" id="nav-checklist" onclick="showAdmin('checklist')">Checklist</button>
+      <button class="sidebar-link" id="nav-budget" onclick="showAdmin('budget')">Budget</button>
+      <button class="sidebar-link" id="nav-timeline" onclick="showAdmin('timeline')">Timeline</button>
+    </nav>
+    <button class="btn btn-ghost" onclick="adminLogout()" style="margin-top:auto;justify-content:flex-start;">Logout</button>
+  </aside>
+  <div class="admin-content" id="adminContent"></div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════
+// STORAGE HELPERS
+// ═══════════════════════════════════════════════
+function get(key, def) {
+  try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : def; }
+  catch { return def; }
+}
+function set(key, val) {
+  try { localStorage.setItem(key, JSON.stringify(val)); } catch {}
+}
+
+// ═══════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════
+function showPage(name) {
+  ['homePage','detailsPage','rsvpPage'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.remove('active');
+  });
+  document.getElementById('adminLoginPage').classList.remove('active');
+  document.getElementById('adminPage').classList.remove('active');
+
+  if (name === 'home') { document.getElementById('homePage').classList.add('active'); }
+  else if (name === 'details') { document.getElementById('detailsPage').classList.add('active'); renderPublicTimeline(); }
+  else if (name === 'rsvp') { document.getElementById('rsvpPage').classList.add('active'); initRSVP(); }
+  else if (name === 'admin') {
+    const isAuth = sessionStorage.getItem('wedding_admin_auth') === 'true';
+    if (isAuth) { document.getElementById('adminPage').classList.add('active'); showAdmin('dashboard'); }
+    else { document.getElementById('adminLoginPage').classList.add('active'); }
+  }
+}
+
+// ═══════════════════════════════════════════════
+// COUNTDOWN
+// ═══════════════════════════════════════════════
+function updateCountdown() {
+  const target = new Date('2027-07-17T00:00:00').getTime();
+  const now = Date.now();
+  const diff = Math.max(0, target - now);
+  const days = Math.floor(diff / 864e5);
+  const hours = Math.floor((diff / 36e5) % 24);
+  const mins = Math.floor((diff / 6e4) % 60);
+  const secs = Math.floor((diff / 1e3) % 60);
+  document.getElementById('cd-days').textContent = String(days).padStart(3,'0');
+  document.getElementById('cd-hours').textContent = String(hours).padStart(2,'0');
+  document.getElementById('cd-mins').textContent = String(mins).padStart(2,'0');
+  document.getElementById('cd-secs').textContent = String(secs).padStart(2,'0');
+}
+updateCountdown();
+setInterval(updateCountdown, 1000);
+
+// ═══════════════════════════════════════════════
+// CALENDAR
+// ═══════════════════════════════════════════════
+let calType = null;
+const LOCATION = 'The Oak Tree of Peover, Plumley Moor Road, Lower Peover, Knutsford WA16 9RX';
+const EVENTS = {
+  day: { title:"Ian & Emma's Wedding", startUtc:'20270717T120000Z', endUtc:'20270718T230000Z', desc:'Day guest — Ceremony & Reception. Arrival from 1:00 PM. Carriages at midnight.', file:'ian-emma-wedding-day.ics' },
+  evening: { title:"Ian & Emma's Wedding — Evening Reception", startUtc:'20270717T180000Z', endUtc:'20270717T230000Z', desc:'Evening guest — Arrival from 7:00 PM. Carriages at midnight.', file:'ian-emma-wedding-evening.ics' }
+};
+
+function toggleCalType(type) {
+  calType = calType === type ? null : type;
+  document.getElementById('calDayBtn').classList.toggle('active', calType === 'day');
+  document.getElementById('calEveningBtn').classList.toggle('active', calType === 'evening');
+  const opts = document.getElementById('calOptions');
+  opts.style.display = calType ? 'flex' : 'none';
+  if (calType) {
+    const e = EVENTS[calType];
+    const p = new URLSearchParams({ action:'TEMPLATE', text:e.title, dates:`${e.startUtc}/${e.endUtc}`, details:e.desc, location:LOCATION });
+    document.getElementById('calGoogle').href = `https://calendar.google.com/calendar/render?${p}`;
+  }
+}
+
+function downloadICS() {
+  if (!calType) return;
+  const e = EVENTS[calType];
+  const ics = ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Ian & Emma Wedding//EN','CALSCALE:GREGORIAN','METHOD:PUBLISH','BEGIN:VEVENT',
+    `DTSTART:${e.startUtc}`,`DTEND:${e.endUtc}`,`SUMMARY:${e.title}`,`LOCATION:${LOCATION}`,`DESCRIPTION:${e.desc}`,'STATUS:CONFIRMED','END:VEVENT','END:VCALENDAR'].join('\r\n');
+  const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(new Blob([ics],{type:'text/calendar'})), download: e.file });
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+}
+
+// ═══════════════════════════════════════════════
+// PUBLIC TIMELINE
+// ═══════════════════════════════════════════════
+const DEFAULT_TIMELINE = [
+  {id:'1',time:'1:00 PM',description:'Guest Arrival',order:1,notes:[]},
+  {id:'2',time:'1:30 PM',description:'Ceremony',order:2,notes:[]},
+  {id:'3',time:'2:00 PM',description:'Drinks Reception & Photographs',order:3,notes:[]},
+  {id:'4',time:'4:00 PM',description:'Wedding Breakfast',order:4,notes:[]},
+  {id:'5',time:'7:00 PM',description:'Evening Guests Arrive',order:5,notes:[]},
+  {id:'6',time:'7:30 PM',description:'First Dance & Cake Cutting',order:6,notes:[]},
+  {id:'7',time:'12:00 AM',description:'Carriages',order:7,notes:[]}
+];
+
+function renderPublicTimeline() {
+  const items = [...get('wedding_timeline', DEFAULT_TIMELINE)].sort((a,b)=>a.order-b.order);
+  const el = document.getElementById('publicTimeline');
+  el.innerHTML = items.map((item, i) => `
+    <div class="timeline-item" ${i===0?'style="border-top:none;padding-top:0;"':''}>
+      <div class="timeline-time">${item.time}</div>
+      <div class="timeline-content">
+        <p>${item.description}</p>
+        ${(item.notes||[]).length ? `<ul class="timeline-notes">${item.notes.map(n=>`<li>${n}</li>`).join('')}</ul>` : ''}
+      </div>
+    </div>`).join('');
+}
+
+// ═══════════════════════════════════════════════
+// RSVP FLOW
+// ═══════════════════════════════════════════════
+let rsvpState = { step:'type', guestType:null, guests:[], mealChoices:{}, notes:'' };
+
+function initRSVP() {
+  rsvpState = { step:'type', guestType:null, guests:[{name:'',email:'',phone:'',attending:''}], mealChoices:{}, notes:'' };
+  renderRSVP();
+}
+
+function renderStepIndicator() {
+  if (rsvpState.step === 'done') { document.getElementById('rsvpStepIndicator').innerHTML = ''; return; }
+  const steps = ['type','guests','meals','notes'];
+  const labels = ['Guest Type','Details','Meals','Notes'];
+  const cur = steps.indexOf(rsvpState.step);
+  const courses = get('wedding_meal_courses',[]);
+  const hasMeals = courses.some(c => rsvpState.guestType && c.guestTypes.includes(rsvpState.guestType) && c.options.length > 0);
+  const visSteps = hasMeals ? steps : steps.filter(s=>s!=='meals');
+  const visLabels = hasMeals ? labels : labels.filter((_,i)=>i!==2);
+  const visCur = visSteps.indexOf(rsvpState.step);
+
+  document.getElementById('rsvpStepIndicator').innerHTML = visSteps.map((s,i) => {
+    const cls = i < visCur ? 'done' : i === visCur ? 'current' : 'future';
+    const lCls = i === visCur ? 'current' : 'other';
+    return `
+      <div class="step-dot ${cls}">${i < visCur ? '✓' : i+1}</div>
+      <span class="step-label ${lCls} hidden-mobile">${visLabels[i]}</span>
+      ${i < visSteps.length-1 ? `<div class="step-line ${i < visCur ? 'done' : 'future'}"></div>` : ''}`;
+  }).join('');
+}
+
+function renderRSVP() {
+  renderStepIndicator();
+  const el = document.getElementById('rsvpContent');
+  if (rsvpState.step === 'type') el.innerHTML = renderTypeStep();
+  else if (rsvpState.step === 'guests') el.innerHTML = renderGuestsStep();
+  else if (rsvpState.step === 'meals') el.innerHTML = renderMealsStep();
+  else if (rsvpState.step === 'notes') el.innerHTML = renderNotesStep();
+  else if (rsvpState.step === 'done') el.innerHTML = renderDoneStep();
+}
+
+function renderTypeStep() {
+  return `<div>
+    <p style="text-align:center;font-size:0.7rem;text-transform:uppercase;letter-spacing:0.2em;color:var(--secondary);margin-bottom:2rem;">Are you joining us as a…</p>
+    <div class="type-grid">
+      <div class="type-card" onclick="selectGuestType('day')">
+        <h3>Day Guest</h3><p>Ceremony &amp; reception</p>
+      </div>
+      <div class="type-card" onclick="selectGuestType('evening')">
+        <h3>Evening Guest</h3><p>Evening celebration</p>
+      </div>
+    </div>
+  </div>`;
+}
+
+function selectGuestType(type) {
+  rsvpState.guestType = type;
+  rsvpState.step = 'guests';
+  renderRSVP();
+}
+
+function renderGuestsStep() {
+  const guests = rsvpState.guests;
+  return `<div class="form-card">
+    <div class="form-card-header">
+      <button class="back-btn" onclick="rsvpBack()">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <span class="form-eyebrow">${rsvpState.guestType === 'day' ? 'Day' : 'Evening'} Guest</span>
+    </div>
+    <div style="margin-bottom:1rem;">
+      <label style="font-size:0.75rem;text-transform:uppercase;letter-spacing:0.15em;color:var(--secondary);">Guest Details <span style="normal-case;text-transform:none;letter-spacing:normal;color:hsl(210,15%,60%);"> — one row per person</span></label>
+    </div>
+    ${guests.map((g,i) => `
+    <div class="guest-block" id="guestBlock${i}">
+      <div class="guest-header">
+        <span class="guest-label">Guest ${i+1}</span>
+        ${guests.length > 1 ? `<button class="remove-guest-btn" onclick="removeGuest(${i})">✕</button>` : ''}
+      </div>
+      <div class="guest-grid">
+        <div>
+          <label class="field-label">Full Name</label>
+          <input id="g${i}_name" value="${esc(g.name)}" oninput="updateGuest(${i},'name',this.value)" placeholder="First Last" />
+        </div>
+        <div>
+          <label class="field-label">Email</label>
+          <input id="g${i}_email" value="${esc(g.email)}" oninput="updateGuest(${i},'email',this.value)" type="email" placeholder="email@example.com" />
+        </div>
+        <div>
+          <label class="field-label">Mobile Number</label>
+          <input id="g${i}_phone" value="${esc(g.phone)}" oninput="updateGuest(${i},'phone',this.value)" type="tel" placeholder="07700 123456" />
+        </div>
+        <div>
+          <label class="field-label">Attendance</label>
+          <div class="attend-row">
+            <label class="radio-option"><input type="radio" name="attend${i}" value="yes" ${g.attending==='yes'?'checked':''} onchange="updateGuest(${i},'attending','yes')">Accept</label>
+            <label class="radio-option"><input type="radio" name="attend${i}" value="no" ${g.attending==='no'?'checked':''} onchange="updateGuest(${i},'attending','no')">Decline</label>
+          </div>
+        </div>
+      </div>
+    </div>`).join('')}
+    <button class="add-guest-btn" onclick="addGuest()">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Add another guest
+    </button>
+    <div id="guestErrors"></div>
+    <button class="btn btn-primary btn-full" style="margin-top:1.5rem;" onclick="guestsNext()">Continue</button>
+  </div>`;
+}
+
+function updateGuest(i, field, val) {
+  if (field === 'name') val = val.replace(/\b\w/g, c => c.toUpperCase());
+  rsvpState.guests[i][field] = val;
+}
+function addGuest() {
+  rsvpState.guests.push({name:'',email:'',phone:'',attending:''});
+  renderRSVP();
+}
+function removeGuest(i) {
+  rsvpState.guests.splice(i,1);
+  renderRSVP();
+}
+
+function guestsNext() {
+  const guests = rsvpState.guests;
+  const errs = [];
+  guests.forEach((g,i) => {
+    const nm = (g.name||'').trim();
+    const label = nm || `Guest ${i+1}`;
+    if (!nm) errs.push(`Guest ${i+1}: name is required.`);
+    else if (nm.split(/\s+/).filter(Boolean).length < 2) errs.push(`${nm}: please enter first and last name.`);
+    if (!g.email.trim()) errs.push(`${label}: email is required.`);
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(g.email.trim())) errs.push(`${label}: please enter a valid email.`);
+    if (!g.phone.trim()) errs.push(`${label}: mobile number is required.`);
+    else if (!/^07\d{9}$/.test(g.phone.replace(/\s+/g,''))) errs.push(`${label}: mobile must be 11 digits starting 07.`);
+    if (!g.attending) errs.push(`${label}: please select Accept or Decline.`);
+  });
+  if (errs.length) {
+    document.getElementById('guestErrors').innerHTML = `<div class="error-box"><ul>${errs.map(e=>`<li>${e}</li>`).join('')}</ul></div>`;
+    return;
+  }
+  const existing = get('wedding_rsvps',[]).flatMap(r=>r.guests.map(g=>g.name.toLowerCase()));
+  const dupes = guests.map(g=>g.name.trim()).filter(n=>existing.includes(n.toLowerCase()));
+  if (dupes.length) {
+    document.getElementById('guestErrors').innerHTML = `<div class="error-box">"${dupes.join('", "')}" ${dupes.length>1?'have':'has'} already submitted an RSVP. Please contact us if you need to make changes.</div>`;
+    return;
+  }
+  const courses = get('wedding_meal_courses',[]);
+  const attending = guests.filter(g=>g.attending==='yes');
+  const hasMeals = courses.some(c=>rsvpState.guestType && c.guestTypes.includes(rsvpState.guestType) && c.options.length>0) && attending.length>0;
+  rsvpState.step = hasMeals ? 'meals' : 'notes';
+  renderRSVP();
+}
+
+function renderMealsStep() {
+  const courses = get('wedding_meal_courses',[]).filter(c=>rsvpState.guestType && c.guestTypes.includes(rsvpState.guestType) && c.options.length>0);
+  const attending = rsvpState.guests.map((g,i)=>({g,i})).filter(({g})=>g.attending==='yes');
+  return `<div class="form-card">
+    <div class="form-card-header">
+      <button class="back-btn" onclick="rsvpBack()">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <span class="form-eyebrow">Meal Choices</span>
+    </div>
+    ${attending.map(({g,i}) => `
+    <div class="meal-guest-block">
+      <div class="meal-guest-header">${esc(g.name)}</div>
+      <div class="meal-guest-body">
+        ${courses.map(c => {
+          const hasErr = (rsvpState.mealErrors||new Set()).has(`${i}-${c.id}`);
+          return `<div style="margin-bottom:1rem;">
+            <div class="course-label">${esc(c.name)} ${hasErr?'<span class="course-error">Please make a selection</span>':''}</div>
+            <div class="option-pills">
+              ${c.options.map(o => {
+                const sel = (rsvpState.mealChoices[i]||{})[c.id] === o.id;
+                return `<label class="option-pill ${hasErr&&!sel?'has-error':''}">
+                  <input type="radio" name="meal_${i}_${c.id}" value="${o.id}" ${sel?'checked':''} onchange="setMealChoice(${i},'${c.id}','${o.id}')">
+                  <span ${sel?'style="font-weight:500"':''}>${esc(o.name)}</span>
+                  ${o.description?`<span style="font-size:0.7rem;opacity:0.6;margin-left:0.25rem;">— ${esc(o.description)}</span>`:''}
+                </label>`;
+              }).join('')}
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`).join('')}
+    <div id="mealErrors"></div>
+    <button class="btn btn-primary btn-full" style="margin-top:1rem;" onclick="mealsNext()">Continue</button>
+  </div>`;
+}
+
+function setMealChoice(gi, courseId, optionId) {
+  if (!rsvpState.mealChoices[gi]) rsvpState.mealChoices[gi] = {};
+  rsvpState.mealChoices[gi][courseId] = optionId;
+  if (rsvpState.mealErrors) rsvpState.mealErrors.delete(`${gi}-${courseId}`);
+}
+
+function mealsNext() {
+  const courses = get('wedding_meal_courses',[]).filter(c=>rsvpState.guestType && c.guestTypes.includes(rsvpState.guestType) && c.options.length>0);
+  const attending = rsvpState.guests.map((g,i)=>({g,i})).filter(({g})=>g.attending==='yes');
+  const missing = new Set();
+  attending.forEach(({i}) => courses.forEach(c => { if (!(rsvpState.mealChoices[i]||{})[c.id]) missing.add(`${i}-${c.id}`); }));
+  if (missing.size) {
+    rsvpState.mealErrors = missing;
+    renderRSVP();
+    return;
+  }
+  rsvpState.step = 'notes';
+  renderRSVP();
+}
+
+function renderNotesStep() {
+  return `<div class="form-card">
+    <div class="form-card-header">
+      <button class="back-btn" onclick="rsvpBack()">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <span class="form-eyebrow">Final Details</span>
+    </div>
+    <div style="margin-bottom:1.5rem;">
+      <label class="field-label" style="text-transform:uppercase;letter-spacing:0.15em;">Dietary Requirements &amp; Notes</label>
+      <textarea id="rsvpNotes" style="min-height:7rem;margin-top:0.5rem;" placeholder="Please let us know about any dietary requirements or anything else we should know.">${esc(rsvpState.notes)}</textarea>
+    </div>
+    <button class="btn btn-primary btn-full" onclick="submitRSVP()">Send Reply</button>
+  </div>`;
+}
+
+function submitRSVP() {
+  rsvpState.notes = document.getElementById('rsvpNotes').value;
+  const entry = {
+    id: Date.now().toString(),
+    guestType: rsvpState.guestType,
+    guests: rsvpState.guests.map((g,i) => ({
+      name: g.name.trim(), email: g.email.trim(),
+      phone: g.phone.replace(/\s+/g,''),
+      attending: g.attending === 'yes',
+      mealChoices: rsvpState.mealChoices[i] || {}
+    })),
+    message: rsvpState.notes.trim(),
+    submittedAt: new Date().toISOString()
+  };
+  const rsvps = get('wedding_rsvps',[]);
+  set('wedding_rsvps', [...rsvps, entry]);
+  rsvpState.step = 'done';
+  renderRSVP();
+}
+
+function renderDoneStep() {
+  return `<div class="done-card">
+    <h2>Thank You</h2>
+    <p>Your response has been warmly received.</p>
+  </div>`;
+}
+
+function rsvpBack() {
+  const courses = get('wedding_meal_courses',[]);
+  const hasMeals = courses.some(c=>rsvpState.guestType && c.guestTypes.includes(rsvpState.guestType) && c.options.length>0);
+  if (rsvpState.step === 'guests') rsvpState.step = 'type';
+  else if (rsvpState.step === 'meals') rsvpState.step = 'guests';
+  else if (rsvpState.step === 'notes') rsvpState.step = hasMeals ? 'meals' : 'guests';
+  renderRSVP();
+}
+
+// ═══════════════════════════════════════════════
+// ADMIN AUTH
+// ═══════════════════════════════════════════════
+function doLogin() {
+  const pwd = document.getElementById('adminPwdInput').value;
+  const stored = localStorage.getItem('wedding_admin_pwd') || 'lowe2027';
+  if (pwd === stored) {
+    sessionStorage.setItem('wedding_admin_auth','true');
+    document.getElementById('loginError').style.display = 'none';
+    document.getElementById('adminLoginPage').classList.remove('active');
+    document.getElementById('adminPage').classList.add('active');
+    showAdmin('dashboard');
+  } else {
+    document.getElementById('loginError').style.display = 'block';
+  }
+}
+
+function adminLogout() {
+  sessionStorage.removeItem('wedding_admin_auth');
+  document.getElementById('adminPage').classList.remove('active');
+  showPage('home');
+}
+
+// ═══════════════════════════════════════════════
+// ADMIN NAVIGATION
+// ═══════════════════════════════════════════════
+function showAdmin(section) {
+  document.querySelectorAll('.sidebar-link').forEach(l=>l.classList.remove('active'));
+  const nav = document.getElementById(`nav-${section}`);
+  if (nav) nav.classList.add('active');
+  const el = document.getElementById('adminContent');
+  if (section === 'dashboard') el.innerHTML = renderAdminDashboard();
+  else if (section === 'rsvps') el.innerHTML = renderAdminRSVPs('all');
+  else if (section === 'meals') el.innerHTML = renderAdminMeals();
+  else if (section === 'checklist') el.innerHTML = renderAdminChecklist('All');
+  else if (section === 'budget') el.innerHTML = renderAdminBudget();
+  else if (section === 'timeline') el.innerHTML = renderAdminTimeline();
+}
+
+// ═══════════════════════════════════════════════
+// ADMIN DASHBOARD
+// ═══════════════════════════════════════════════
+function renderAdminDashboard() {
+  const rsvps = get('wedding_rsvps',[]);
+  const all = rsvps.flatMap(r=>r.guests);
+  const attending = all.filter(g=>g.attending).length;
+  const declined = all.filter(g=>!g.attending).length;
+  const recent = [...rsvps].reverse().slice(0,5);
+  return `
+    <h1 class="page-header">Dashboard Overview</h1>
+    <div class="stat-grid">
+      <div class="stat-card"><div class="stat-label">Total Attending</div><div class="stat-num">${attending}</div></div>
+      <div class="stat-card"><div class="stat-label">Declined</div><div class="stat-num">${declined}</div></div>
+      <div class="stat-card"><div class="stat-label">Submissions</div><div class="stat-num">${rsvps.length}</div></div>
+    </div>
+    <div class="recent-card">
+      <h2>Recent RSVPs</h2>
+      ${recent.length === 0 ? '<p class="text-sm text-secondary">No RSVPs yet.</p>' :
+        recent.map(r => {
+          const att = r.guests.filter(g=>g.attending).length;
+          return `<div class="rsvp-row">
+            <div>
+              <div class="rsvp-row-name">${r.guests.map(g=>esc(g.name)).join(', ')}</div>
+              <div class="rsvp-row-sub">${r.guestType} guest</div>
+            </div>
+            <span class="badge ${att>0?'badge-attending':'badge-declined'}">${att>0?att+' attending':'Declined'}</span>
+          </div>`;
+        }).join('')}
+    </div>`;
+}
+
+// ═══════════════════════════════════════════════
+// ADMIN RSVPs
+// ═══════════════════════════════════════════════
+let rsvpFilter = 'all';
+let expandedRSVP = null;
+
+function renderAdminRSVPs(filter) {
+  rsvpFilter = filter || rsvpFilter;
+  const rsvps = get('wedding_rsvps',[]);
+  const courses = get('wedding_meal_courses',[]);
+  const filtered = rsvps.filter(r => rsvpFilter === 'all' ? true : r.guestType === rsvpFilter);
+  const totalAtt = rsvps.flatMap(r=>r.guests).filter(g=>g.attending).length;
+  const totalDec = rsvps.flatMap(r=>r.guests).filter(g=>!g.attending).length;
+
+  const getCOpt = (cid, oid) => { const c = courses.find(x=>x.id===cid); return c?.options.find(o=>o.id===oid)?.name||oid; };
+  const getCName = cid => courses.find(c=>c.id===cid)?.name||cid;
+
+  return `
+    <div class="page-header-row">
+      <div>
+        <h1 class="page-header" style="margin-bottom:0.25rem;">Guest Responses</h1>
+        <p class="page-header-sub">${totalAtt} attending · ${totalDec} declined · ${rsvps.length} submission${rsvps.length!==1?'s':''}</p>
+      </div>
+      <div class="filter-bar">
+        ${['all','day','evening'].map(f=>`<button class="btn ${rsvpFilter===f?'btn-primary':'btn-outline'} btn-sm" onclick="filterRSVPs('${f}')">${f}</button>`).join('')}
+      </div>
+    </div>
+    ${filtered.length === 0 ? '<div class="empty-state">No RSVPs found.</div>' :
+      filtered.map(r => {
+        const att = r.guests.filter(g=>g.attending);
+        const dec = r.guests.filter(g=>!g.attending);
+        const expanded = expandedRSVP === r.id;
+        return `<div class="rsvp-card">
+          <button class="rsvp-card-header" onclick="toggleExpandRSVP('${r.id}')">
+            <div class="rsvp-card-left">
+              <span class="badge badge-${r.guestType}">${r.guestType}</span>
+              <div>
+                <div class="rsvp-card-name">${r.guests.map(g=>esc(g.name)).join(', ')}</div>
+                <div class="rsvp-card-sub">${att.length?att.length+' attending':''}${att.length&&dec.length?' · ':''}${dec.length?dec.length+' declined':''}</div>
+              </div>
+            </div>
+            <div class="rsvp-card-right">
+              <span style="font-size:0.75rem;color:var(--secondary);">${new Date(r.submittedAt).toLocaleDateString('en-GB')}</span>
+              <span style="font-size:0.75rem;color:var(--secondary);">${expanded?'▲':'▼'}</span>
+            </div>
+          </button>
+          ${expanded ? `<div class="rsvp-detail">
+            ${r.guests.map(g => `
+            <div class="rsvp-guest-row">
+              <div>
+                <div class="rsvp-field-label">Name</div>
+                <div class="rsvp-field-val" style="font-weight:500;">${esc(g.name)}</div>
+                <span class="badge ${g.attending?'badge-attending':'badge-declined'}" style="margin-top:0.25rem;">${g.attending?'Attending':'Declined'}</span>
+              </div>
+              <div>
+                <div class="rsvp-field-label">Contact</div>
+                <div class="rsvp-field-val">${esc(g.email)}</div>
+                <div style="font-size:0.875rem;color:var(--secondary);">${g.phone}</div>
+              </div>
+              ${g.attending && Object.keys(g.mealChoices||{}).length ? `<div>
+                <div class="rsvp-field-label">Meal Choices</div>
+                ${Object.entries(g.mealChoices).map(([cid,oid])=>`<div style="font-size:0.875rem;"><span style="color:var(--secondary);">${getCName(cid)}:</span> <strong>${getCOpt(cid,oid)}</strong></div>`).join('')}
+              </div>` : '<div></div>'}
+            </div>`).join('')}
+            ${r.message ? `<div class="rsvp-notes"><div class="rsvp-field-label">Notes / Dietary</div><div>${esc(r.message)}</div></div>` : ''}
+          </div>` : ''}
+        </div>`;
+      }).join('')}`;
+}
+
+function filterRSVPs(f) {
+  expandedRSVP = null;
+  document.getElementById('adminContent').innerHTML = renderAdminRSVPs(f);
+}
+function toggleExpandRSVP(id) {
+  expandedRSVP = expandedRSVP === id ? null : id;
+  document.getElementById('adminContent').innerHTML = renderAdminRSVPs();
+}
+
+// ═══════════════════════════════════════════════
+// ADMIN MEALS
+// ═══════════════════════════════════════════════
+let editingCourseId = null, editingOptionKey = null, addingOptionTo = null;
+
+function renderAdminMeals() {
+  const courses = get('wedding_meal_courses',[]);
+  return `
+    <div class="page-header-row">
+      <div>
+        <h1 class="page-header" style="margin-bottom:0;">Meal Options</h1>
+        <p class="page-header-sub">Configure courses and choices shown to guests when they RSVP</p>
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="addCourse()">+ Add Course</button>
+    </div>
+    ${courses.length === 0 ? `<div class="empty-state" style="border:1px solid var(--border);background:var(--white);">
+      <p style="margin-bottom:0.5rem;">No meal courses configured yet.</p>
+      <p style="font-size:0.75rem;opacity:0.6;">Add courses (e.g. Starter, Main, Dessert) and options for each. Guests choose during RSVP.</p>
+    </div>` : ''}
+    <div id="mealCoursesList">
+      ${courses.map(course => renderMealCourse(course)).join('')}
+    </div>`;
+}
+
+function renderMealCourse(course) {
+  const isEditing = editingCourseId === course.id;
+  const isAddingOption = addingOptionTo === course.id;
+  return `<div class="meal-course-card">
+    <div class="meal-course-header">
+      <div style="flex:1;display:flex;align-items:center;gap:0.75rem;">
+        ${isEditing ? `
+          <input id="editCourseName" class="course-name-edit" value="${esc(course.name)}" onkeydown="if(event.key==='Enter')saveCourse('${course.id}');if(event.key==='Escape')cancelCourseEdit()" style="max-width:16rem;" />
+          <button class="icon-btn confirm" onclick="saveCourse('${course.id}')">✓</button>
+          <button class="icon-btn cancel" onclick="cancelCourseEdit()">✕</button>
+        ` : `
+          <button class="course-name-btn" onclick="startEditCourse('${course.id}','${esc(course.name)}')">${esc(course.name)}</button>
+        `}
+        <div class="guest-type-toggles" style="margin-left:auto;margin-right:1rem;">
+          ${['day','evening'].map(t=>`<button class="type-toggle ${course.guestTypes.includes(t)?'active':''}" onclick="toggleGuestType('${course.id}','${t}')">${t}</button>`).join('')}
+        </div>
+      </div>
+      <button class="icon-btn delete" onclick="deleteCourse('${course.id}')">🗑</button>
+    </div>
+    <div class="meal-options-body">
+      ${course.options.length===0&&!isAddingOption?'<p style="font-size:0.75rem;opacity:0.6;margin-bottom:0.75rem;">No options yet — add the choices guests can pick from.</p>':''}
+      ${course.options.map(opt => {
+        const isEditOpt = editingOptionKey === `${course.id}|${opt.id}`;
+        return `<div class="option-row">
+          ${isEditOpt ? `
+            <div class="inline-edit" style="flex:1;">
+              <input id="editOptName" value="${esc(opt.name)}" placeholder="Name" style="max-width:10rem;" onkeydown="if(event.key==='Enter')saveOption('${course.id}','${opt.id}');if(event.key==='Escape')cancelOptEdit()" />
+              <input id="editOptDesc" value="${esc(opt.description||'')}" placeholder="Description (optional)" onkeydown="if(event.key==='Enter')saveOption('${course.id}','${opt.id}')" />
+              <button class="icon-btn confirm" onclick="saveOption('${course.id}','${opt.id}')">✓</button>
+              <button class="icon-btn cancel" onclick="cancelOptEdit()">✕</button>
+            </div>
+          ` : `
+            <button class="option-edit-btn" onclick="startEditOption('${course.id}','${opt.id}','${esc(opt.name)}','${esc(opt.description||'')}')">
+              <span class="option-name">${esc(opt.name)}</span>
+              ${opt.description?`<span class="option-desc">${esc(opt.description)}</span>`:''}
+            </button>
+            <button class="icon-btn delete" onclick="deleteOption('${course.id}','${opt.id}')">🗑</button>
+          `}
+        </div>`;
+      }).join('')}
+      ${isAddingOption ? `
+        <div class="option-row">
+          <div class="inline-edit" style="flex:1;">
+            <input id="newOptName" placeholder="Option name (e.g. Salmon)" style="max-width:12rem;" onkeydown="if(event.key==='Enter')addOption('${course.id}');if(event.key==='Escape')cancelAddOption()" autofocus />
+            <input id="newOptDesc" placeholder="Description (optional)" onkeydown="if(event.key==='Enter')addOption('${course.id}')" />
+            <button class="icon-btn confirm" onclick="addOption('${course.id}')">✓</button>
+            <button class="icon-btn cancel" onclick="cancelAddOption()">✕</button>
+          </div>
+        </div>` : `
+        <button class="add-option-btn" onclick="startAddOption('${course.id}')">+ Add option</button>`}
+    </div>
+  </div>`;
+}
+
+function addCourse() {
+  const courses = get('wedding_meal_courses',[]);
+  const newCourse = { id: Date.now().toString(36), name:'New Course', guestTypes:['day','evening'], options:[] };
+  set('wedding_meal_courses',[...courses, newCourse]);
+  editingCourseId = newCourse.id;
+  document.getElementById('adminContent').innerHTML = renderAdminMeals();
+  setTimeout(()=>{ const el=document.getElementById('editCourseName'); if(el){el.focus();el.select();} },50);
+}
+function startEditCourse(id, name) { editingCourseId=id; document.getElementById('adminContent').innerHTML=renderAdminMeals(); setTimeout(()=>{const el=document.getElementById('editCourseName');if(el){el.focus();el.select();}},50); }
+function saveCourse(id) {
+  const name = (document.getElementById('editCourseName')||{}).value || '';
+  const courses = get('wedding_meal_courses',[]);
+  set('wedding_meal_courses', courses.map(c=>c.id===id?{...c,name:name.trim()||c.name}:c));
+  editingCourseId=null; document.getElementById('adminContent').innerHTML=renderAdminMeals();
+}
+function cancelCourseEdit() { editingCourseId=null; document.getElementById('adminContent').innerHTML=renderAdminMeals(); }
+function deleteCourse(id) { set('wedding_meal_courses',get('wedding_meal_courses',[]).filter(c=>c.id!==id)); document.getElementById('adminContent').innerHTML=renderAdminMeals(); }
+function toggleGuestType(courseId, type) {
+  const courses = get('wedding_meal_courses',[]);
+  set('wedding_meal_courses', courses.map(c=>{
+    if(c.id!==courseId)return c;
+    const has=c.guestTypes.includes(type);
+    if(has&&c.guestTypes.length===1)return c;
+    return {...c,guestTypes:has?c.guestTypes.filter(t=>t!==type):[...c.guestTypes,type]};
+  }));
+  document.getElementById('adminContent').innerHTML=renderAdminMeals();
+}
+function startAddOption(courseId) { addingOptionTo=courseId; document.getElementById('adminContent').innerHTML=renderAdminMeals(); setTimeout(()=>{const el=document.getElementById('newOptName');if(el)el.focus();},50); }
+function cancelAddOption() { addingOptionTo=null; document.getElementById('adminContent').innerHTML=renderAdminMeals(); }
+function addOption(courseId) {
+  const name=(document.getElementById('newOptName')||{}).value||'';
+  const desc=(document.getElementById('newOptDesc')||{}).value||'';
+  if(!name.trim())return;
+  const courses=get('wedding_meal_courses',[]);
+  const opt={id:Date.now().toString(36)+Math.random().toString(36).slice(2,5),name:name.trim(),description:desc.trim()||undefined};
+  set('wedding_meal_courses',courses.map(c=>c.id===courseId?{...c,options:[...c.options,opt]}:c));
+  addingOptionTo=null; document.getElementById('adminContent').innerHTML=renderAdminMeals();
+}
+function startEditOption(cid,oid,name,desc) { editingOptionKey=`${cid}|${oid}`; document.getElementById('adminContent').innerHTML=renderAdminMeals(); setTimeout(()=>{const el=document.getElementById('editOptName');if(el){el.focus();el.select();}},50); }
+function saveOption(cid,oid) {
+  const name=(document.getElementById('editOptName')||{}).value||'';
+  const desc=(document.getElementById('editOptDesc')||{}).value||'';
+  const courses=get('wedding_meal_courses',[]);
+  set('wedding_meal_courses',courses.map(c=>c.id!==cid?c:{...c,options:c.options.map(o=>o.id!==oid?o:{...o,name:name.trim()||o.name,description:desc.trim()||undefined})}));
+  editingOptionKey=null; document.getElementById('adminContent').innerHTML=renderAdminMeals();
+}
+function cancelOptEdit() { editingOptionKey=null; document.getElementById('adminContent').innerHTML=renderAdminMeals(); }
+function deleteOption(cid,oid) { set('wedding_meal_courses',get('wedding_meal_courses',[]).map(c=>c.id!==cid?c:{...c,options:c.options.filter(o=>o.id!==oid)})); document.getElementById('adminContent').innerHTML=renderAdminMeals(); }
+
+// ═══════════════════════════════════════════════
+// ADMIN CHECKLIST
+// ═══════════════════════════════════════════════
+const CHECKLIST_CATS = ['Venue','Catering','Flowers','Photography','Music','Guests','Attire','Other'];
+const INIT_CHECKLIST = [
+  {id:'1',text:'Book venue',dueDate:'2026-01-17',category:'Venue',done:true},
+  {id:'2',text:'Book photographer',dueDate:'2026-03-01',category:'Photography',done:true},
+  {id:'3',text:'Send save the dates',dueDate:'2026-07-17',category:'Guests',done:false},
+  {id:'4',text:'Book caterer',dueDate:'2026-08-01',category:'Catering',done:false},
+  {id:'5',text:'Choose wedding dress',dueDate:'2026-09-01',category:'Attire',done:false},
+  {id:'6',text:'Book band/DJ',dueDate:'2026-10-01',category:'Music',done:false},
+  {id:'7',text:'Book florist',dueDate:'2026-11-01',category:'Flowers',done:false},
+  {id:'8',text:'Send invitations',dueDate:'2027-03-17',category:'Guests',done:false},
+  {id:'9',text:'Confirm menu',dueDate:'2027-05-17',category:'Catering',done:false},
+  {id:'10',text:'Final dress fitting',dueDate:'2027-06-01',category:'Attire',done:false},
+];
+let checklistFilter = 'All';
+
+function renderAdminChecklist(filter) {
+  checklistFilter = filter || checklistFilter;
+  const items = [...get('wedding_checklist', INIT_CHECKLIST)];
+  const filtered = items.filter(i=>checklistFilter==='All'||i.category===checklistFilter);
+  filtered.sort((a,b)=>{if(a.done!==b.done)return a.done?1:-1;return new Date(a.dueDate)-new Date(b.dueDate);});
+
+  return `
+    <div class="page-header-row">
+      <h1 class="page-header">Planning Checklist</h1>
+    </div>
+    <div class="checklist-add">
+      <h2>Add Task</h2>
+      <div class="checklist-add-row">
+        <input name="text" id="newTaskText" placeholder="Task description" style="flex:2;min-width:10rem;" />
+        <input name="dueDate" id="newTaskDate" type="date" style="width:9rem;" />
+        <select id="newTaskCat">
+          ${CHECKLIST_CATS.map(c=>`<option value="${c}">${c}</option>`).join('')}
+        </select>
+        <button class="btn btn-primary" onclick="addChecklistItem()">Add</button>
+      </div>
+    </div>
+    <div class="filter-chips">
+      ${['All',...CHECKLIST_CATS].map(c=>`<button class="btn ${checklistFilter===c?'btn-primary':'btn-outline'} btn-sm" onclick="filterChecklist('${c}')">${c}</button>`).join('')}
+    </div>
+    <div class="checklist-list">
+      ${filtered.length===0?'<div class="empty-state">No tasks found.</div>':
+        filtered.map(item=>`
+        <div class="checklist-item ${item.done?'done':''}">
+          <button class="check-box ${item.done?'checked':''}" onclick="toggleCheck('${item.id}')"></button>
+          <div class="checklist-text">
+            <p class="${item.done?'strikethrough':''}">${esc(item.text)}</p>
+            <div class="checklist-meta">
+              <span>${new Date(item.dueDate+'T12:00:00').toLocaleDateString('en-GB')}</span>
+              <span>•</span>
+              <span>${esc(item.category)}</span>
+            </div>
+          </div>
+          <button class="btn-danger" onclick="deleteCheckItem('${item.id}')">Delete</button>
+        </div>`).join('')}
+    </div>`;
+}
+
+function addChecklistItem() {
+  const text=(document.getElementById('newTaskText')||{}).value||'';
+  const date=(document.getElementById('newTaskDate')||{}).value||'';
+  const cat=(document.getElementById('newTaskCat')||{}).value||'Other';
+  if(!text.trim()||!date)return;
+  const items=get('wedding_checklist',INIT_CHECKLIST);
+  set('wedding_checklist',[...items,{id:Date.now().toString(),text:text.trim(),dueDate:date,category:cat,done:false}]);
+  document.getElementById('adminContent').innerHTML=renderAdminChecklist();
+}
+function filterChecklist(f) { checklistFilter=f; document.getElementById('adminContent').innerHTML=renderAdminChecklist(); }
+function toggleCheck(id) { set('wedding_checklist',get('wedding_checklist',INIT_CHECKLIST).map(i=>i.id===id?{...i,done:!i.done}:i)); document.getElementById('adminContent').innerHTML=renderAdminChecklist(); }
+function deleteCheckItem(id) { set('wedding_checklist',get('wedding_checklist',INIT_CHECKLIST).filter(i=>i.id!==id)); document.getElementById('adminContent').innerHTML=renderAdminChecklist(); }
+
+// ═══════════════════════════════════════════════
+// ADMIN BUDGET
+// ═══════════════════════════════════════════════
+const INIT_CATS = [
+  {id:'cat-1',name:'Venue',budgeted:6000},{id:'cat-2',name:'Catering',budgeted:5500},
+  {id:'cat-3',name:'Photography',budgeted:2000},{id:'cat-4',name:'Music',budgeted:1200},
+  {id:'cat-5',name:'Flowers',budgeted:1000},{id:'cat-6',name:'Attire',budgeted:2800},
+  {id:'cat-7',name:'Decor',budgeted:800},{id:'cat-8',name:'Other',budgeted:700}
+];
+const INIT_ACTUALS = [
+  {id:'act-1',categoryId:'cat-1',name:'Venue — Deposit',amount:1500,paid:true,date:'2025-03-01'},
+  {id:'act-2',categoryId:'cat-1',name:'Venue — Second Payment',amount:2250,paid:false,date:'2026-07-17'},
+  {id:'act-3',categoryId:'cat-1',name:'Venue — Final Balance',amount:2250,paid:false,date:'2027-06-17'},
+  {id:'act-4',categoryId:'cat-2',name:'Catering — Food',amount:4200,paid:false,date:'2027-06-01'},
+  {id:'act-5',categoryId:'cat-3',name:'Photographer',amount:2100,paid:false,date:'2027-07-17'},
+  {id:'act-6',categoryId:'cat-4',name:'Band',amount:1200,paid:false,date:'2027-07-17'},
+  {id:'act-7',categoryId:'cat-6',name:'Wedding Dress',amount:1850,paid:true,date:'2025-11-10'},
+];
+let budgetAddTab = 'expense';
+let editingCatId = null, editingActualId = null;
+
+function fmt(n) { return new Intl.NumberFormat('en-GB',{style:'currency',currency:'GBP'}).format(n); }
+function daysUntil(iso) { if(!iso)return null; return Math.ceil((new Date(iso).setHours(0,0,0,0)-new Date().setHours(0,0,0,0))/(864e5)); }
+function dueBadgeClass(iso,paid) {
+  if(paid)return 'is-paid';
+  const d=daysUntil(iso);
+  if(d===null||d<=30)return 'due-soon';
+  if(d<=60)return 'due-amber';
+  return 'scheduled';
+}
+function dueBadgeLabel(iso,paid) {
+  if(paid)return 'Paid';
+  const d=daysUntil(iso);
+  if(d===null||d<=30)return 'Due';
+  if(d<=60)return 'Due';
+  return 'Scheduled';
+}
+
+function renderAdminBudget() {
+  const cats=get('wedding_budget_categories',INIT_CATS);
+  const acts=get('wedding_budget_actuals',INIT_ACTUALS);
+  const totalBudgeted=cats.reduce((s,c)=>s+c.budgeted,0);
+  const totalCommitted=acts.reduce((s,a)=>s+a.amount,0);
+  const totalPaid=acts.filter(a=>a.paid).reduce((s,a)=>s+a.amount,0);
+  const totalOut=totalCommitted-totalPaid;
+
+  return `
+    <h1 class="page-header">Budget Tracker</h1>
+    <div class="budget-summary">
+      <div class="budget-stat"><div class="budget-stat-label">Total Budget</div><div class="budget-stat-val">${fmt(totalBudgeted)}</div></div>
+      <div class="budget-stat"><div class="budget-stat-label">Committed</div><div class="budget-stat-val">${fmt(totalCommitted)}</div><div class="budget-stat-sub">of ${fmt(totalBudgeted)}</div></div>
+      <div class="budget-stat"><div class="budget-stat-label">Paid</div><div class="budget-stat-val primary">${fmt(totalPaid)}</div><div class="budget-stat-sub">${acts.filter(a=>a.paid).length} payments</div></div>
+      <div class="budget-stat ${totalOut>0?'warning':''}"><div class="budget-stat-label">Outstanding</div><div class="budget-stat-val ${totalOut>0?'amber':''}">${fmt(totalOut)}</div><div class="budget-stat-sub">${acts.filter(a=>!a.paid).length} payments due</div></div>
+    </div>
+    <div id="budgetCatsList">
+      ${cats.map(cat => {
+        const lines=acts.filter(a=>a.categoryId===cat.id);
+        const catComm=lines.reduce((s,a)=>s+a.amount,0);
+        const catPaid=lines.filter(a=>a.paid).reduce((s,a)=>s+a.amount,0);
+        const catVar=cat.budgeted-catComm;
+        const isEdCat=editingCatId===cat.id;
+        return `<div class="cat-card">
+          <div class="cat-header">
+            ${isEdCat?`
+              <input id="editCatName" value="${esc(cat.name)}" style="width:8rem;height:1.75rem;font-size:0.8rem;text-transform:uppercase;letter-spacing:0.1em;" onkeydown="if(event.key==='Enter')saveCat('${cat.id}');if(event.key==='Escape')cancelCatEdit()" />
+              <input id="editCatBudget" type="number" step="0.01" value="${cat.budgeted}" style="width:7rem;height:1.75rem;font-size:0.8rem;" onkeydown="if(event.key==='Enter')saveCat('${cat.id}')" />
+              <button class="btn btn-primary btn-sm" onclick="saveCat('${cat.id}')">Save</button>
+              <button class="btn btn-ghost btn-sm" onclick="cancelCatEdit()">Cancel</button>
+            `:`
+              <button class="cat-name-btn" onclick="startEditCat('${cat.id}')">${esc(cat.name)}</button>
+              <div class="cat-stats">
+                <span>Budget <span onclick="startEditCat('${cat.id}')" style="cursor:pointer;text-decoration:underline;text-decoration-style:dotted;">${fmt(cat.budgeted)}</span></span>
+                <span>Committed <span>${fmt(catComm)}</span></span>
+                <span>Paid <span class="primary">${fmt(catPaid)}</span></span>
+                <span><span class="${catVar<0?'red':''}">  ${catVar>=0?'+':''}${fmt(catVar)} remaining</span></span>
+              </div>
+              <button class="btn-danger" onclick="deleteCat('${cat.id}')">Delete</button>
+            `}
+          </div>
+          ${lines.length>0?lines.map(line=>{
+            const isEdAct=editingActualId===line.id;
+            const badgeCls=dueBadgeClass(line.date,line.paid);
+            const badgeLbl=dueBadgeLabel(line.date,line.paid);
+            return `<div class="actual-row ${line.paid?'paid':''}">
+              ${isEdAct?`
+                <button class="paid-badge ${dueBadgeClass(line.date,document.getElementById('editActPaid')?.dataset?.paid==='true'||line.paid)}" onclick="toggleEditActPaid()" id="editActPaidBtn" data-paid="${line.paid}">${line.paid?'Paid':'Due'}</button>
+                <input id="editActName" value="${esc(line.name)}" style="flex:1;height:1.75rem;font-size:0.8rem;" onkeydown="if(event.key==='Enter')saveActual('${line.id}');if(event.key==='Escape')cancelActEdit()" />
+                <input id="editActAmt" type="number" step="0.01" value="${line.amount}" style="width:6rem;height:1.75rem;font-size:0.8rem;" onkeydown="if(event.key==='Enter')saveActual('${line.id}')" />
+                <input id="editActDate" type="date" value="${line.date||''}" style="width:9rem;height:1.75rem;font-size:0.75rem;" />
+                <button class="btn btn-primary btn-sm" onclick="saveActual('${line.id}')">Save</button>
+                <button class="btn btn-ghost btn-sm" onclick="cancelActEdit()">Cancel</button>
+              `:`
+                <button class="paid-badge ${badgeCls}" onclick="togglePaid('${line.id}')">${badgeLbl}</button>
+                <span class="actual-name" onclick="startEditActual('${line.id}')">${esc(line.name)}</span>
+                ${line.date?`<span class="actual-date" onclick="startEditActual('${line.id}')">${line.paid?'Paid':'Due'} ${new Date(line.date+'T12:00:00').toLocaleDateString('en-GB')}</span>`:''}
+                <span class="actual-amount" onclick="startEditActual('${line.id}')">${fmt(line.amount)}</span>
+                <button class="btn-danger" onclick="deleteActual('${line.id}')">Remove</button>
+              `}
+            </div>`;
+          }).join(''):`<div class="no-actuals">No payments recorded yet</div>`}
+        </div>`;
+      }).join('')}
+    </div>
+    <div class="add-section">
+      <div class="add-tabs">
+        <button class="add-tab ${budgetAddTab==='expense'?'active':''}" onclick="switchBudgetTab('expense')">Add Payment</button>
+        <button class="add-tab ${budgetAddTab==='category'?'active':''}" onclick="switchBudgetTab('category')">Add Category</button>
+      </div>
+      <div class="add-panel ${budgetAddTab==='expense'?'active':''}">
+        <div style="display:flex;gap:0.75rem;flex-wrap:wrap;align-items:flex-end;">
+          <select id="newActCat" style="width:9rem;"><option value="">Category</option>${get('wedding_budget_categories',INIT_CATS).map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('')}</select>
+          <input id="newActName" placeholder="Description" style="flex:2;min-width:10rem;" onkeydown="if(event.key==='Enter')addActual()" />
+          <input id="newActAmt" type="number" step="0.01" placeholder="Amount £" style="width:8rem;" onkeydown="if(event.key==='Enter')addActual()" />
+          <input id="newActDate" type="date" style="width:9rem;" />
+          <button class="paid-badge scheduled" id="newActPaidBtn" onclick="toggleNewPaid()" data-paid="false">Due</button>
+          <button class="btn btn-primary btn-sm" onclick="addActual()">Add</button>
+        </div>
+      </div>
+      <div class="add-panel ${budgetAddTab==='category'?'active':''}">
+        <div style="display:flex;gap:0.75rem;align-items:flex-end;">
+          <input id="newCatName" placeholder="Category name" style="flex:1;" onkeydown="if(event.key==='Enter')addCat()" />
+          <input id="newCatBudget" type="number" step="0.01" placeholder="Budget £" style="width:9rem;" onkeydown="if(event.key==='Enter')addCat()" />
+          <button class="btn btn-primary btn-sm" onclick="addCat()">Add Category</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+function switchBudgetTab(tab) { budgetAddTab=tab; document.getElementById('adminContent').innerHTML=renderAdminBudget(); }
+function startEditCat(id) { editingCatId=id; document.getElementById('adminContent').innerHTML=renderAdminBudget(); setTimeout(()=>{const el=document.getElementById('editCatName');if(el){el.focus();el.select();}},50); }
+function saveCat(id) {
+  const name=(document.getElementById('editCatName')||{}).value||'';
+  const budget=parseFloat((document.getElementById('editCatBudget')||{}).value)||0;
+  const cats=get('wedding_budget_categories',INIT_CATS);
+  set('wedding_budget_categories',cats.map(c=>c.id===id?{...c,name:name.trim()||c.name,budgeted:budget||c.budgeted}:c));
+  editingCatId=null; document.getElementById('adminContent').innerHTML=renderAdminBudget();
+}
+function cancelCatEdit() { editingCatId=null; document.getElementById('adminContent').innerHTML=renderAdminBudget(); }
+function deleteCat(id) { set('wedding_budget_categories',get('wedding_budget_categories',INIT_CATS).filter(c=>c.id!==id)); set('wedding_budget_actuals',get('wedding_budget_actuals',INIT_ACTUALS).filter(a=>a.categoryId!==id)); document.getElementById('adminContent').innerHTML=renderAdminBudget(); }
+function addCat() {
+  const name=(document.getElementById('newCatName')||{}).value||'';
+  const budget=parseFloat((document.getElementById('newCatBudget')||{}).value)||0;
+  if(!name.trim()||!budget)return;
+  set('wedding_budget_categories',[...get('wedding_budget_categories',INIT_CATS),{id:Date.now().toString(),name:name.trim(),budgeted:budget}]);
+  document.getElementById('adminContent').innerHTML=renderAdminBudget();
+}
+function togglePaid(id) { set('wedding_budget_actuals',get('wedding_budget_actuals',INIT_ACTUALS).map(a=>a.id===id?{...a,paid:!a.paid}:a)); document.getElementById('adminContent').innerHTML=renderAdminBudget(); }
+function startEditActual(id) { editingActualId=id; document.getElementById('adminContent').innerHTML=renderAdminBudget(); setTimeout(()=>{const el=document.getElementById('editActName');if(el){el.focus();}},50); }
+function saveActual(id) {
+  const name=(document.getElementById('editActName')||{}).value||'';
+  const amt=parseFloat((document.getElementById('editActAmt')||{}).value)||0;
+  const date=(document.getElementById('editActDate')||{}).value||'';
+  const paidBtn=document.getElementById('editActPaidBtn');
+  const paid=paidBtn?paidBtn.dataset.paid==='true':false;
+  const acts=get('wedding_budget_actuals',INIT_ACTUALS);
+  set('wedding_budget_actuals',acts.map(a=>a.id===id?{...a,name:name.trim()||a.name,amount:amt||a.amount,paid,date:date||undefined}:a));
+  editingActualId=null; document.getElementById('adminContent').innerHTML=renderAdminBudget();
+}
+function toggleEditActPaid() {
+  const btn=document.getElementById('editActPaidBtn');
+  if(!btn)return;
+  const cur=btn.dataset.paid==='true';
+  btn.dataset.paid=(!cur).toString();
+  btn.textContent=cur?'Due':'Paid';
+  btn.className='paid-badge '+(cur?'scheduled':'is-paid');
+}
+function cancelActEdit() { editingActualId=null; document.getElementById('adminContent').innerHTML=renderAdminBudget(); }
+function deleteActual(id) { set('wedding_budget_actuals',get('wedding_budget_actuals',INIT_ACTUALS).filter(a=>a.id!==id)); document.getElementById('adminContent').innerHTML=renderAdminBudget(); }
+function toggleNewPaid() {
+  const btn=document.getElementById('newActPaidBtn');
+  if(!btn)return;
+  const cur=btn.dataset.paid==='true';
+  btn.dataset.paid=(!cur).toString();
+  btn.textContent=cur?'Due':'Paid';
+  btn.className='paid-badge '+(cur?'scheduled':'is-paid');
+}
+function addActual() {
+  const catId=(document.getElementById('newActCat')||{}).value||'';
+  const name=(document.getElementById('newActName')||{}).value||'';
+  const amt=parseFloat((document.getElementById('newActAmt')||{}).value)||0;
+  const date=(document.getElementById('newActDate')||{}).value||'';
+  const paidBtn=document.getElementById('newActPaidBtn');
+  const paid=paidBtn?paidBtn.dataset.paid==='true':false;
+  if(!catId||!name.trim()||!amt)return;
+  set('wedding_budget_actuals',[...get('wedding_budget_actuals',INIT_ACTUALS),{id:Date.now().toString(),categoryId:catId,name:name.trim(),amount:amt,paid,date:date||undefined}]);
+  document.getElementById('adminContent').innerHTML=renderAdminBudget();
+}
+
+// ═══════════════════════════════════════════════
+// ADMIN TIMELINE
+// ═══════════════════════════════════════════════
+const DEFAULT_TL = [
+  {id:'1',time:'1:00 PM',description:'Guest Arrival',order:1,notes:[]},
+  {id:'2',time:'1:30 PM',description:'Ceremony',order:2,notes:[]},
+  {id:'3',time:'2:00 PM',description:'Drinks Reception & Photographs',order:3,notes:['Live acoustic guitar','Mixologist cocktail bar']},
+  {id:'4',time:'4:00 PM',description:'Wedding Breakfast',order:4,notes:[]},
+  {id:'5',time:'7:00 PM',description:'Evening Guests Arrive',order:5,notes:[]},
+  {id:'6',time:'7:30 PM',description:'First Dance & Cake Cutting',order:6,notes:[]},
+  {id:'7',time:'12:00 AM',description:'Carriages',order:7,notes:[]}
+];
+let editingTLItem = null, expandedTLItem = null;
+
+function renderAdminTimeline() {
+  const items=[...get('wedding_timeline',DEFAULT_TL)].sort((a,b)=>a.order-b.order);
+  return `
+    <h1 class="page-header">Day-of Timeline</h1>
+    <p class="text-sm text-secondary mb-6">This timeline is displayed on the public Details page. Add details to each event — they'll appear as notes beneath the headline for guests.</p>
+    <div class="timeline-add">
+      <h2>Add Event</h2>
+      <div class="timeline-add-row">
+        <input id="newTLTime" placeholder="e.g. 1:30 PM" style="width:9rem;" onkeydown="if(event.key==='Enter')addTLItem()" />
+        <input id="newTLDesc" placeholder="Headline (e.g. Drinks Reception)" style="flex:1;" onkeydown="if(event.key==='Enter')addTLItem()" />
+        <button class="btn btn-primary btn-sm" onclick="addTLItem()">Add</button>
+      </div>
+    </div>
+    <div class="timeline-admin-list">
+      ${items.map((item,i)=>{
+        const isEd=editingTLItem===item.id;
+        const isExp=expandedTLItem===item.id;
+        const notes=item.notes||[];
+        return `<div class="timeline-admin-item">
+          <div class="timeline-admin-row">
+            <div class="reorder-btns">
+              <button class="reorder-btn" onclick="tlMoveUp(${i})" ${i===0?'disabled':''}>▲</button>
+              <button class="reorder-btn" onclick="tlMoveDown(${i})" ${i===items.length-1?'disabled':''}>▼</button>
+            </div>
+            ${isEd?`
+              <input id="editTLTime" value="${esc(item.time)}" style="width:7rem;height:1.75rem;font-size:0.8rem;" onkeydown="if(event.key==='Enter')saveTLItem('${item.id}');if(event.key==='Escape')cancelTLEdit()" />
+              <input id="editTLDesc" value="${esc(item.description)}" style="flex:1;height:1.75rem;font-size:0.8rem;" onkeydown="if(event.key==='Enter')saveTLItem('${item.id}')" />
+              <button class="btn btn-primary btn-sm" onclick="saveTLItem('${item.id}')">Save</button>
+              <button class="btn btn-ghost btn-sm" onclick="cancelTLEdit()">Cancel</button>
+            `:`
+              <button class="timeline-admin-time" onclick="startEditTL('${item.id}')">${esc(item.time)}</button>
+              <div style="flex:1;">
+                <button class="timeline-admin-desc" onclick="startEditTL('${item.id}')">${esc(item.description)}</button>
+                ${notes.length?`<span class="notes-count">${notes.length} detail${notes.length>1?'s':''}</span>`:''}
+              </div>
+              <button class="expand-btn" onclick="toggleTLExpand('${item.id}')">${isExp?'Hide':'Details'}</button>
+              <button class="btn-danger" onclick="deleteTLItem('${item.id}')">Remove</button>
+            `}
+          </div>
+          ${isExp?`
+          <div class="timeline-notes-panel">
+            <div class="notes-panel-label">Details for guests</div>
+            ${notes.length?notes.map((n,ni)=>`<div class="note-item"><span class="note-dot"></span><span class="note-text">${esc(n)}</span><button class="note-remove-btn" onclick="removeNote('${item.id}',${ni})">Remove</button></div>`).join(''):'<p style="font-size:0.75rem;opacity:0.6;font-style:italic;">No details added yet</p>'}
+            <div class="note-add-row">
+              <input id="noteInput_${item.id}" placeholder="e.g. Live acoustic guitar" onkeydown="if(event.key==='Enter'){event.preventDefault();addNote('${item.id}')}" />
+              <button class="btn btn-primary btn-sm" onclick="addNote('${item.id}')">Add</button>
+            </div>
+          </div>`:''} 
+        </div>`;
+      }).join('')}
+    </div>`;
+}
+
+function addTLItem() {
+  const time=(document.getElementById('newTLTime')||{}).value||'';
+  const desc=(document.getElementById('newTLDesc')||{}).value||'';
+  if(!time.trim()||!desc.trim())return;
+  const items=get('wedding_timeline',DEFAULT_TL);
+  const maxOrder=items.reduce((m,i)=>Math.max(m,i.order),0);
+  set('wedding_timeline',[...items,{id:Date.now().toString(),time:time.trim(),description:desc.trim(),order:maxOrder+1,notes:[]}]);
+  document.getElementById('adminContent').innerHTML=renderAdminTimeline();
+}
+function startEditTL(id) { editingTLItem=id; document.getElementById('adminContent').innerHTML=renderAdminTimeline(); setTimeout(()=>{const el=document.getElementById('editTLTime');if(el){el.focus();}},50); }
+function saveTLItem(id) {
+  const time=(document.getElementById('editTLTime')||{}).value||'';
+  const desc=(document.getElementById('editTLDesc')||{}).value||'';
+  const items=get('wedding_timeline',DEFAULT_TL);
+  set('wedding_timeline',items.map(i=>i.id===id?{...i,time:time.trim()||i.time,description:desc.trim()||i.description}:i));
+  editingTLItem=null; document.getElementById('adminContent').innerHTML=renderAdminTimeline();
+}
+function cancelTLEdit() { editingTLItem=null; document.getElementById('adminContent').innerHTML=renderAdminTimeline(); }
+function deleteTLItem(id) { set('wedding_timeline',get('wedding_timeline',DEFAULT_TL).filter(i=>i.id!==id)); document.getElementById('adminContent').innerHTML=renderAdminTimeline(); }
+function toggleTLExpand(id) { expandedTLItem=expandedTLItem===id?null:id; document.getElementById('adminContent').innerHTML=renderAdminTimeline(); }
+function tlMoveUp(idx) {
+  const items=[...get('wedding_timeline',DEFAULT_TL)].sort((a,b)=>a.order-b.order);
+  if(idx===0)return;
+  const t=items[idx].order; items[idx].order=items[idx-1].order; items[idx-1].order=t;
+  set('wedding_timeline',items); document.getElementById('adminContent').innerHTML=renderAdminTimeline();
+}
+function tlMoveDown(idx) {
+  const items=[...get('wedding_timeline',DEFAULT_TL)].sort((a,b)=>a.order-b.order);
+  if(idx===items.length-1)return;
+  const t=items[idx].order; items[idx].order=items[idx+1].order; items[idx+1].order=t;
+  set('wedding_timeline',items); document.getElementById('adminContent').innerHTML=renderAdminTimeline();
+}
+function addNote(id) {
+  const el=document.getElementById(`noteInput_${id}`);
+  if(!el)return;
+  const text=el.value.trim();
+  if(!text)return;
+  const items=get('wedding_timeline',DEFAULT_TL);
+  set('wedding_timeline',items.map(i=>i.id===id?{...i,notes:[...(i.notes||[]),text]}:i));
+  document.getElementById('adminContent').innerHTML=renderAdminTimeline();
+}
+function removeNote(id,ni) {
+  const items=get('wedding_timeline',DEFAULT_TL);
+  set('wedding_timeline',items.map(i=>i.id===id?{...i,notes:(i.notes||[]).filter((_,j)=>j!==ni)}:i));
+  document.getElementById('adminContent').innerHTML=renderAdminTimeline();
+}
+
+// ═══════════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════════
+function esc(str) {
+  return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+// Secret admin access — type /admin at any time
+document.addEventListener('keydown', e => {
+  if (e.altKey && e.key === 'a') showPage('admin');
+});
+
+// Init
+renderPublicTimeline();
+</script>
+</body>
 </html>
