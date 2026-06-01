@@ -328,6 +328,22 @@
     .add-row { display: grid; grid-template-columns: auto 1fr auto auto auto auto; gap: 0.75rem; align-items: end; }
     .add-row-cat { grid-column: span 2; display: grid; grid-template-columns: 1fr 1fr auto; gap: 0.75rem; align-items: end; }
 
+    /* ── BUDGET EXTRAS ── */
+    .paid-badge.is-quote { border-color: hsl(260,40%,70%); color: hsl(260,40%,45%); background: hsl(260,40%,97%); }
+    .paid-badge.is-quote:hover { background: hsl(260,40%,93%); }
+    .link-btn { display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.125rem 0.5rem; font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.1em; border: 1px solid var(--border); color: var(--secondary); text-decoration: none; transition: all 0.2s; background: none; cursor: pointer; font-family: var(--font-sans); flex-shrink: 0; }
+    .link-btn:hover { border-color: var(--primary); color: var(--primary); }
+    .perhead-panel { background: var(--white); border: 1px solid var(--border); padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; }
+    .perhead-panel-title { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.15em; color: var(--secondary); margin-bottom: 1rem; display: flex; align-items: center; justify-content: space-between; }
+    .perhead-row { display: flex; gap: 1.5rem; flex-wrap: wrap; align-items: flex-end; }
+    .perhead-field { display: flex; flex-direction: column; gap: 0.25rem; }
+    .perhead-field label { font-size: 0.7rem; color: var(--secondary); }
+    .perhead-field input { width: 7rem; }
+    .perhead-source { display: flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; color: var(--secondary); padding: 0.5rem 0; }
+    .perhead-source input[type=checkbox] { width: auto; accent-color: var(--primary); cursor: pointer; }
+    .perhead-tag { display: inline-block; padding: 0.1rem 0.4rem; font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.1em; background: hsl(260,40%,95%); color: hsl(260,40%,45%); border: 1px solid hsl(260,40%,75%); margin-left: 0.25rem; }
+    .actual-perhead-tag { font-size: 0.65rem; color: hsl(260,40%,50%); margin-left: 0.25rem; opacity: 0.8; }
+
     /* ── ADMIN TIMELINE ── */
     .timeline-add { background: var(--white); border: 1px solid var(--border); padding: 1.5rem; margin-bottom: 1.5rem; }
     .timeline-add h2 { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.15em; color: var(--secondary); margin-bottom: 1rem; }
@@ -1267,55 +1283,127 @@ const INIT_CATS = [
   {id:'cat-7',name:'Decor',budgeted:800},{id:'cat-8',name:'Other',budgeted:700}
 ];
 const INIT_ACTUALS = [
-  {id:'act-1',categoryId:'cat-1',name:'Venue — Deposit',amount:1500,paid:true,date:'2025-03-01'},
-  {id:'act-2',categoryId:'cat-1',name:'Venue — Second Payment',amount:2250,paid:false,date:'2026-07-17'},
-  {id:'act-3',categoryId:'cat-1',name:'Venue — Final Balance',amount:2250,paid:false,date:'2027-06-17'},
-  {id:'act-4',categoryId:'cat-2',name:'Catering — Food',amount:4200,paid:false,date:'2027-06-01'},
-  {id:'act-5',categoryId:'cat-3',name:'Photographer',amount:2100,paid:false,date:'2027-07-17'},
-  {id:'act-6',categoryId:'cat-4',name:'Band',amount:1200,paid:false,date:'2027-07-17'},
-  {id:'act-7',categoryId:'cat-6',name:'Wedding Dress',amount:1850,paid:true,date:'2025-11-10'},
+  {id:'act-1',categoryId:'cat-1',name:'Venue — Deposit',amount:1500,status:'paid',date:'2025-03-01'},
+  {id:'act-2',categoryId:'cat-1',name:'Venue — Second Payment',amount:2250,status:'scheduled',date:'2026-07-17'},
+  {id:'act-3',categoryId:'cat-1',name:'Venue — Final Balance',amount:2250,status:'scheduled',date:'2027-06-17'},
+  {id:'act-4',categoryId:'cat-2',name:'Catering — Food',amount:4200,status:'scheduled',date:'2027-06-01'},
+  {id:'act-5',categoryId:'cat-3',name:'Photographer',amount:2100,status:'scheduled',date:'2027-07-17'},
+  {id:'act-6',categoryId:'cat-4',name:'Band',amount:1200,status:'scheduled',date:'2027-07-17'},
+  {id:'act-7',categoryId:'cat-6',name:'Wedding Dress',amount:1850,status:'paid',date:'2025-11-10'},
 ];
+// Migrate old paid:bool entries to status string
+function migrateActuals(acts) {
+  return acts.map(a => {
+    if (a.status) return a;
+    return {...a, status: a.paid ? 'paid' : 'scheduled', paid: undefined};
+  });
+}
+const INIT_HEADCOUNT = { dayEst:80, eveningEst:40, useActual:false };
+
 let budgetAddTab = 'expense';
 let editingCatId = null, editingActualId = null;
 
 function fmt(n) { return new Intl.NumberFormat('en-GB',{style:'currency',currency:'GBP'}).format(n); }
 function daysUntil(iso) { if(!iso)return null; return Math.ceil((new Date(iso).setHours(0,0,0,0)-new Date().setHours(0,0,0,0))/(864e5)); }
-function dueBadgeClass(iso,paid) {
-  if(paid)return 'is-paid';
-  const d=daysUntil(iso);
-  if(d===null||d<=30)return 'due-soon';
-  if(d<=60)return 'due-amber';
+
+function statusBadgeClass(status, date) {
+  if(status==='paid') return 'is-paid';
+  if(status==='quote') return 'is-quote';
+  const d=daysUntil(date);
+  if(d===null||d<=30) return 'due-soon';
+  if(d<=60) return 'due-amber';
   return 'scheduled';
 }
-function dueBadgeLabel(iso,paid) {
-  if(paid)return 'Paid';
-  const d=daysUntil(iso);
-  if(d===null||d<=30)return 'Due';
-  if(d<=60)return 'Due';
+function statusBadgeLabel(status, date) {
+  if(status==='paid') return 'Paid';
+  if(status==='quote') return 'Quote';
+  const d=daysUntil(date);
+  if(d===null||d<=30) return 'Due';
+  if(d<=60) return 'Due';
   return 'Scheduled';
+}
+const STATUS_OPTIONS = ['paid','scheduled','quote'];
+function nextStatus(current) {
+  const i = STATUS_OPTIONS.indexOf(current);
+  return STATUS_OPTIONS[(i+1) % STATUS_OPTIONS.length];
+}
+
+// Per-head calculation
+function getHeadcount() {
+  const hc = get('wedding_headcount', INIT_HEADCOUNT);
+  const rsvps = get('wedding_rsvps',[]);
+  const actualDay = rsvps.filter(r=>r.guestType==='day').flatMap(r=>r.guests).filter(g=>g.attending).length;
+  const actualEvening = rsvps.filter(r=>r.guestType==='evening').flatMap(r=>r.guests).filter(g=>g.attending).length;
+  return {
+    ...hc,
+    actualDay,
+    actualEvening,
+    dayCount: hc.useActual ? actualDay : hc.dayEst,
+    eveningCount: hc.useActual ? actualEvening : hc.eveningEst,
+  };
+}
+
+function resolveAmount(line) {
+  if(!line.perHead) return line.amount||0;
+  const hc = getHeadcount();
+  const pph = line.perHeadAmount||0;
+  const guestType = line.perHeadType||'day';
+  const count = guestType==='evening' ? hc.eveningCount : guestType==='both' ? hc.dayCount+hc.eveningCount : hc.dayCount;
+  return pph * count;
 }
 
 function renderAdminBudget() {
   const cats=get('wedding_budget_categories',INIT_CATS);
-  const acts=get('wedding_budget_actuals',INIT_ACTUALS);
+  const acts=migrateActuals(get('wedding_budget_actuals',INIT_ACTUALS));
+  const hc=getHeadcount();
+
   const totalBudgeted=cats.reduce((s,c)=>s+c.budgeted,0);
-  const totalCommitted=acts.reduce((s,a)=>s+a.amount,0);
-  const totalPaid=acts.filter(a=>a.paid).reduce((s,a)=>s+a.amount,0);
-  const totalOut=totalCommitted-totalPaid;
+  const totalCommitted=acts.reduce((s,a)=>s+resolveAmount(a),0);
+  const totalPaid=acts.filter(a=>a.status==='paid').reduce((s,a)=>s+resolveAmount(a),0);
+  const totalOut=acts.filter(a=>a.status!=='paid'&&a.status!=='quote').reduce((s,a)=>s+resolveAmount(a),0);
 
   return `
     <h1 class="page-header">Budget Tracker</h1>
+
+    <!-- Per-head settings -->
+    <div class="perhead-panel">
+      <div class="perhead-panel-title">
+        <span>Guest Headcount Settings</span>
+        <span style="font-size:0.7rem;font-weight:400;">Used to calculate per-head costs below</span>
+      </div>
+      <div class="perhead-row">
+        <div class="perhead-field">
+          <label>Day guests (estimated)</label>
+          <input type="number" id="phDayEst" value="${hc.dayEst}" onchange="saveHeadcount()" style="width:7rem;" />
+        </div>
+        <div class="perhead-field">
+          <label>Evening guests (estimated)</label>
+          <input type="number" id="phEveEst" value="${hc.eveningEst}" onchange="saveHeadcount()" style="width:7rem;" />
+        </div>
+        <div class="perhead-source">
+          <input type="checkbox" id="phUseActual" ${hc.useActual?'checked':''} onchange="saveHeadcount()" />
+          <label for="phUseActual">Use actual RSVP headcount instead</label>
+          <span style="font-size:0.7rem;color:var(--secondary);margin-left:0.5rem;">(${hc.actualDay} day / ${hc.actualEvening} evening confirmed)</span>
+        </div>
+      </div>
+      <div style="margin-top:0.75rem;font-size:0.7rem;color:var(--secondary);">
+        Currently calculating with: <strong>${hc.dayCount} day</strong> + <strong>${hc.eveningCount} evening</strong> guests
+        ${hc.useActual?'<span class="perhead-tag">From RSVPs</span>':'<span style="font-size:0.65rem;color:hsl(210,15%,60%);margin-left:0.25rem;">(estimated)</span>'}
+      </div>
+    </div>
+
     <div class="budget-summary">
       <div class="budget-stat"><div class="budget-stat-label">Total Budget</div><div class="budget-stat-val">${fmt(totalBudgeted)}</div></div>
       <div class="budget-stat"><div class="budget-stat-label">Committed</div><div class="budget-stat-val">${fmt(totalCommitted)}</div><div class="budget-stat-sub">of ${fmt(totalBudgeted)}</div></div>
-      <div class="budget-stat"><div class="budget-stat-label">Paid</div><div class="budget-stat-val primary">${fmt(totalPaid)}</div><div class="budget-stat-sub">${acts.filter(a=>a.paid).length} payments</div></div>
-      <div class="budget-stat ${totalOut>0?'warning':''}"><div class="budget-stat-label">Outstanding</div><div class="budget-stat-val ${totalOut>0?'amber':''}">${fmt(totalOut)}</div><div class="budget-stat-sub">${acts.filter(a=>!a.paid).length} payments due</div></div>
+      <div class="budget-stat"><div class="budget-stat-label">Paid</div><div class="budget-stat-val primary">${fmt(totalPaid)}</div><div class="budget-stat-sub">${acts.filter(a=>a.status==='paid').length} payments</div></div>
+      <div class="budget-stat ${totalOut>0?'warning':''}"><div class="budget-stat-label">Outstanding</div><div class="budget-stat-val ${totalOut>0?'amber':''}">${fmt(totalOut)}</div><div class="budget-stat-sub">${acts.filter(a=>a.status==='scheduled').length} payments due</div></div>
     </div>
+
     <div id="budgetCatsList">
       ${cats.map(cat => {
         const lines=acts.filter(a=>a.categoryId===cat.id);
-        const catComm=lines.reduce((s,a)=>s+a.amount,0);
-        const catPaid=lines.filter(a=>a.paid).reduce((s,a)=>s+a.amount,0);
+        const catComm=lines.reduce((s,a)=>s+resolveAmount(a),0);
+        const catPaid=lines.filter(a=>a.status==='paid').reduce((s,a)=>s+resolveAmount(a),0);
         const catVar=cat.budgeted-catComm;
         const isEdCat=editingCatId===cat.id;
         return `<div class="cat-card">
@@ -1338,21 +1426,45 @@ function renderAdminBudget() {
           </div>
           ${lines.length>0?lines.map(line=>{
             const isEdAct=editingActualId===line.id;
-            const badgeCls=dueBadgeClass(line.date,line.paid);
-            const badgeLbl=dueBadgeLabel(line.date,line.paid);
-            return `<div class="actual-row ${line.paid?'paid':''}">
+            const resolvedAmt=resolveAmount(line);
+            const badgeCls=statusBadgeClass(line.status,line.date);
+            const badgeLbl=statusBadgeLabel(line.status,line.date);
+            return `<div class="actual-row ${line.status==='paid'?'paid':''}">
               ${isEdAct?`
-                <button class="paid-badge ${dueBadgeClass(line.date,document.getElementById('editActPaid')?.dataset?.paid==='true'||line.paid)}" onclick="toggleEditActPaid()" id="editActPaidBtn" data-paid="${line.paid}">${line.paid?'Paid':'Due'}</button>
+                <select id="editActStatus" style="width:7rem;height:1.75rem;font-size:0.75rem;padding:0.2rem 0.4rem;">
+                  <option value="scheduled" ${(line.status||'scheduled')==='scheduled'?'selected':''}>Scheduled</option>
+                  <option value="paid" ${line.status==='paid'?'selected':''}>Paid</option>
+                  <option value="quote" ${line.status==='quote'?'selected':''}>Quote</option>
+                </select>
                 <input id="editActName" value="${esc(line.name)}" style="flex:1;height:1.75rem;font-size:0.8rem;" onkeydown="if(event.key==='Enter')saveActual('${line.id}');if(event.key==='Escape')cancelActEdit()" />
-                <input id="editActAmt" type="number" step="0.01" value="${line.amount}" style="width:6rem;height:1.75rem;font-size:0.8rem;" onkeydown="if(event.key==='Enter')saveActual('${line.id}')" />
+                <div style="display:flex;flex-direction:column;gap:0.25rem;flex-shrink:0;">
+                  <div style="display:flex;align-items:center;gap:0.35rem;font-size:0.7rem;">
+                    <input type="checkbox" id="editActPerHead" ${line.perHead?'checked':''} onchange="toggleEditPerHead()" style="width:auto;accent-color:var(--primary);" />
+                    <label for="editActPerHead" style="cursor:pointer;color:var(--secondary);">Per head</label>
+                  </div>
+                </div>
+                <div id="editAmtArea" style="display:flex;gap:0.35rem;align-items:center;">
+                  ${line.perHead?`
+                    <input id="editActPph" type="number" step="0.01" value="${line.perHeadAmount||''}" placeholder="£/head" style="width:5rem;height:1.75rem;font-size:0.8rem;" />
+                    <select id="editActPphType" style="width:5.5rem;height:1.75rem;font-size:0.75rem;padding:0.2rem 0.35rem;">
+                      <option value="day" ${(line.perHeadType||'day')==='day'?'selected':''}>Day</option>
+                      <option value="evening" ${line.perHeadType==='evening'?'selected':''}>Evening</option>
+                      <option value="both" ${line.perHeadType==='both'?'selected':''}>Both</option>
+                    </select>
+                  `:`
+                    <input id="editActAmt" type="number" step="0.01" value="${line.amount||''}" style="width:6rem;height:1.75rem;font-size:0.8rem;" onkeydown="if(event.key==='Enter')saveActual('${line.id}')" />
+                  `}
+                </div>
                 <input id="editActDate" type="date" value="${line.date||''}" style="width:9rem;height:1.75rem;font-size:0.75rem;" />
+                <input id="editActLink" type="url" value="${esc(line.link||'')}" placeholder="https://..." style="width:10rem;height:1.75rem;font-size:0.75rem;" />
                 <button class="btn btn-primary btn-sm" onclick="saveActual('${line.id}')">Save</button>
                 <button class="btn btn-ghost btn-sm" onclick="cancelActEdit()">Cancel</button>
               `:`
-                <button class="paid-badge ${badgeCls}" onclick="togglePaid('${line.id}')">${badgeLbl}</button>
-                <span class="actual-name" onclick="startEditActual('${line.id}')">${esc(line.name)}</span>
-                ${line.date?`<span class="actual-date" onclick="startEditActual('${line.id}')">${line.paid?'Paid':'Due'} ${new Date(line.date+'T12:00:00').toLocaleDateString('en-GB')}</span>`:''}
-                <span class="actual-amount" onclick="startEditActual('${line.id}')">${fmt(line.amount)}</span>
+                <button class="paid-badge ${badgeCls}" onclick="cycleStatus('${line.id}')" title="Click to change status">${badgeLbl}</button>
+                <span class="actual-name" onclick="startEditActual('${line.id}')">${esc(line.name)}${line.perHead?`<span class="actual-perhead-tag">×${line.perHeadType||'day'}</span>`:''}</span>
+                ${line.link?`<a href="${esc(line.link)}" target="_blank" rel="noopener" class="link-btn">↗ Link</a>`:''}
+                ${line.date?`<span class="actual-date" onclick="startEditActual('${line.id}')">${line.status==='paid'?'Paid':'Due'} ${new Date(line.date+'T12:00:00').toLocaleDateString('en-GB')}</span>`:''}
+                <span class="actual-amount" onclick="startEditActual('${line.id}')">${fmt(resolvedAmt)}</span>
                 <button class="btn-danger" onclick="deleteActual('${line.id}')">Remove</button>
               `}
             </div>`;
@@ -1360,6 +1472,7 @@ function renderAdminBudget() {
         </div>`;
       }).join('')}
     </div>
+
     <div class="add-section">
       <div class="add-tabs">
         <button class="add-tab ${budgetAddTab==='expense'?'active':''}" onclick="switchBudgetTab('expense')">Add Payment</button>
@@ -1369,9 +1482,22 @@ function renderAdminBudget() {
         <div style="display:flex;gap:0.75rem;flex-wrap:wrap;align-items:flex-end;">
           <select id="newActCat" style="width:9rem;"><option value="">Category</option>${get('wedding_budget_categories',INIT_CATS).map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('')}</select>
           <input id="newActName" placeholder="Description" style="flex:2;min-width:10rem;" onkeydown="if(event.key==='Enter')addActual()" />
-          <input id="newActAmt" type="number" step="0.01" placeholder="Amount £" style="width:8rem;" onkeydown="if(event.key==='Enter')addActual()" />
+          <div style="display:flex;flex-direction:column;gap:0.25rem;">
+            <div style="display:flex;align-items:center;gap:0.35rem;font-size:0.7rem;">
+              <input type="checkbox" id="newActPerHead" onchange="toggleNewPerHead()" style="width:auto;accent-color:var(--primary);" />
+              <label for="newActPerHead" style="cursor:pointer;color:var(--secondary);">Per head</label>
+            </div>
+            <div id="newAmtArea" style="display:flex;gap:0.35rem;">
+              <input id="newActAmt" type="number" step="0.01" placeholder="Amount £" style="width:8rem;" onkeydown="if(event.key==='Enter')addActual()" />
+            </div>
+          </div>
           <input id="newActDate" type="date" style="width:9rem;" />
-          <button class="paid-badge scheduled" id="newActPaidBtn" onclick="toggleNewPaid()" data-paid="false">Due</button>
+          <input id="newActLink" type="url" placeholder="Link (optional)" style="width:11rem;" />
+          <select id="newActStatus" style="width:8rem;height:2.15rem;font-size:0.8rem;">
+            <option value="scheduled">Scheduled</option>
+            <option value="paid">Paid</option>
+            <option value="quote">Quote</option>
+          </select>
           <button class="btn btn-primary btn-sm" onclick="addActual()">Add</button>
         </div>
       </div>
@@ -1385,6 +1511,40 @@ function renderAdminBudget() {
     </div>`;
 }
 
+function saveHeadcount() {
+  const dayEst=parseInt((document.getElementById('phDayEst')||{}).value)||0;
+  const eveningEst=parseInt((document.getElementById('phEveEst')||{}).value)||0;
+  const useActual=(document.getElementById('phUseActual')||{}).checked||false;
+  set('wedding_headcount',{...get('wedding_headcount',INIT_HEADCOUNT),dayEst,eveningEst,useActual});
+  document.getElementById('adminContent').innerHTML=renderAdminBudget();
+}
+
+function toggleNewPerHead() {
+  const isPerHead=(document.getElementById('newActPerHead')||{}).checked;
+  const area=document.getElementById('newAmtArea');
+  if(!area)return;
+  area.innerHTML = isPerHead ?
+    `<input id="newActPph" type="number" step="0.01" placeholder="£/head" style="width:6rem;" />
+     <select id="newActPphType" style="width:5.5rem;height:2.15rem;font-size:0.8rem;">
+       <option value="day">Day</option><option value="evening">Evening</option><option value="both">Both</option>
+     </select>` :
+    `<input id="newActAmt" type="number" step="0.01" placeholder="Amount £" style="width:8rem;" onkeydown="if(event.key==='Enter')addActual()" />`;
+}
+
+function toggleEditPerHead() {
+  const isPerHead=(document.getElementById('editActPerHead')||{}).checked;
+  const area=document.getElementById('editAmtArea');
+  if(!area)return;
+  area.innerHTML = isPerHead ?
+    `<input id="editActPph" type="number" step="0.01" placeholder="£/head" style="width:5rem;height:1.75rem;font-size:0.8rem;" />
+     <select id="editActPphType" style="width:5.5rem;height:1.75rem;font-size:0.75rem;padding:0.2rem 0.35rem;">
+       <option value="day">Day</option><option value="evening">Evening</option><option value="both">Both</option>
+     </select>` :
+    `<input id="editActAmt" type="number" step="0.01" placeholder="Amount £" style="width:6rem;height:1.75rem;font-size:0.8rem;" onkeydown="if(event.key==='Enter')saveActual(currentEditId)" />`;
+}
+
+let currentEditId = null;
+
 function switchBudgetTab(tab) { budgetAddTab=tab; document.getElementById('adminContent').innerHTML=renderAdminBudget(); }
 function startEditCat(id) { editingCatId=id; document.getElementById('adminContent').innerHTML=renderAdminBudget(); setTimeout(()=>{const el=document.getElementById('editCatName');if(el){el.focus();el.select();}},50); }
 function saveCat(id) {
@@ -1395,7 +1555,11 @@ function saveCat(id) {
   editingCatId=null; document.getElementById('adminContent').innerHTML=renderAdminBudget();
 }
 function cancelCatEdit() { editingCatId=null; document.getElementById('adminContent').innerHTML=renderAdminBudget(); }
-function deleteCat(id) { set('wedding_budget_categories',get('wedding_budget_categories',INIT_CATS).filter(c=>c.id!==id)); set('wedding_budget_actuals',get('wedding_budget_actuals',INIT_ACTUALS).filter(a=>a.categoryId!==id)); document.getElementById('adminContent').innerHTML=renderAdminBudget(); }
+function deleteCat(id) {
+  set('wedding_budget_categories',get('wedding_budget_categories',INIT_CATS).filter(c=>c.id!==id));
+  set('wedding_budget_actuals',migrateActuals(get('wedding_budget_actuals',INIT_ACTUALS)).filter(a=>a.categoryId!==id));
+  document.getElementById('adminContent').innerHTML=renderAdminBudget();
+}
 function addCat() {
   const name=(document.getElementById('newCatName')||{}).value||'';
   const budget=parseFloat((document.getElementById('newCatBudget')||{}).value)||0;
@@ -1403,45 +1567,52 @@ function addCat() {
   set('wedding_budget_categories',[...get('wedding_budget_categories',INIT_CATS),{id:Date.now().toString(),name:name.trim(),budgeted:budget}]);
   document.getElementById('adminContent').innerHTML=renderAdminBudget();
 }
-function togglePaid(id) { set('wedding_budget_actuals',get('wedding_budget_actuals',INIT_ACTUALS).map(a=>a.id===id?{...a,paid:!a.paid}:a)); document.getElementById('adminContent').innerHTML=renderAdminBudget(); }
-function startEditActual(id) { editingActualId=id; document.getElementById('adminContent').innerHTML=renderAdminBudget(); setTimeout(()=>{const el=document.getElementById('editActName');if(el){el.focus();}},50); }
+function cycleStatus(id) {
+  const acts=migrateActuals(get('wedding_budget_actuals',INIT_ACTUALS));
+  set('wedding_budget_actuals',acts.map(a=>a.id===id?{...a,status:nextStatus(a.status||'scheduled')}:a));
+  document.getElementById('adminContent').innerHTML=renderAdminBudget();
+}
+function startEditActual(id) { currentEditId=id; editingActualId=id; document.getElementById('adminContent').innerHTML=renderAdminBudget(); setTimeout(()=>{const el=document.getElementById('editActName');if(el){el.focus();}},50); }
 function saveActual(id) {
   const name=(document.getElementById('editActName')||{}).value||'';
-  const amt=parseFloat((document.getElementById('editActAmt')||{}).value)||0;
+  const status=(document.getElementById('editActStatus')||{}).value||'scheduled';
   const date=(document.getElementById('editActDate')||{}).value||'';
-  const paidBtn=document.getElementById('editActPaidBtn');
-  const paid=paidBtn?paidBtn.dataset.paid==='true':false;
-  const acts=get('wedding_budget_actuals',INIT_ACTUALS);
-  set('wedding_budget_actuals',acts.map(a=>a.id===id?{...a,name:name.trim()||a.name,amount:amt||a.amount,paid,date:date||undefined}:a));
-  editingActualId=null; document.getElementById('adminContent').innerHTML=renderAdminBudget();
+  const link=((document.getElementById('editActLink')||{}).value||'').trim();
+  const isPerHead=(document.getElementById('editActPerHead')||{}).checked||false;
+  let amount=0, perHeadAmount=0, perHeadType='day';
+  if(isPerHead) {
+    perHeadAmount=parseFloat((document.getElementById('editActPph')||{}).value)||0;
+    perHeadType=(document.getElementById('editActPphType')||{}).value||'day';
+  } else {
+    amount=parseFloat((document.getElementById('editActAmt')||{}).value)||0;
+  }
+  const acts=migrateActuals(get('wedding_budget_actuals',INIT_ACTUALS));
+  set('wedding_budget_actuals',acts.map(a=>a.id===id?{...a,name:name.trim()||a.name,status,date:date||undefined,link:link||undefined,perHead:isPerHead,amount:isPerHead?0:amount||a.amount,perHeadAmount:isPerHead?perHeadAmount:undefined,perHeadType:isPerHead?perHeadType:undefined}:a));
+  editingActualId=null; currentEditId=null; document.getElementById('adminContent').innerHTML=renderAdminBudget();
 }
-function toggleEditActPaid() {
-  const btn=document.getElementById('editActPaidBtn');
-  if(!btn)return;
-  const cur=btn.dataset.paid==='true';
-  btn.dataset.paid=(!cur).toString();
-  btn.textContent=cur?'Due':'Paid';
-  btn.className='paid-badge '+(cur?'scheduled':'is-paid');
-}
-function cancelActEdit() { editingActualId=null; document.getElementById('adminContent').innerHTML=renderAdminBudget(); }
-function deleteActual(id) { set('wedding_budget_actuals',get('wedding_budget_actuals',INIT_ACTUALS).filter(a=>a.id!==id)); document.getElementById('adminContent').innerHTML=renderAdminBudget(); }
-function toggleNewPaid() {
-  const btn=document.getElementById('newActPaidBtn');
-  if(!btn)return;
-  const cur=btn.dataset.paid==='true';
-  btn.dataset.paid=(!cur).toString();
-  btn.textContent=cur?'Due':'Paid';
-  btn.className='paid-badge '+(cur?'scheduled':'is-paid');
+function cancelActEdit() { editingActualId=null; currentEditId=null; document.getElementById('adminContent').innerHTML=renderAdminBudget(); }
+function deleteActual(id) {
+  set('wedding_budget_actuals',migrateActuals(get('wedding_budget_actuals',INIT_ACTUALS)).filter(a=>a.id!==id));
+  document.getElementById('adminContent').innerHTML=renderAdminBudget();
 }
 function addActual() {
   const catId=(document.getElementById('newActCat')||{}).value||'';
   const name=(document.getElementById('newActName')||{}).value||'';
-  const amt=parseFloat((document.getElementById('newActAmt')||{}).value)||0;
+  const status=(document.getElementById('newActStatus')||{}).value||'scheduled';
   const date=(document.getElementById('newActDate')||{}).value||'';
-  const paidBtn=document.getElementById('newActPaidBtn');
-  const paid=paidBtn?paidBtn.dataset.paid==='true':false;
-  if(!catId||!name.trim()||!amt)return;
-  set('wedding_budget_actuals',[...get('wedding_budget_actuals',INIT_ACTUALS),{id:Date.now().toString(),categoryId:catId,name:name.trim(),amount:amt,paid,date:date||undefined}]);
+  const link=((document.getElementById('newActLink')||{}).value||'').trim();
+  const isPerHead=(document.getElementById('newActPerHead')||{}).checked||false;
+  let amount=0, perHeadAmount=0, perHeadType='day';
+  if(isPerHead) {
+    perHeadAmount=parseFloat((document.getElementById('newActPph')||{}).value)||0;
+    perHeadType=(document.getElementById('newActPphType')||{}).value||'day';
+    if(!catId||!name.trim()||!perHeadAmount)return;
+  } else {
+    amount=parseFloat((document.getElementById('newActAmt')||{}).value)||0;
+    if(!catId||!name.trim()||!amount)return;
+  }
+  const entry={id:Date.now().toString(),categoryId:catId,name:name.trim(),status,date:date||undefined,link:link||undefined,perHead:isPerHead,amount:isPerHead?0:amount,perHeadAmount:isPerHead?perHeadAmount:undefined,perHeadType:isPerHead?perHeadType:undefined};
+  set('wedding_budget_actuals',[...migrateActuals(get('wedding_budget_actuals',INIT_ACTUALS)),entry]);
   document.getElementById('adminContent').innerHTML=renderAdminBudget();
 }
 
