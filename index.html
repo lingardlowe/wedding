@@ -378,6 +378,22 @@
     .tl-note-add { display: flex; gap: 0.5rem; margin-top: 0.75rem; }
     .tl-note-add input { flex: 1; height: 1.9rem; font-size: 0.8rem; }
 
+    /* ── RSVP TABLE ── */
+    .rsvp-table-wrap { background: var(--white); border: 1px solid var(--border); overflow-x: auto; }
+    .rsvp-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+    .rsvp-table th { padding: 0.625rem 1rem; text-align: left; font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--secondary); background: hsl(150,10%,98%); border-bottom: 1px solid var(--border); white-space: nowrap; user-select: none; }
+    .rsvp-table th.sortable { cursor: pointer; transition: color 0.15s; }
+    .rsvp-table th.sortable:hover { color: var(--primary); }
+    .rsvp-table th.sort-asc::after { content: ' ▲'; font-size: 0.55rem; color: var(--primary); }
+    .rsvp-table th.sort-desc::after { content: ' ▼'; font-size: 0.55rem; color: var(--primary); }
+    .rsvp-table td { padding: 0.625rem 1rem; border-bottom: 1px solid hsl(150,10%,93%); vertical-align: middle; }
+    .rsvp-table tr:last-child td { border-bottom: none; }
+    .rsvp-table tr:hover td { background: hsl(150,10%,99%); }
+    .rsvp-table .td-name { font-weight: 500; color: var(--fg); }
+    .rsvp-table .td-contact { color: var(--secondary); font-size: 0.75rem; line-height: 1.5; }
+    .rsvp-table .td-notes { color: var(--secondary); font-size: 0.75rem; font-style: italic; max-width: 14rem; }
+    .rsvp-table .td-meals { color: var(--secondary); font-size: 0.72rem; max-width: 12rem; }
+
     /* ── UTILS ── */
     .flex { display: flex; }
     .items-center { align-items: center; }
@@ -1302,82 +1318,101 @@ async function loadRSVPsFromSheets() {
   document.getElementById('adminContent').innerHTML = renderAdminRSVPs();
 }
 
+let rsvpSortCol = 'name';
+let rsvpSortDir = 'asc';
+
+function sortRSVPs(col) {
+  if (rsvpSortCol === col) { rsvpSortDir = rsvpSortDir === 'asc' ? 'desc' : 'asc'; }
+  else { rsvpSortCol = col; rsvpSortDir = 'asc'; }
+  document.getElementById('adminContent').innerHTML = renderAdminRSVPs();
+}
+
 function renderAdminRSVPs(filter) {
   rsvpFilter = filter || rsvpFilter;
   const sheetsUrl = getSiteSettings().sheetsUrl;
   const rsvps = get('wedding_rsvps_sheets_cache', get('wedding_rsvps',[]));
   const courses = get('wedding_meal_courses',[]);
-  const filtered = rsvps.filter(r => rsvpFilter === 'all' ? true : r.guestType === rsvpFilter);
-  const totalAtt = rsvps.flatMap(r=>r.guests||[]).filter(g=>g.attending).length;
-  const totalDec = rsvps.flatMap(r=>r.guests||[]).filter(g=>!g.attending).length;
 
-  const getCOpt = (cid, oid) => { const c = courses.find(x=>x.id===cid); return c?.options.find(o=>o.id===oid)?.name||oid; };
-  const getCName = cid => courses.find(c=>c.id===cid)?.name||cid;
+  // Flatten to one row per guest
+  const rows = rsvps.flatMap(r =>
+    (r.guests||[]).map(g => ({
+      name: g.name||'',
+      email: g.email||'',
+      phone: g.phone||'',
+      attending: g.attending===true||g.attending==='Yes',
+      guestType: r.guestType||'',
+      meals: g.mealsText || Object.entries(g.mealChoices||{}).map(([cid,oid])=>{
+        const c=courses.find(x=>x.id===cid); return (c?.name||cid)+': '+(c?.options.find(o=>o.id===oid)?.name||oid);
+      }).join(' | '),
+      notes: r.message||'',
+      submittedAt: r.submittedAt||'',
+    }))
+  );
+
+  // Filter
+  const filtered = rows.filter(r => rsvpFilter==='all' ? true : r.guestType===rsvpFilter);
+
+  // Sort
+  filtered.sort((a,b) => {
+    let av = a[rsvpSortCol]||'', bv = b[rsvpSortCol]||'';
+    if (rsvpSortCol==='attending') { av=a.attending?1:0; bv=b.attending?1:0; }
+    if (rsvpSortCol==='submittedAt') { av=new Date(av); bv=new Date(bv); }
+    const cmp = typeof av==='number' ? av-bv : String(av).localeCompare(String(bv));
+    return rsvpSortDir==='asc' ? cmp : -cmp;
+  });
+
+  const totalAtt = rows.filter(r=>r.attending).length;
+  const totalDec = rows.filter(r=>!r.attending).length;
+
+  const thCls = col => `sortable${rsvpSortCol===col?' sort-'+rsvpSortDir:''}`;
+  const hasMeals = courses.length > 0;
 
   return `
-    <div class="page-header-row">
+    <div class="page-header-row" style="margin-bottom:1rem;">
       <div>
         <h1 class="page-header" style="margin-bottom:0.25rem;">Guest Responses</h1>
-        <p class="page-header-sub">${totalAtt} attending · ${totalDec} declined · ${rsvps.length} submission${rsvps.length!==1?'s':''}</p>
+        <p class="page-header-sub">${totalAtt} attending · ${totalDec} declined · ${rows.length} guest${rows.length!==1?'s':''}</p>
       </div>
-      <div style="display:flex;gap:0.5rem;align-items:center;">
-        ${sheetsUrl?`<button class="btn btn-outline btn-sm" onclick="loadRSVPsFromSheets()" ${rsvpsLoading?'disabled':''} style="display:flex;align-items:center;gap:0.35rem;">${rsvpsLoading?'Loading…':'↻ Refresh'}</button>`:''}
-        <div class="filter-bar">
-          ${['all','day','evening'].map(f=>`<button class="btn ${rsvpFilter===f?'btn-primary':'btn-outline'} btn-sm" onclick="filterRSVPs('${f}')">${f}</button>`).join('')}
-        </div>
+      <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;">
+        ${sheetsUrl?`<button class="btn btn-outline btn-sm" onclick="loadRSVPsFromSheets()" ${rsvpsLoading?'disabled':''}>${rsvpsLoading?'Loading…':'↻ Refresh'}</button>`:''}
+        ${['all','day','evening'].map(f=>`<button class="btn ${rsvpFilter===f?'btn-primary':'btn-outline'} btn-sm" onclick="filterRSVPs('${f}')">${f}</button>`).join('')}
       </div>
     </div>
     ${!sheetsUrl?`<div style="background:hsl(38,100%,97%);border:1px solid hsl(38,85%,70%);padding:0.875rem 1.25rem;margin-bottom:1rem;font-size:0.8rem;color:hsl(32,80%,35%);">⚠ Google Sheets not connected — showing locally saved RSVPs only.</div>`:''}
-    ${filtered.length === 0 ? '<div class="empty-state">No RSVPs found.</div>' :
-      filtered.map(r => {
-        const att = r.guests.filter(g=>g.attending);
-        const dec = r.guests.filter(g=>!g.attending);
-        const expanded = expandedRSVP === r.id;
-        return `<div class="rsvp-card">
-          <button class="rsvp-card-header" onclick="toggleExpandRSVP('${r.id}')">
-            <div class="rsvp-card-left">
-              <span class="badge badge-${r.guestType}">${r.guestType}</span>
-              <div>
-                <div class="rsvp-card-name">${r.guests.map(g=>esc(g.name)).join(', ')}</div>
-                <div class="rsvp-card-sub">${att.length?att.length+' attending':''}${att.length&&dec.length?' · ':''}${dec.length?dec.length+' declined':''}</div>
-              </div>
-            </div>
-            <div class="rsvp-card-right">
-              <span style="font-size:0.75rem;color:var(--secondary);">${new Date(r.submittedAt).toLocaleDateString('en-GB')}</span>
-              <span style="font-size:0.75rem;color:var(--secondary);">${expanded?'▲':'▼'}</span>
-            </div>
-          </button>
-          ${expanded ? `<div class="rsvp-detail">
-            ${r.guests.map(g => `
-            <div class="rsvp-guest-row">
-              <div>
-                <div class="rsvp-field-label">Name</div>
-                <div class="rsvp-field-val" style="font-weight:500;">${esc(g.name)}</div>
-                <span class="badge ${g.attending?'badge-attending':'badge-declined'}" style="margin-top:0.25rem;">${g.attending?'Attending':'Declined'}</span>
-              </div>
-              <div>
-                <div class="rsvp-field-label">Contact</div>
-                <div class="rsvp-field-val">${esc(g.email)}</div>
-                <div style="font-size:0.875rem;color:var(--secondary);">${g.phone}</div>
-              </div>
-              ${g.attending && Object.keys(g.mealChoices||{}).length ? `<div>
-                <div class="rsvp-field-label">Meal Choices</div>
-                ${Object.entries(g.mealChoices).map(([cid,oid])=>`<div style="font-size:0.875rem;"><span style="color:var(--secondary);">${getCName(cid)}:</span> <strong>${getCOpt(cid,oid)}</strong></div>`).join('')}
-              </div>` : '<div></div>'}
-            </div>`).join('')}
-            ${r.message ? `<div class="rsvp-notes"><div class="rsvp-field-label">Notes / Dietary</div><div>${esc(r.message)}</div></div>` : ''}
-          </div>` : ''}
-        </div>`;
-      }).join('')}`;
+    ${filtered.length===0?'<div class="empty-state">No RSVPs found.</div>':`
+    <div class="rsvp-table-wrap">
+      <table class="rsvp-table">
+        <thead>
+          <tr>
+            <th class="${thCls('name')}" onclick="sortRSVPs('name')">Name</th>
+            <th class="${thCls('email')}" onclick="sortRSVPs('email')">Email</th>
+            <th class="${thCls('phone')}" onclick="sortRSVPs('phone')">Phone</th>
+            <th class="${thCls('guestType')}" onclick="sortRSVPs('guestType')">Type</th>
+            <th class="${thCls('attending')}" onclick="sortRSVPs('attending')">Attending</th>
+            ${hasMeals?`<th class="${thCls('meals')}" onclick="sortRSVPs('meals')">Meals</th>`:''}
+            <th class="${thCls('notes')}" onclick="sortRSVPs('notes')">Notes</th>
+            <th class="${thCls('submittedAt')}" onclick="sortRSVPs('submittedAt')">Submitted</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${filtered.map(r=>`
+          <tr>
+            <td class="td-name">${esc(r.name)}</td>
+            <td class="td-contact">${esc(r.email)}</td>
+            <td class="td-contact">${esc(r.phone)}</td>
+            <td><span class="badge badge-${r.guestType||'day'}">${r.guestType||'—'}</span></td>
+            <td><span class="badge ${r.attending?'badge-attending':'badge-declined'}">${r.attending?'Yes':'No'}</span></td>
+            ${hasMeals?`<td class="td-meals">${esc(r.meals)||'—'}</td>`:''}
+            <td class="td-notes">${esc(r.notes)||'—'}</td>
+            <td class="td-contact">${r.submittedAt?new Date(r.submittedAt).toLocaleDateString('en-GB'):'—'}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>`}`;
 }
 
 function filterRSVPs(f) {
-  expandedRSVP = null;
   document.getElementById('adminContent').innerHTML = renderAdminRSVPs(f);
-}
-function toggleExpandRSVP(id) {
-  expandedRSVP = expandedRSVP === id ? null : id;
-  document.getElementById('adminContent').innerHTML = renderAdminRSVPs();
 }
 
 // ═══════════════════════════════════════════════
