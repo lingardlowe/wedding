@@ -712,6 +712,7 @@ function getSiteSettings() {
     accomm: [],
     themeColor: '#6a9e82',
     adminPassword: 'lowe2027',
+    sheetsUrl: '',
   });
 }
 
@@ -1020,6 +1021,9 @@ function guestsNext() {
     return;
   }
   const existing = get('wedding_rsvps',[]).flatMap(r=>r.guests.map(g=>g.name.toLowerCase()));
+  // Also check sheets cache
+  const sheetsCache = get('wedding_rsvps_sheets_cache',[]);
+  sheetsCache.forEach(r => { if(r.name && !existing.includes(r.name.toLowerCase())) existing.push(r.name.toLowerCase()); });
   const dupes = guests.map(g=>g.name.trim()).filter(n=>existing.includes(n.toLowerCase()));
   if (dupes.length) {
     document.getElementById('guestErrors').innerHTML = `<div class="error-box">"${dupes.join('", "')}" ${dupes.length>1?'have':'has'} already submitted an RSVP. Please contact us if you need to make changes.</div>`;
@@ -1105,8 +1109,12 @@ function renderNotesStep() {
   </div>`;
 }
 
-function submitRSVP() {
+async function submitRSVP() {
   rsvpState.notes = document.getElementById('rsvpNotes').value;
+  const submitBtn = document.querySelector('#rsvpContent .btn-primary');
+  if (submitBtn) { submitBtn.textContent = 'Sending…'; submitBtn.disabled = true; }
+
+  const courses = get('wedding_meal_courses',[]);
   const entry = {
     id: Date.now().toString(),
     guestType: rsvpState.guestType,
@@ -1119,6 +1127,38 @@ function submitRSVP() {
     message: rsvpState.notes.trim(),
     submittedAt: new Date().toISOString()
   };
+
+  // Resolve meal choice names for readability in the sheet
+  const getCOpt = (cid,oid) => { const c=courses.find(x=>x.id===cid); return c?.options.find(o=>o.id===oid)?.name||oid; };
+  const getCName = cid => courses.find(c=>c.id===cid)?.name||cid;
+
+  const sheetsUrl = getSiteSettings().sheetsUrl;
+  if (sheetsUrl) {
+    try {
+      // Build flat rows — one per guest
+      const rows = entry.guests.map(g => ({
+        submissionId: entry.id,
+        submittedAt: entry.submittedAt,
+        guestType: entry.guestType,
+        name: g.name,
+        email: g.email,
+        phone: g.phone,
+        attending: g.attending ? 'Yes' : 'No',
+        meals: Object.entries(g.mealChoices||{}).map(([cid,oid])=>getCName(cid)+': '+getCOpt(cid,oid)).join(' | '),
+        notes: entry.message
+      }));
+      await fetch(sheetsUrl, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rows })
+      });
+    } catch(e) {
+      console.warn('Sheets submit failed, saving locally', e);
+    }
+  }
+
+  // Always save locally as backup
   const rsvps = get('wedding_rsvps',[]);
   set('wedding_rsvps', [...rsvps, entry]);
   rsvpState.step = 'done';
@@ -1185,27 +1225,33 @@ function showAdmin(section) {
 // ADMIN DASHBOARD
 // ═══════════════════════════════════════════════
 function renderAdminDashboard() {
-  const rsvps = get('wedding_rsvps',[]);
-  const all = rsvps.flatMap(r=>r.guests);
-  const attending = all.filter(g=>g.attending).length;
-  const declined = all.filter(g=>!g.attending).length;
-  const recent = [...rsvps].reverse().slice(0,5);
+  const cache = get('wedding_rsvps_sheets_cache', get('wedding_rsvps',[]));
+  const all = cache.flatMap(r=>r.guests||[{attending:r.attending==='Yes',name:r.name}]);
+  const attending = all.filter(g=>g.attending===true||g.attending==='Yes').length;
+  const declined = all.filter(g=>g.attending===false||g.attending==='No').length;
+  const hasSheets = !!getSiteSettings().sheetsUrl;
+  const recent = [...cache].reverse().slice(0,5);
   return `
     <h1 class="page-header">Dashboard Overview</h1>
+    ${!hasSheets?`<div style="background:hsl(38,100%,97%);border:1px solid hsl(38,85%,70%);padding:0.875rem 1.25rem;margin-bottom:1.5rem;font-size:0.8rem;color:hsl(32,80%,35%);">
+      ⚠ Google Sheets not connected — RSVPs are only saved locally in this browser.
+      <button onclick="showAdmin('settings');setTimeout(()=>document.getElementById('sheetsUrlInput')?.scrollIntoView({behavior:'smooth'}),100)" style="background:none;border:none;cursor:pointer;color:hsl(32,80%,35%);text-decoration:underline;font-size:0.8rem;margin-left:0.5rem;">Connect now →</button>
+    </div>`:''}
     <div class="stat-grid">
       <div class="stat-card"><div class="stat-label">Total Attending</div><div class="stat-num">${attending}</div></div>
       <div class="stat-card"><div class="stat-label">Declined</div><div class="stat-num">${declined}</div></div>
-      <div class="stat-card"><div class="stat-label">Submissions</div><div class="stat-num">${rsvps.length}</div></div>
+      <div class="stat-card"><div class="stat-label">Submissions</div><div class="stat-num">${cache.length}</div></div>
     </div>
     <div class="recent-card">
       <h2>Recent RSVPs</h2>
-      ${recent.length === 0 ? '<p class="text-sm text-secondary">No RSVPs yet.</p>' :
-        recent.map(r => {
-          const att = r.guests.filter(g=>g.attending).length;
+      ${recent.length===0?'<p class="text-sm text-secondary">No RSVPs yet.</p>':
+        recent.map(r=>{
+          const guests = r.guests || [{name:r.name,attending:r.attending==='Yes'}];
+          const att = guests.filter(g=>g.attending===true||g.attending==='Yes').length;
           return `<div class="rsvp-row">
             <div>
-              <div class="rsvp-row-name">${r.guests.map(g=>esc(g.name)).join(', ')}</div>
-              <div class="rsvp-row-sub">${r.guestType} guest</div>
+              <div class="rsvp-row-name">${guests.map(g=>esc(g.name)).join(', ')}</div>
+              <div class="rsvp-row-sub">${r.guestType||'guest'}</div>
             </div>
             <span class="badge ${att>0?'badge-attending':'badge-declined'}">${att>0?att+' attending':'Declined'}</span>
           </div>`;
@@ -1218,14 +1264,52 @@ function renderAdminDashboard() {
 // ═══════════════════════════════════════════════
 let rsvpFilter = 'all';
 let expandedRSVP = null;
+let rsvpsLoading = false;
+
+async function loadRSVPsFromSheets() {
+  const url = getSiteSettings().sheetsUrl;
+  if (!url) return;
+  rsvpsLoading = true;
+  document.getElementById('adminContent').innerHTML = renderAdminRSVPs();
+  try {
+    const res = await fetch(url + '?action=get');
+    const data = await res.json();
+    if (data.rows) {
+      // Convert flat sheet rows back to grouped submissions
+      const groups = {};
+      data.rows.forEach(row => {
+        const id = row.submissionId || row[0];
+        if (!groups[id]) groups[id] = {
+          id, guestType: row.guestType||row[2]||'',
+          submittedAt: row.submittedAt||row[1]||'',
+          message: row.notes||row[8]||'', guests:[]
+        };
+        groups[id].guests.push({
+          name: row.name||row[3]||'',
+          email: row.email||row[4]||'',
+          phone: row.phone||row[5]||'',
+          attending: (row.attending||row[6]||'').toLowerCase()==='yes',
+          mealChoices: {},
+          mealsText: row.meals||row[7]||''
+        });
+      });
+      const rsvps = Object.values(groups).sort((a,b)=>new Date(b.submittedAt)-new Date(a.submittedAt));
+      set('wedding_rsvps_sheets_cache', rsvps);
+      set('wedding_rsvps', rsvps); // keep local in sync
+    }
+  } catch(e) { console.warn('Failed to load from Sheets:', e); }
+  rsvpsLoading = false;
+  document.getElementById('adminContent').innerHTML = renderAdminRSVPs();
+}
 
 function renderAdminRSVPs(filter) {
   rsvpFilter = filter || rsvpFilter;
-  const rsvps = get('wedding_rsvps',[]);
+  const sheetsUrl = getSiteSettings().sheetsUrl;
+  const rsvps = get('wedding_rsvps_sheets_cache', get('wedding_rsvps',[]));
   const courses = get('wedding_meal_courses',[]);
   const filtered = rsvps.filter(r => rsvpFilter === 'all' ? true : r.guestType === rsvpFilter);
-  const totalAtt = rsvps.flatMap(r=>r.guests).filter(g=>g.attending).length;
-  const totalDec = rsvps.flatMap(r=>r.guests).filter(g=>!g.attending).length;
+  const totalAtt = rsvps.flatMap(r=>r.guests||[]).filter(g=>g.attending).length;
+  const totalDec = rsvps.flatMap(r=>r.guests||[]).filter(g=>!g.attending).length;
 
   const getCOpt = (cid, oid) => { const c = courses.find(x=>x.id===cid); return c?.options.find(o=>o.id===oid)?.name||oid; };
   const getCName = cid => courses.find(c=>c.id===cid)?.name||cid;
@@ -1236,10 +1320,14 @@ function renderAdminRSVPs(filter) {
         <h1 class="page-header" style="margin-bottom:0.25rem;">Guest Responses</h1>
         <p class="page-header-sub">${totalAtt} attending · ${totalDec} declined · ${rsvps.length} submission${rsvps.length!==1?'s':''}</p>
       </div>
-      <div class="filter-bar">
-        ${['all','day','evening'].map(f=>`<button class="btn ${rsvpFilter===f?'btn-primary':'btn-outline'} btn-sm" onclick="filterRSVPs('${f}')">${f}</button>`).join('')}
+      <div style="display:flex;gap:0.5rem;align-items:center;">
+        ${sheetsUrl?`<button class="btn btn-outline btn-sm" onclick="loadRSVPsFromSheets()" ${rsvpsLoading?'disabled':''} style="display:flex;align-items:center;gap:0.35rem;">${rsvpsLoading?'Loading…':'↻ Refresh'}</button>`:''}
+        <div class="filter-bar">
+          ${['all','day','evening'].map(f=>`<button class="btn ${rsvpFilter===f?'btn-primary':'btn-outline'} btn-sm" onclick="filterRSVPs('${f}')">${f}</button>`).join('')}
+        </div>
       </div>
     </div>
+    ${!sheetsUrl?`<div style="background:hsl(38,100%,97%);border:1px solid hsl(38,85%,70%);padding:0.875rem 1.25rem;margin-bottom:1rem;font-size:0.8rem;color:hsl(32,80%,35%);">⚠ Google Sheets not connected — showing locally saved RSVPs only.</div>`:''}
     ${filtered.length === 0 ? '<div class="empty-state">No RSVPs found.</div>' :
       filtered.map(r => {
         const att = r.guests.filter(g=>g.attending);
@@ -2199,6 +2287,22 @@ function renderAdminSettings() {
     </div>
 
     <div class="settings-section">
+      <div class="settings-section-title">Google Sheets Integration</div>
+      <div class="settings-grid single" style="padding-bottom:0;">
+        <div class="settings-field">
+          <label>Google Apps Script URL</label>
+          <input id="sheetsUrlInput" value="${esc(s.sheetsUrl||'')}" placeholder="https://script.google.com/macros/s/..." />
+          <small>Paste the deployment URL from your Google Apps Script here. RSVPs will be sent to your sheet automatically.</small>
+        </div>
+      </div>
+      <div class="settings-save-row">
+        <button class="btn btn-primary btn-sm" onclick="saveSettings('sheets')">Save</button>
+        <span class="settings-saved" id="saved_sheets">Saved ✓</span>
+        ${s.sheetsUrl?'<span style="font-size:0.75rem;color:var(--primary);">✓ Connected</span>':'<span style="font-size:0.75rem;color:hsl(210,15%,60%);">Not connected</span>'}
+      </div>
+    </div>
+
+    <div class="settings-section">
       <div class="settings-section-title">Admin Password</div>
       <div class="settings-grid" style="max-width:32rem;">
         <div class="settings-field">
@@ -2277,6 +2381,8 @@ function saveSettings(section) {
     const rawColor = (document.getElementById('ss_themeColor')||{}).value?.trim() || s.themeColor;
     s.themeColor = rawColor;
     applyThemeColor(rawColor);
+  } else if (section === 'sheets') {
+    s.sheetsUrl = (document.getElementById('sheetsUrlInput')||{}).value?.trim() || '';
   } else if (section === 'password') {
     const p1 = (document.getElementById('ss_newPwd')||{}).value;
     const p2 = (document.getElementById('ss_confirmPwd')||{}).value;
