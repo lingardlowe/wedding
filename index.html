@@ -395,6 +395,29 @@
 
     @keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
 
+    /* ── SITE SETTINGS ── */
+    .settings-section { background: var(--white); border: 1px solid var(--border); margin-bottom: 1.5rem; overflow: hidden; }
+    .settings-section-title { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.15em; color: var(--secondary); padding: 1rem 1.5rem; border-bottom: 1px solid var(--border); background: hsl(150,10%,98%); }
+    .settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; padding: 1.5rem; }
+    .settings-grid.single { grid-template-columns: 1fr; }
+    .settings-grid.three { grid-template-columns: 1fr 1fr 1fr; }
+    .settings-field { display: flex; flex-direction: column; gap: 0.35rem; }
+    .settings-field label { font-size: 0.7rem; color: var(--secondary); font-weight: 500; }
+    .settings-field textarea { min-height: 6rem; resize: vertical; }
+    .settings-field small { font-size: 0.65rem; color: hsl(210,15%,60%); }
+    .settings-save-row { padding: 1rem 1.5rem; border-top: 1px solid var(--border); display: flex; align-items: center; gap: 1rem; }
+    .settings-saved { font-size: 0.75rem; color: var(--primary); opacity: 0; transition: opacity 0.3s; }
+    .settings-saved.show { opacity: 1; }
+    .color-swatch-row { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.35rem; }
+    .color-swatch { width: 1.75rem; height: 1.75rem; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: border-color 0.2s; flex-shrink: 0; }
+    .color-swatch.active { border-color: var(--fg); }
+    .accomm-item { display: flex; gap: 0.75rem; align-items: center; padding: 0.6rem 0; border-bottom: 1px solid hsl(150,10%,92%); }
+    .accomm-item:last-child { border-bottom: none; }
+    .accomm-item input { flex: 1; height: 1.9rem; font-size: 0.8rem; }
+    .hero-monogram { position: absolute; font-family: var(--font-serif); font-size: clamp(10rem,30vw,22rem); color: var(--primary); opacity: 0.045; pointer-events: none; user-select: none; line-height: 1; z-index: 0; top: 50%; left: 50%; transform: translate(-50%,-50%); white-space: nowrap; }
+    .hero { position: relative; overflow: hidden; min-height: 80vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 4rem 1.5rem; }
+    .hero > * { position: relative; z-index: 1; }
+
     @media (max-width: 640px) {
       .type-grid { grid-template-columns: 1fr; }
       .guest-grid { grid-template-columns: 1fr; }
@@ -412,7 +435,7 @@
 <div id="homePage" class="page active">
   <nav class="main-nav">
     <div class="nav-inner">
-      <a class="nav-logo" onclick="showPage('home')">I &amp; E</a>
+      <a class="nav-logo" id="navLogo" onclick="showPage('home')">I &amp; E</a>
       <div class="nav-links">
         <a class="nav-link" onclick="showPage('details')">Details</a>
         <a class="nav-link" onclick="showPage('rsvp')">RSVP</a>
@@ -421,16 +444,17 @@
   </nav>
   <main>
     <section class="hero">
+      <div class="hero-monogram" id="heroMonogram"></div>
       <p class="hero-eyebrow">Please join us for the wedding of</p>
-      <h1 class="hero-title">I &amp; E</h1>
-      <p class="hero-names">
+      <h1 class="hero-title" id="heroMonogram2">I &amp; E</h1>
+      <p class="hero-names" id="heroNames">
         Ian James Lowe<br>
         <em>and</em><br>
         Emma Charlotte Lingard
       </p>
       <div class="divider" style="height:3rem;"></div>
-      <p class="hero-date">17th July 2027</p>
-      <p class="hero-date">The Oak Tree of Peover, Knutsford</p>
+      <p class="hero-date" id="heroDate">17th July 2027</p>
+      <p class="hero-date" id="heroVenue">The Oak Tree of Peover, Knutsford</p>
       <div class="divider" style="height:3rem;"></div>
       <div class="countdown" id="countdown">
         <div class="countdown-unit"><span class="countdown-num" id="cd-days">000</span><span class="countdown-label">Days</span></div>
@@ -465,11 +489,10 @@
         <button class="btn btn-primary btn-full" style="min-width:12rem;" onclick="showPage('rsvp')">RSVP</button>
       </div>
     </section>
-    <section class="story">
+    <section class="story" id="storySection">
       <div class="story-inner">
         <h2>Our Story</h2>
-        <p>It started with a chance meeting and grew into a lifetime of shared moments, quiet Sunday mornings, and adventures around the world. We are thrilled to invite our closest family and friends to celebrate the next chapter of our story.</p>
-        <p>We can't wait to share this beautiful day with you.</p>
+        <div id="storyText"><p>It started with a chance meeting and grew into a lifetime of shared moments, quiet Sunday mornings, and adventures around the world. We are thrilled to invite our closest family and friends to celebrate the next chapter of our story.</p><p>We can't wait to share this beautiful day with you.</p></div>
       </div>
     </section>
   </main>
@@ -488,11 +511,19 @@
   </nav>
   <main class="details-main">
     <h1 class="page-title">The Details</h1>
-    <section class="venue-section">
+    <section class="venue-section" id="detailsVenueSection">
       <p class="section-eyebrow">The Venue</p>
-      <h2 class="venue-name">The Oak Tree of Peover</h2>
-      <p class="venue-addr">Plumley Moor Road, Lower Peover, Knutsford WA16 9RX</p>
-      <p class="venue-desc">A beautiful rustic venue set in the heart of the Cheshire countryside. The ceremony and reception will both be held here.</p>
+      <h2 class="venue-name" id="detailsVenueName">The Oak Tree of Peover</h2>
+      <p class="venue-addr" id="detailsVenueAddr">Plumley Moor Road, Lower Peover, Knutsford WA16 9RX</p>
+      <p class="venue-desc" id="detailsVenueDesc">A beautiful rustic venue set in the heart of the Cheshire countryside. The ceremony and reception will both be held here.</p>
+    </section>
+    <section id="detailsDressSection" style="text-align:center;margin-bottom:3rem;display:none;">
+      <p class="section-eyebrow">Dress Code</p>
+      <p id="detailsDressCode" style="color:var(--secondary);margin-top:0.5rem;"></p>
+    </section>
+    <section id="detailsAccommSection" style="margin-bottom:3rem;display:none;">
+      <p class="section-eyebrow" style="text-align:center;margin-bottom:1.5rem;">Accommodation</p>
+      <div id="detailsAccomm" style="max-width:28rem;margin:0 auto;"></div>
     </section>
     <section>
       <p class="section-eyebrow" style="text-align:center;margin-bottom:2rem;">Order of the Day</p>
@@ -514,6 +545,7 @@
   </nav>
   <main class="rsvp-main">
     <h1 class="page-title">RSVP</h1>
+    <p id="rsvpDeadlineText" style="text-align:center;font-size:0.8rem;color:var(--secondary);margin-bottom:1.5rem;margin-top:-1rem;display:none;"></p>
     <div id="rsvpStepIndicator" class="step-indicator"></div>
     <div id="rsvpContent"></div>
   </main>
@@ -544,6 +576,7 @@
       <button class="sidebar-link" id="nav-checklist" onclick="showAdmin('checklist')">Checklist</button>
       <button class="sidebar-link" id="nav-budget" onclick="showAdmin('budget')">Budget</button>
       <button class="sidebar-link" id="nav-timeline" onclick="showAdmin('timeline')">Timeline</button>
+      <button class="sidebar-link" id="nav-settings" onclick="showAdmin('settings')">Site Settings</button>
     </nav>
     <button class="btn btn-ghost" onclick="adminLogout()" style="margin-top:auto;justify-content:flex-start;">Logout</button>
   </aside>
@@ -573,7 +606,7 @@ function showPage(name) {
   document.getElementById('adminLoginPage').classList.remove('active');
   document.getElementById('adminPage').classList.remove('active');
 
-  if (name === 'home') { document.getElementById('homePage').classList.add('active'); }
+  if (name === 'home') { document.getElementById('homePage').classList.add('active'); applyFrontEnd(); }
   else if (name === 'details') { document.getElementById('detailsPage').classList.add('active'); renderPublicTimeline(); }
   else if (name === 'rsvp') { document.getElementById('rsvpPage').classList.add('active'); initRSVP(); }
   else if (name === 'admin') {
@@ -587,7 +620,8 @@ function showPage(name) {
 // COUNTDOWN
 // ═══════════════════════════════════════════════
 function updateCountdown() {
-  const target = new Date('2027-07-17T00:00:00').getTime();
+  const s = getSiteSettings();
+  const target = new Date(s.weddingDate + 'T' + (s.ceremonyTime||'13:00') + ':00').getTime();
   const now = Date.now();
   const diff = Math.max(0, target - now);
   const days = Math.floor(diff / 864e5);
@@ -647,7 +681,105 @@ const DEFAULT_TIMELINE = [
   {id:'7',time:'12:00 AM',description:'Carriages',order:7,notes:[]}
 ];
 
+function getSiteSettings() {
+  return get('wedding_site_settings', {
+    groom: 'Ian',
+    groomFull: 'Ian James Lowe',
+    bride: 'Emma',
+    brideFull: 'Emma Charlotte Lingard',
+    monogram: 'I & E',
+    weddingDate: '2027-07-17',
+    ceremonyTime: '13:00',
+    venueName: 'The Oak Tree of Peover',
+    venueAddr: 'Plumley Moor Road, Lower Peover, Knutsford WA16 9RX',
+    venueDesc: 'A beautiful rustic venue set in the heart of the Cheshire countryside. The ceremony and reception will both be held here.',
+    story: 'It started with a chance meeting and grew into a lifetime of shared moments, quiet Sunday mornings, and adventures around the world. We are thrilled to invite our closest family and friends to celebrate the next chapter of our story.\n\nWe can\'t wait to share this beautiful day with you.',
+    dressCode: '',
+    rsvpDeadline: '',
+    accomm: [],
+    themeColor: '150,20%,50%',
+    adminPassword: 'lowe2027',
+  });
+}
+
+function applyThemeColor(hsl) {
+  if (!hsl) return;
+  document.documentElement.style.setProperty('--primary', `hsl(${hsl})`);
+  document.documentElement.style.setProperty('--primary-light', `hsl(${hsl.split(',')[0]},${hsl.split(',')[1]},95%)`);
+}
+
+function applyFrontEnd() {
+  const s = getSiteSettings();
+  applyThemeColor(s.themeColor);
+
+  const mono = s.monogram || '';
+  const el = document.getElementById('heroMonogram');
+  if (el) el.textContent = mono;
+
+  const logo = document.getElementById('navLogo');
+  if (logo) logo.textContent = mono || (s.groom[0] + ' & ' + s.bride[0]);
+
+  const m2 = document.getElementById('heroMonogram2');
+  if (m2) m2.textContent = mono || (s.groom[0] + ' & ' + s.bride[0]);
+
+  const names = document.getElementById('heroNames');
+  if (names) names.innerHTML = `${esc(s.groomFull)}<br><em>and</em><br>${esc(s.brideFull)}`;
+
+  const dateEl = document.getElementById('heroDate');
+  if (dateEl && s.weddingDate) {
+    dateEl.textContent = new Date(s.weddingDate + 'T12:00:00').toLocaleDateString('en-GB', {day:'numeric',month:'long',year:'numeric'});
+  }
+
+  const venueEl = document.getElementById('heroVenue');
+  if (venueEl) venueEl.textContent = s.venueName + (s.venueAddr ? ', ' + s.venueAddr.split(',').pop().trim() : '');
+
+  const storyEl = document.getElementById('storyText');
+  if (storyEl) {
+    const paragraphs = (s.story||'').split(/
+
++/).filter(Boolean);
+    storyEl.innerHTML = paragraphs.map(p => `<p>${esc(p)}</p>`).join('');
+  }
+
+  // Details page
+  const dvName = document.getElementById('detailsVenueName');
+  if (dvName) dvName.textContent = s.venueName;
+  const dvAddr = document.getElementById('detailsVenueAddr');
+  if (dvAddr) dvAddr.textContent = s.venueAddr;
+  const dvDesc = document.getElementById('detailsVenueDesc');
+  if (dvDesc) dvDesc.textContent = s.venueDesc;
+
+  const dressSection = document.getElementById('detailsDressSection');
+  const dressEl = document.getElementById('detailsDressCode');
+  if (dressSection && dressEl) {
+    if (s.dressCode) { dressSection.style.display = ''; dressEl.textContent = s.dressCode; }
+    else { dressSection.style.display = 'none'; }
+  }
+
+  const accSection = document.getElementById('detailsAccommSection');
+  const accEl = document.getElementById('detailsAccomm');
+  if (accSection && accEl && s.accomm && s.accomm.length > 0) {
+    accSection.style.display = '';
+    accEl.innerHTML = s.accomm.map(a => `
+      <div style="display:flex;justify-content:space-between;align-items:start;padding:0.75rem 0;border-bottom:1px solid var(--border);">
+        <div>
+          <p style="font-weight:500;">${esc(a.name)}</p>
+          ${a.detail ? `<p style="font-size:0.8rem;color:var(--secondary);">${esc(a.detail)}</p>` : ''}
+        </div>
+        ${a.link ? `<a href="${esc(a.link)}" target="_blank" class="link-btn" style="margin-left:1rem;flex-shrink:0;">↗ Link</a>` : ''}
+      </div>`).join('');
+  } else if (accSection) { accSection.style.display = 'none'; }
+
+  // RSVP deadline on page
+  const rsvpDl = document.getElementById('rsvpDeadlineText');
+  if (rsvpDl && s.rsvpDeadline) {
+    rsvpDl.textContent = 'Kindly respond by ' + new Date(s.rsvpDeadline + 'T12:00:00').toLocaleDateString('en-GB', {day:'numeric',month:'long',year:'numeric'}) + '.';
+    rsvpDl.style.display = '';
+  } else if (rsvpDl) { rsvpDl.style.display = 'none'; }
+}
+
 function renderPublicTimeline() {
+  applyFrontEnd();
   const items = [...get('wedding_timeline', DEFAULT_TIMELINE)].sort((a,b)=>a.order-b.order);
   const el = document.getElementById('publicTimeline');
   el.innerHTML = items.map((item, i) => `
@@ -960,6 +1092,7 @@ function showAdmin(section) {
   else if (section === 'checklist') el.innerHTML = renderAdminChecklist('All');
   else if (section === 'budget') el.innerHTML = renderAdminBudget();
   else if (section === 'timeline') el.innerHTML = renderAdminTimeline();
+  else if (section === 'settings') el.innerHTML = renderAdminSettings();
 }
 
 // ═══════════════════════════════════════════════
@@ -1742,7 +1875,267 @@ document.addEventListener('keydown', e => {
   if (e.altKey && e.key === 'a') showPage('admin');
 });
 
+// ═══════════════════════════════════════════════
+// ADMIN SITE SETTINGS
+// ═══════════════════════════════════════════════
+const THEME_PRESETS = [
+  { label:'Sage',    hsl:'150,20%,50%' },
+  { label:'Dusty Rose', hsl:'345,30%,62%' },
+  { label:'Navy',    hsl:'220,40%,40%' },
+  { label:'Slate',   hsl:'210,25%,45%' },
+  { label:'Terracotta', hsl:'18,45%,52%' },
+  { label:'Lavender',hsl:'260,28%,58%' },
+  { label:'Gold',    hsl:'42,55%,48%' },
+  { label:'Forest',  hsl:'140,30%,38%' },
+];
+
+function renderAdminSettings() {
+  const s = getSiteSettings();
+  return `
+    <h1 class="page-header">Site Settings</h1>
+    <p class="text-sm text-secondary mb-6">Changes here update the public website immediately.</p>
+
+    <div class="settings-section">
+      <div class="settings-section-title">Names</div>
+      <div class="settings-grid">
+        <div class="settings-field">
+          <label>Groom's first name</label>
+          <input id="ss_groom" value="${esc(s.groom)}" placeholder="Ian" />
+        </div>
+        <div class="settings-field">
+          <label>Bride's first name</label>
+          <input id="ss_bride" value="${esc(s.bride)}" placeholder="Emma" />
+        </div>
+        <div class="settings-field">
+          <label>Groom's full name</label>
+          <input id="ss_groomFull" value="${esc(s.groomFull)}" placeholder="Ian James Lowe" />
+        </div>
+        <div class="settings-field">
+          <label>Bride's full name</label>
+          <input id="ss_brideFull" value="${esc(s.brideFull)}" placeholder="Emma Charlotte Lingard" />
+        </div>
+      </div>
+      <div class="settings-save-row">
+        <button class="btn btn-primary btn-sm" onclick="saveSettings('names')">Save Names</button>
+        <span class="settings-saved" id="saved_names">Saved ✓</span>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-section-title">Monogram &amp; Logo</div>
+      <div class="settings-grid">
+        <div class="settings-field">
+          <label>Monogram text</label>
+          <input id="ss_monogram" value="${esc(s.monogram)}" placeholder="I & E" oninput="document.getElementById('monogramPreview').textContent=this.value" />
+          <small>Shown as the hero title, navbar logo, and watermark behind the page</small>
+        </div>
+        <div>
+          <div class="settings-field" style="margin-bottom:0.5rem;"><label>Preview</label></div>
+          <div id="monogramPreview" style="font-family:var(--font-serif);font-size:4rem;color:var(--primary);opacity:0.15;line-height:1;padding:0.5rem 0;">${esc(s.monogram)}</div>
+        </div>
+      </div>
+      <div class="settings-save-row">
+        <button class="btn btn-primary btn-sm" onclick="saveSettings('monogram')">Save Monogram</button>
+        <span class="settings-saved" id="saved_monogram">Saved ✓</span>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-section-title">Date &amp; Time</div>
+      <div class="settings-grid three">
+        <div class="settings-field">
+          <label>Wedding date</label>
+          <input id="ss_weddingDate" type="date" value="${esc(s.weddingDate)}" />
+        </div>
+        <div class="settings-field">
+          <label>Ceremony time</label>
+          <input id="ss_ceremonyTime" type="time" value="${esc(s.ceremonyTime||'13:00')}" />
+          <small>Used for countdown and calendar invites</small>
+        </div>
+        <div class="settings-field">
+          <label>RSVP deadline</label>
+          <input id="ss_rsvpDeadline" type="date" value="${esc(s.rsvpDeadline||'')}" />
+          <small>Shown on the RSVP page (optional)</small>
+        </div>
+      </div>
+      <div class="settings-save-row">
+        <button class="btn btn-primary btn-sm" onclick="saveSettings('date')">Save Date &amp; Time</button>
+        <span class="settings-saved" id="saved_date">Saved ✓</span>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-section-title">Venue</div>
+      <div class="settings-grid single">
+        <div class="settings-field">
+          <label>Venue name</label>
+          <input id="ss_venueName" value="${esc(s.venueName)}" placeholder="The Oak Tree of Peover" />
+        </div>
+        <div class="settings-field">
+          <label>Address</label>
+          <input id="ss_venueAddr" value="${esc(s.venueAddr)}" placeholder="Plumley Moor Road, Lower Peover, Knutsford WA16 9RX" />
+        </div>
+        <div class="settings-field">
+          <label>Venue description</label>
+          <textarea id="ss_venueDesc">${esc(s.venueDesc)}</textarea>
+        </div>
+        <div class="settings-field">
+          <label>Dress code <span style="font-weight:400;color:hsl(210,15%,60%);">(optional — shown on Details page)</span></label>
+          <input id="ss_dressCode" value="${esc(s.dressCode||'')}" placeholder="e.g. Smart / garden party" />
+        </div>
+      </div>
+      <div class="settings-save-row">
+        <button class="btn btn-primary btn-sm" onclick="saveSettings('venue')">Save Venue</button>
+        <span class="settings-saved" id="saved_venue">Saved ✓</span>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-section-title">Our Story <span style="font-weight:400;text-transform:none;letter-spacing:normal;font-size:0.7rem;">(shown on the home page)</span></div>
+      <div class="settings-grid single" style="padding-bottom:0;">
+        <div class="settings-field">
+          <textarea id="ss_story" style="min-height:9rem;">${esc(s.story||'')}</textarea>
+          <small>Separate paragraphs with a blank line</small>
+        </div>
+      </div>
+      <div class="settings-save-row">
+        <button class="btn btn-primary btn-sm" onclick="saveSettings('story')">Save Story</button>
+        <span class="settings-saved" id="saved_story">Saved ✓</span>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-section-title">Accommodation <span style="font-weight:400;text-transform:none;letter-spacing:normal;font-size:0.7rem;">(shown on Details page)</span></div>
+      <div id="accommList" style="padding:1rem 1.5rem 0;">
+        ${(s.accomm||[]).map((a,i) => `
+        <div class="accomm-item" id="accomm_${i}">
+          <input value="${esc(a.name)}" placeholder="Venue name" oninput="updateAccomm(${i},'name',this.value)" />
+          <input value="${esc(a.detail||'')}" placeholder="Details (e.g. 5 min drive · from £90)" oninput="updateAccomm(${i},'detail',this.value)" />
+          <input value="${esc(a.link||'')}" placeholder="Link (optional)" type="url" oninput="updateAccomm(${i},'link',this.value)" style="max-width:12rem;" />
+          <button class="btn-danger" onclick="removeAccomm(${i})">✕</button>
+        </div>`).join('')}
+      </div>
+      <div style="padding:0.75rem 1.5rem;">
+        <button class="btn btn-outline btn-sm" onclick="addAccomm()">+ Add Accommodation</button>
+      </div>
+      <div class="settings-save-row">
+        <button class="btn btn-primary btn-sm" onclick="saveSettings('accomm')">Save Accommodation</button>
+        <span class="settings-saved" id="saved_accomm">Saved ✓</span>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-section-title">Colour Theme</div>
+      <div style="padding:1.5rem;">
+        <div class="settings-field" style="margin-bottom:1rem;">
+          <label>Choose a preset or enter a custom HSL value</label>
+          <div class="color-swatch-row">
+            ${THEME_PRESETS.map(p => `
+              <button title="${p.label}" class="color-swatch ${s.themeColor===p.hsl?'active':''}"
+                style="background:hsl(${p.hsl});"
+                onclick="pickThemeColor('${p.hsl}')"></button>`).join('')}
+          </div>
+        </div>
+        <div class="settings-field">
+          <label>Custom HSL <span style="font-weight:400;color:hsl(210,15%,60%);">(e.g. 150,20%,50%)</span></label>
+          <input id="ss_themeColor" value="${esc(s.themeColor||'150,20%,50%')}" placeholder="150,20%,50%" style="max-width:12rem;" />
+        </div>
+      </div>
+      <div class="settings-save-row">
+        <button class="btn btn-primary btn-sm" onclick="saveSettings('theme')">Apply Theme</button>
+        <span class="settings-saved" id="saved_theme">Saved ✓</span>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-section-title">Admin Password</div>
+      <div class="settings-grid" style="max-width:32rem;">
+        <div class="settings-field">
+          <label>New password</label>
+          <input id="ss_newPwd" type="password" placeholder="Enter new password" />
+        </div>
+        <div class="settings-field">
+          <label>Confirm password</label>
+          <input id="ss_confirmPwd" type="password" placeholder="Confirm new password" />
+        </div>
+      </div>
+      <div class="settings-save-row">
+        <button class="btn btn-primary btn-sm" onclick="saveSettings('password')">Change Password</button>
+        <span class="settings-saved" id="saved_password">Saved ✓</span>
+        <span class="settings-saved" id="saved_password_err" style="color:var(--red);">Passwords don't match</span>
+      </div>
+    </div>`;
+}
+
+let _accommTemp = null;
+function getAccommTemp() {
+  if (!_accommTemp) _accommTemp = [...(getSiteSettings().accomm||[])];
+  return _accommTemp;
+}
+function updateAccomm(i, field, val) { getAccommTemp()[i][field] = val; }
+function addAccomm() {
+  getAccommTemp().push({name:'',detail:'',link:''});
+  document.getElementById('adminContent').innerHTML = renderAdminSettings();
+}
+function removeAccomm(i) {
+  getAccommTemp().splice(i,1);
+  document.getElementById('adminContent').innerHTML = renderAdminSettings();
+}
+
+function pickThemeColor(hsl) {
+  const el = document.getElementById('ss_themeColor');
+  if (el) el.value = hsl;
+  applyThemeColor(hsl);
+  document.getElementById('adminContent').innerHTML = renderAdminSettings();
+}
+
+function showSaved(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2000);
+}
+
+function saveSettings(section) {
+  const s = {...getSiteSettings()};
+  if (section === 'names') {
+    s.groom = (document.getElementById('ss_groom')||{}).value?.trim() || s.groom;
+    s.bride = (document.getElementById('ss_bride')||{}).value?.trim() || s.bride;
+    s.groomFull = (document.getElementById('ss_groomFull')||{}).value?.trim() || s.groomFull;
+    s.brideFull = (document.getElementById('ss_brideFull')||{}).value?.trim() || s.brideFull;
+  } else if (section === 'monogram') {
+    s.monogram = (document.getElementById('ss_monogram')||{}).value || s.monogram;
+  } else if (section === 'date') {
+    s.weddingDate = (document.getElementById('ss_weddingDate')||{}).value || s.weddingDate;
+    s.ceremonyTime = (document.getElementById('ss_ceremonyTime')||{}).value || s.ceremonyTime;
+    s.rsvpDeadline = (document.getElementById('ss_rsvpDeadline')||{}).value || '';
+  } else if (section === 'venue') {
+    s.venueName = (document.getElementById('ss_venueName')||{}).value?.trim() || s.venueName;
+    s.venueAddr = (document.getElementById('ss_venueAddr')||{}).value?.trim() || s.venueAddr;
+    s.venueDesc = (document.getElementById('ss_venueDesc')||{}).value?.trim() || s.venueDesc;
+    s.dressCode = (document.getElementById('ss_dressCode')||{}).value?.trim() || '';
+  } else if (section === 'story') {
+    s.story = (document.getElementById('ss_story')||{}).value || s.story;
+  } else if (section === 'accomm') {
+    s.accomm = getAccommTemp().filter(a => a.name.trim());
+    _accommTemp = null;
+  } else if (section === 'theme') {
+    s.themeColor = (document.getElementById('ss_themeColor')||{}).value?.trim() || s.themeColor;
+    applyThemeColor(s.themeColor);
+  } else if (section === 'password') {
+    const p1 = (document.getElementById('ss_newPwd')||{}).value;
+    const p2 = (document.getElementById('ss_confirmPwd')||{}).value;
+    if (!p1 || p1 !== p2) { showSaved('saved_password_err'); return; }
+    s.adminPassword = p1;
+    localStorage.setItem('wedding_admin_pwd', p1);
+  }
+  set('wedding_site_settings', s);
+  applyFrontEnd();
+  showSaved('saved_' + section);
+}
+
 // Init
+applyFrontEnd();
 renderPublicTimeline();
 </script>
 </body>
