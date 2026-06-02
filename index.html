@@ -3,10 +3,20 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
-  <title>I &amp; E Wedding</title>
+  <title>E &amp; I Wedding</title>
+  <script>
+    // Set title immediately from localStorage before page renders
+    try {
+      const s = JSON.parse(localStorage.getItem('wedding_site_settings')||'{}');
+      const sc = JSON.parse(localStorage.getItem('wedding_site_settings_sheets')||'{}');
+      const merged = {...sc, ...s};
+      const mono = merged.monogram;
+      if (mono) document.title = mono + ' Wedding';
+    } catch(e) {}
+  </script>
   <meta name="description" content="Ian &amp; Emma's Wedding — 17th July 2027 · The Oak Tree of Peover, Knutsford" />
   <meta name="robots" content="index, follow" />
-  <meta property="og:title" content="I &amp; E Wedding" />
+  <meta property="og:title" content="E &amp; I Wedding" />
   <meta property="og:description" content="Ian &amp; Emma's Wedding — 17th July 2027" />
   <meta property="og:type" content="website" />
   <link rel="icon" id="faviconLink" href="data:," />
@@ -746,15 +756,28 @@ function sanitiseDateFields(s) {
   // to avoid timezone shifts (e.g. 2027-07-17T00:00:00Z becoming July 16 in UK time)
   function toDateStr(val) {
     if (!val) return val;
-    if (typeof val === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(val)) return val;
+    // Already clean
+    if (typeof val === 'string' && /^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(val)) return val;
+    // ISO string — take date part directly without timezone conversion
     if (typeof val === 'string' && val.includes('T')) return val.split('T')[0];
-    const d = new Date(val);
-    if (!isNaN(d)) return d.toISOString().split('T')[0];
+    // Google Sheets date string e.g. "Sat Jul 17 2027 00:00:00 GMT+0100"
+    // Extract day/month/year directly from the string to avoid timezone issues
+    if (typeof val === 'string' && val.includes(' ')) {
+      const months = {Jan:'01',Feb:'02',Mar:'03',Apr:'04',May:'05',Jun:'06',Jul:'07',Aug:'08',Sep:'09',Oct:'10',Nov:'11',Dec:'12'};
+      const m = val.match(/([A-Z][a-z]{2})\s+([A-Z][a-z]{2})\s+(\d{1,2})\s+(\d{4})/);
+      if (m) return m[4] + '-' + (months[m[2]]||'01') + '-' + String(m[3]).padStart(2,'0');
+    }
     return val;
   }
   function toTimeStr(val) {
     if (!val) return '13:00';
-    if (typeof val === 'string' && /^\d{2}:\d{2}/.test(val)) return val.slice(0,5);
+    // Already clean HH:mm
+    if (typeof val === 'string' && /^[0-9]{2}:[0-9]{2}/.test(val)) return val.slice(0,5);
+    // Google Sheets time string e.g. "Sat Dec 30 1899 14:00:00 GMT+0000"
+    if (typeof val === 'string' && val.includes(' ')) {
+      const m = val.match(/(\d{2}):(\d{2}):\d{2}\s+GMT/);
+      if (m) return m[1] + ':' + m[2];
+    }
     const d = new Date(val);
     if (!isNaN(d)) return String(d.getUTCHours()).padStart(2,'0') + ':' + String(d.getUTCMinutes()).padStart(2,'0');
     return '13:00';
