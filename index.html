@@ -978,7 +978,7 @@ function applyFrontEnd() {
 
 function renderPublicTimeline() {
   applyFrontEnd();
-  const items = [...(get('wedding_timeline', DEFAULT_TIMELINE)||DEFAULT_TIMELINE)].sort((a,b)=>a.order-b.order);
+  const items = [...(get('wedding_timeline', DEFAULT_TIMELINE)||DEFAULT_TIMELINE||DEFAULT_TIMELINE)].sort((a,b)=>a.order-b.order);
   const el = document.getElementById('publicTimeline');
   el.innerHTML = items.map((item, i) => `
     <div class="timeline-item" ${i===0?'style="border-top:none;padding-top:0;"':''}>
@@ -1005,7 +1005,7 @@ function renderStepIndicator() {
   const steps = ['type','guests','meals','notes'];
   const labels = ['Guest Type','Details','Meals','Notes'];
   const cur = steps.indexOf(rsvpState.step);
-  const courses = get('wedding_meal_courses',[]);
+  const courses = get('wedding_meal_courses',[])||[];
   const hasMeals = courses.some(c => rsvpState.guestType && c.guestTypes.includes(rsvpState.guestType) && c.options.length > 0);
   const visSteps = hasMeals ? steps : steps.filter(s=>s!=='meals');
   const visLabels = hasMeals ? labels : labels.filter((_,i)=>i!==2);
@@ -1131,7 +1131,7 @@ function guestsNext() {
     document.getElementById('guestErrors').innerHTML = `<div class="error-box"><ul>${errs.map(e=>`<li>${e}</li>`).join('')}</ul></div>`;
     return;
   }
-  const existing = get('wedding_rsvps',[]).flatMap(r=>r.guests.map(g=>g.name.toLowerCase()));
+  const existing = get('wedding_rsvps',[])||[].flatMap(r=>r.guests.map(g=>g.name.toLowerCase()));
   // Also check sheets cache
   const sheetsCache = get('wedding_rsvps_sheets_cache',[]);
   sheetsCache.forEach(r => { if(r.name && !existing.includes(r.name.toLowerCase())) existing.push(r.name.toLowerCase()); });
@@ -1140,7 +1140,7 @@ function guestsNext() {
     document.getElementById('guestErrors').innerHTML = `<div class="error-box">"${dupes.join('", "')}" ${dupes.length>1?'have':'has'} already submitted an RSVP. Please contact us if you need to make changes.</div>`;
     return;
   }
-  const courses = get('wedding_meal_courses',[]);
+  const courses = get('wedding_meal_courses',[])||[];
   const attending = guests.filter(g=>g.attending==='yes');
   const hasMeals = courses.some(c=>rsvpState.guestType && c.guestTypes.includes(rsvpState.guestType) && c.options.length>0) && attending.length>0;
   rsvpState.step = hasMeals ? 'meals' : 'notes';
@@ -1148,7 +1148,7 @@ function guestsNext() {
 }
 
 function renderMealsStep() {
-  const courses = get('wedding_meal_courses',[]).filter(c=>rsvpState.guestType && c.guestTypes.includes(rsvpState.guestType) && c.options.length>0);
+  const courses = get('wedding_meal_courses',[])||[].filter(c=>rsvpState.guestType && c.guestTypes.includes(rsvpState.guestType) && c.options.length>0);
   const attending = rsvpState.guests.map((g,i)=>({g,i})).filter(({g})=>g.attending==='yes');
   return `<div class="form-card">
     <div class="form-card-header">
@@ -1191,7 +1191,7 @@ function setMealChoice(gi, courseId, optionId) {
 }
 
 function mealsNext() {
-  const courses = get('wedding_meal_courses',[]).filter(c=>rsvpState.guestType && c.guestTypes.includes(rsvpState.guestType) && c.options.length>0);
+  const courses = get('wedding_meal_courses',[])||[].filter(c=>rsvpState.guestType && c.guestTypes.includes(rsvpState.guestType) && c.options.length>0);
   const attending = rsvpState.guests.map((g,i)=>({g,i})).filter(({g})=>g.attending==='yes');
   const missing = new Set();
   attending.forEach(({i}) => courses.forEach(c => { if (!(rsvpState.mealChoices[i]||{})[c.id]) missing.add(`${i}-${c.id}`); }));
@@ -1225,7 +1225,7 @@ async function submitRSVP() {
   const submitBtn = document.querySelector('#rsvpContent .btn-primary');
   if (submitBtn) { submitBtn.textContent = 'Sending…'; submitBtn.disabled = true; }
 
-  const courses = get('wedding_meal_courses',[]);
+  const courses = get('wedding_meal_courses',[])||[];
   const entry = {
     id: Date.now().toString(),
     guestType: rsvpState.guestType,
@@ -1270,7 +1270,7 @@ async function submitRSVP() {
   }
 
   // Always save locally as backup
-  const rsvps = get('wedding_rsvps',[]);
+  const rsvps = get('wedding_rsvps',[])||[];
   set('wedding_rsvps', [...rsvps, entry]);
   rsvpState.step = 'done';
   renderRSVP();
@@ -1284,7 +1284,7 @@ function renderDoneStep() {
 }
 
 function rsvpBack() {
-  const courses = get('wedding_meal_courses',[]);
+  const courses = get('wedding_meal_courses',[])||[];
   const hasMeals = courses.some(c=>rsvpState.guestType && c.guestTypes.includes(rsvpState.guestType) && c.options.length>0);
   if (rsvpState.step === 'guests') rsvpState.step = 'type';
   else if (rsvpState.step === 'meals') rsvpState.step = 'guests';
@@ -1382,7 +1382,7 @@ async function showAdmin(section) {
 // ADMIN DASHBOARD
 // ═══════════════════════════════════════════════
 function renderAdminDashboard() {
-  const cache = get('wedding_rsvps_sheets_cache', get('wedding_rsvps',[]));
+  const cache = get('wedding_rsvps_sheets_cache', [])||[];
   const all = cache.flatMap(r=>r.guests||[{attending:r.attending==='Yes',name:r.name}]);
   const attending = all.filter(g=>g.attending===true||g.attending==='Yes').length;
   const declined = all.filter(g=>g.attending===false||g.attending==='No').length;
@@ -1470,8 +1470,8 @@ function sortRSVPs(col) {
 function renderAdminRSVPs(filter) {
   rsvpFilter = filter || rsvpFilter;
   const sheetsUrl = 'https://script.google.com/macros/s/AKfycbyMNg6n6bOcOzi3AtH-rVui9oMnF987eipmtK2arnVMfBJLdgt-U1rEpImkWZELQ9HdTg/exec';
-  const rsvps = get('wedding_rsvps_sheets_cache', get('wedding_rsvps',[]))||[];
-  const courses = get('wedding_meal_courses',[])||[];
+  const rsvps = get('wedding_rsvps_sheets_cache', [])||[]||[];
+  const courses = get('wedding_meal_courses',[])||[]||[];
 
   // Flatten to one row per guest
   const rows = rsvps.flatMap(r =>
@@ -1561,7 +1561,7 @@ function filterRSVPs(f) {
 let editingCourseId = null, editingOptionKey = null, addingOptionTo = null;
 
 function renderAdminMeals() {
-  const courses = get('wedding_meal_courses',[])||[];
+  const courses = get('wedding_meal_courses',[])||[]||[];
   return `
     <div class="page-header-row">
       <div>
@@ -1634,7 +1634,7 @@ function renderMealCourse(course) {
 }
 
 function addCourse() {
-  const courses = get('wedding_meal_courses',[]);
+  const courses = get('wedding_meal_courses',[])||[];
   const newCourse = { id: Date.now().toString(36), name:'New Course', guestTypes:['day','evening'], options:[] };
   adminSet('wedding_meal_courses',[...courses, newCourse],'meals');
   editingCourseId = newCourse.id;
@@ -1644,14 +1644,14 @@ function addCourse() {
 function startEditCourse(id, name) { editingCourseId=id; document.getElementById('adminContent').innerHTML=renderAdminMeals(); setTimeout(()=>{const el=document.getElementById('editCourseName');if(el){el.focus();el.select();}},50); }
 function saveCourse(id) {
   const name = (document.getElementById('editCourseName')||{}).value || '';
-  const courses = get('wedding_meal_courses',[]);
+  const courses = get('wedding_meal_courses',[])||[];
   adminSet('wedding_meal_courses', courses.map(c=>c.id===id?{...c,name:name.trim()||c.name}:c),'meals');
   editingCourseId=null; document.getElementById('adminContent').innerHTML=renderAdminMeals();
 }
 function cancelCourseEdit() { editingCourseId=null; document.getElementById('adminContent').innerHTML=renderAdminMeals(); }
-function deleteCourse(id) { adminSet('wedding_meal_courses',get('wedding_meal_courses',[]).filter(c=>c.id!==id),'meals'); document.getElementById('adminContent').innerHTML=renderAdminMeals(); }
+function deleteCourse(id) { adminSet('wedding_meal_courses',get('wedding_meal_courses',[])||[].filter(c=>c.id!==id),'meals'); document.getElementById('adminContent').innerHTML=renderAdminMeals(); }
 function toggleGuestType(courseId, type) {
-  const courses = get('wedding_meal_courses',[]);
+  const courses = get('wedding_meal_courses',[])||[];
   set('wedding_meal_courses', courses.map(c=>{
     if(c.id!==courseId)return c;
     const has=c.guestTypes.includes(type);
@@ -1666,7 +1666,7 @@ function addOption(courseId) {
   const name=(document.getElementById('newOptName')||{}).value||'';
   const desc=(document.getElementById('newOptDesc')||{}).value||'';
   if(!name.trim())return;
-  const courses=get('wedding_meal_courses',[]);
+  const courses=get('wedding_meal_courses',[])||[];
   const opt={id:Date.now().toString(36)+Math.random().toString(36).slice(2,5),name:name.trim(),description:desc.trim()||undefined};
   set('wedding_meal_courses',courses.map(c=>c.id===courseId?{...c,options:[...c.options,opt]}:c));
   addingOptionTo=null; document.getElementById('adminContent').innerHTML=renderAdminMeals();
@@ -1675,12 +1675,12 @@ function startEditOption(cid,oid,name,desc) { editingOptionKey=`${cid}|${oid}`; 
 function saveOption(cid,oid) {
   const name=(document.getElementById('editOptName')||{}).value||'';
   const desc=(document.getElementById('editOptDesc')||{}).value||'';
-  const courses=get('wedding_meal_courses',[]);
+  const courses=get('wedding_meal_courses',[])||[];
   set('wedding_meal_courses',courses.map(c=>c.id!==cid?c:{...c,options:c.options.map(o=>o.id!==oid?o:{...o,name:name.trim()||o.name,description:desc.trim()||undefined})}));
   editingOptionKey=null; document.getElementById('adminContent').innerHTML=renderAdminMeals();
 }
 function cancelOptEdit() { editingOptionKey=null; document.getElementById('adminContent').innerHTML=renderAdminMeals(); }
-function deleteOption(cid,oid) { set('wedding_meal_courses',get('wedding_meal_courses',[]).map(c=>c.id!==cid?c:{...c,options:c.options.filter(o=>o.id!==oid)})); document.getElementById('adminContent').innerHTML=renderAdminMeals(); }
+function deleteOption(cid,oid) { set('wedding_meal_courses',get('wedding_meal_courses',[])||[].map(c=>c.id!==cid?c:{...c,options:c.options.filter(o=>o.id!==oid)})); document.getElementById('adminContent').innerHTML=renderAdminMeals(); }
 
 // ═══════════════════════════════════════════════
 // ADMIN CHECKLIST
@@ -1747,13 +1747,13 @@ function addChecklistItem() {
   const date=(document.getElementById('newTaskDate')||{}).value||'';
   const cat=(document.getElementById('newTaskCat')||{}).value||'Other';
   if(!text.trim()||!date)return;
-  const items=get('wedding_checklist',INIT_CHECKLIST);
+  const items=get('wedding_checklist',INIT_CHECKLIST)||INIT_CHECKLIST;
   adminSet('wedding_checklist',[...items,{id:Date.now().toString(),text:text.trim(),dueDate:date,category:cat,done:false}],'checklist');
   document.getElementById('adminContent').innerHTML=renderAdminChecklist();
 }
 function filterChecklist(f) { checklistFilter=f; document.getElementById('adminContent').innerHTML=renderAdminChecklist(); }
-function toggleCheck(id) { adminSet('wedding_checklist',get('wedding_checklist',INIT_CHECKLIST).map(i=>i.id===id?{...i,done:!i.done}:i),'checklist'); document.getElementById('adminContent').innerHTML=renderAdminChecklist(); }
-function deleteCheckItem(id) { adminSet('wedding_checklist',get('wedding_checklist',INIT_CHECKLIST).filter(i=>i.id!==id),'checklist'); document.getElementById('adminContent').innerHTML=renderAdminChecklist(); }
+function toggleCheck(id) { adminSet('wedding_checklist',get('wedding_checklist',INIT_CHECKLIST)||INIT_CHECKLIST.map(i=>i.id===id?{...i,done:!i.done}:i),'checklist'); document.getElementById('adminContent').innerHTML=renderAdminChecklist(); }
+function deleteCheckItem(id) { adminSet('wedding_checklist',get('wedding_checklist',INIT_CHECKLIST)||INIT_CHECKLIST.filter(i=>i.id!==id),'checklist'); document.getElementById('adminContent').innerHTML=renderAdminChecklist(); }
 
 // ═══════════════════════════════════════════════
 // ADMIN BUDGET
@@ -1814,7 +1814,7 @@ function nextStatus(current) {
 // Per-head calculation
 function getHeadcount() {
   const hc = get('wedding_headcount', INIT_HEADCOUNT) || INIT_HEADCOUNT;
-  const rsvps = get('wedding_rsvps',[]);
+  const rsvps = get('wedding_rsvps',[])||[];
   const actualDay = rsvps.filter(r=>r.guestType==='day').flatMap(r=>r.guests).filter(g=>g.attending).length;
   const actualEvening = rsvps.filter(r=>r.guestType==='evening').flatMap(r=>r.guests).filter(g=>g.attending).length;
   return {
@@ -1836,8 +1836,8 @@ function resolveAmount(line) {
 }
 
 function renderAdminBudget() {
-  const cats=get('wedding_budget_categories',INIT_CATS);
-  const acts=migrateActuals(get('wedding_budget_actuals',INIT_ACTUALS));
+  const cats=get('wedding_budget_categories',INIT_CATS)||INIT_CATS;
+  const acts=migrateActuals(get('wedding_budget_actuals',INIT_ACTUALS)||INIT_ACTUALS);
   const hc=getHeadcount();
 
   const totalBudgeted=cats.reduce((s,c)=>s+c.budgeted,0);
@@ -1963,7 +1963,7 @@ function renderAdminBudget() {
       </div>
       <div class="add-panel ${budgetAddTab==='expense'?'active':''}">
         <div style="display:flex;gap:0.75rem;flex-wrap:wrap;align-items:flex-end;">
-          <select id="newActCat" style="width:9rem;"><option value="">Category</option>${get('wedding_budget_categories',INIT_CATS).map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('')}</select>
+          <select id="newActCat" style="width:9rem;"><option value="">Category</option>${(get('wedding_budget_categories',INIT_CATS)||INIT_CATS).map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('')}</select>
           <input id="newActName" placeholder="Description" style="flex:2;min-width:10rem;" onkeydown="if(event.key==='Enter')addActual()" />
           <div style="display:flex;flex-direction:column;gap:0.25rem;">
             <div style="display:flex;align-items:center;gap:0.35rem;font-size:0.7rem;">
@@ -2033,25 +2033,25 @@ function startEditCat(id) { editingCatId=id; document.getElementById('adminConte
 function saveCat(id) {
   const name=(document.getElementById('editCatName')||{}).value||'';
   const budget=parseFloat((document.getElementById('editCatBudget')||{}).value)||0;
-  const cats=get('wedding_budget_categories',INIT_CATS);
+  const cats=get('wedding_budget_categories',INIT_CATS)||INIT_CATS;
   adminSet('wedding_budget_categories',cats.map(c=>c.id===id?{...c,name:name.trim()||c.name,budgeted:budget||c.budgeted}:c),'budget_categories');
   editingCatId=null; document.getElementById('adminContent').innerHTML=renderAdminBudget();
 }
 function cancelCatEdit() { editingCatId=null; document.getElementById('adminContent').innerHTML=renderAdminBudget(); }
 function deleteCat(id) {
-  set('wedding_budget_categories',get('wedding_budget_categories',INIT_CATS).filter(c=>c.id!==id));
-  set('wedding_budget_actuals',migrateActuals(get('wedding_budget_actuals',INIT_ACTUALS)).filter(a=>a.categoryId!==id));
+  set('wedding_budget_categories',(get('wedding_budget_categories',INIT_CATS)||INIT_CATS).filter(c=>c.id!==id));
+  set('wedding_budget_actuals',migrateActuals(get('wedding_budget_actuals',INIT_ACTUALS)||INIT_ACTUALS).filter(a=>a.categoryId!==id));
   document.getElementById('adminContent').innerHTML=renderAdminBudget();
 }
 function addCat() {
   const name=(document.getElementById('newCatName')||{}).value||'';
   const budget=parseFloat((document.getElementById('newCatBudget')||{}).value)||0;
   if(!name.trim()||!budget)return;
-  adminSet('wedding_budget_categories',[...get('wedding_budget_categories',INIT_CATS),{id:Date.now().toString(),name:name.trim(),budgeted:budget}],'budget_categories');
+  adminSet('wedding_budget_categories',[...(get('wedding_budget_categories',INIT_CATS)||INIT_CATS),{id:Date.now().toString(),name:name.trim(),budgeted:budget}],'budget_categories');
   document.getElementById('adminContent').innerHTML=renderAdminBudget();
 }
 function cycleStatus(id) {
-  const acts=migrateActuals(get('wedding_budget_actuals',INIT_ACTUALS));
+  const acts=migrateActuals(get('wedding_budget_actuals',INIT_ACTUALS)||INIT_ACTUALS);
   set('wedding_budget_actuals',acts.map(a=>a.id===id?{...a,status:nextStatus(a.status||'scheduled')}:a));
   document.getElementById('adminContent').innerHTML=renderAdminBudget();
 }
@@ -2069,13 +2069,13 @@ function saveActual(id) {
   } else {
     amount=parseFloat((document.getElementById('editActAmt')||{}).value)||0;
   }
-  const acts=migrateActuals(get('wedding_budget_actuals',INIT_ACTUALS));
+  const acts=migrateActuals(get('wedding_budget_actuals',INIT_ACTUALS)||INIT_ACTUALS);
   set('wedding_budget_actuals',acts.map(a=>a.id===id?{...a,name:name.trim()||a.name,status,date:date||undefined,link:link||undefined,perHead:isPerHead,amount:isPerHead?0:amount||a.amount,perHeadAmount:isPerHead?perHeadAmount:undefined,perHeadType:isPerHead?perHeadType:undefined}:a));
   editingActualId=null; currentEditId=null; document.getElementById('adminContent').innerHTML=renderAdminBudget();
 }
 function cancelActEdit() { editingActualId=null; currentEditId=null; document.getElementById('adminContent').innerHTML=renderAdminBudget(); }
 function deleteActual(id) {
-  adminSet('wedding_budget_actuals',migrateActuals(get('wedding_budget_actuals',INIT_ACTUALS)).filter(a=>a.id!==id),'budget_actuals');
+  adminSet('wedding_budget_actuals',migrateActuals(get('wedding_budget_actuals',INIT_ACTUALS)||INIT_ACTUALS).filter(a=>a.id!==id),'budget_actuals');
   document.getElementById('adminContent').innerHTML=renderAdminBudget();
 }
 function addActual() {
@@ -2095,7 +2095,7 @@ function addActual() {
     if(!catId||!name.trim()||!amount)return;
   }
   const entry={id:Date.now().toString(),categoryId:catId,name:name.trim(),status,date:date||undefined,link:link||undefined,perHead:isPerHead,amount:isPerHead?0:amount,perHeadAmount:isPerHead?perHeadAmount:undefined,perHeadType:isPerHead?perHeadType:undefined};
-  adminSet('wedding_budget_actuals',[...migrateActuals(get('wedding_budget_actuals',INIT_ACTUALS)),entry],'budget_actuals');
+  adminSet('wedding_budget_actuals',[...migrateActuals(get('wedding_budget_actuals',INIT_ACTUALS)||INIT_ACTUALS),entry],'budget_actuals');
   document.getElementById('adminContent').innerHTML=renderAdminBudget();
 }
 
@@ -2114,7 +2114,7 @@ const DEFAULT_TL = [
 let editingTLItem = null, expandedTLItem = null;
 
 function renderAdminTimeline() {
-  const items=[...(get('wedding_timeline',DEFAULT_TL)||DEFAULT_TL)].sort((a,b)=>a.order-b.order);
+  const items=[...(get('wedding_timeline',DEFAULT_TL)||DEFAULT_TL||DEFAULT_TL)].sort((a,b)=>a.order-b.order);
   return `
     <h1 class="page-header">Day-of Timeline</h1>
     <p class="text-sm text-secondary mb-6">Displayed on the public Details page. Click any item to edit. Use ▲▼ to reorder.</p>
@@ -2178,7 +2178,7 @@ function addTLItem() {
   const time=(document.getElementById('newTLTime')||{}).value||'';
   const desc=(document.getElementById('newTLDesc')||{}).value||'';
   if(!time.trim()||!desc.trim())return;
-  const items=get('wedding_timeline',DEFAULT_TL);
+  const items=get('wedding_timeline',DEFAULT_TL)||DEFAULT_TL;
   const maxOrder=items.reduce((m,i)=>Math.max(m,i.order),0);
   adminSet('wedding_timeline',[...items,{id:Date.now().toString(),time:time.trim(),description:desc.trim(),order:maxOrder+1,notes:[]}],'timeline');
   document.getElementById('adminContent').innerHTML=renderAdminTimeline();
@@ -2187,21 +2187,21 @@ function startEditTL(id) { editingTLItem=id; document.getElementById('adminConte
 function saveTLItem(id) {
   const time=(document.getElementById('editTLTime')||{}).value||'';
   const desc=(document.getElementById('editTLDesc')||{}).value||'';
-  const items=get('wedding_timeline',DEFAULT_TL);
+  const items=get('wedding_timeline',DEFAULT_TL)||DEFAULT_TL;
   adminSet('wedding_timeline',items.map(i=>i.id===id?{...i,time:time.trim()||i.time,description:desc.trim()||i.description}:i),'timeline');
   editingTLItem=null; document.getElementById('adminContent').innerHTML=renderAdminTimeline();
 }
 function cancelTLEdit() { editingTLItem=null; document.getElementById('adminContent').innerHTML=renderAdminTimeline(); }
-function deleteTLItem(id) { adminSet('wedding_timeline',get('wedding_timeline',DEFAULT_TL).filter(i=>i.id!==id),'timeline'); document.getElementById('adminContent').innerHTML=renderAdminTimeline(); }
+function deleteTLItem(id) { adminSet('wedding_timeline',get('wedding_timeline',DEFAULT_TL)||DEFAULT_TL.filter(i=>i.id!==id),'timeline'); document.getElementById('adminContent').innerHTML=renderAdminTimeline(); }
 function toggleTLExpand(id) { expandedTLItem=expandedTLItem===id?null:id; document.getElementById('adminContent').innerHTML=renderAdminTimeline(); }
 function tlMoveUp(idx) {
-  const items=[...get('wedding_timeline',DEFAULT_TL)].sort((a,b)=>a.order-b.order);
+  const items=[...get('wedding_timeline',DEFAULT_TL)||DEFAULT_TL].sort((a,b)=>a.order-b.order);
   if(idx===0)return;
   const t=items[idx].order; items[idx].order=items[idx-1].order; items[idx-1].order=t;
   set('wedding_timeline',items); document.getElementById('adminContent').innerHTML=renderAdminTimeline();
 }
 function tlMoveDown(idx) {
-  const items=[...get('wedding_timeline',DEFAULT_TL)].sort((a,b)=>a.order-b.order);
+  const items=[...get('wedding_timeline',DEFAULT_TL)||DEFAULT_TL].sort((a,b)=>a.order-b.order);
   if(idx===items.length-1)return;
   const t=items[idx].order; items[idx].order=items[idx+1].order; items[idx+1].order=t;
   set('wedding_timeline',items); document.getElementById('adminContent').innerHTML=renderAdminTimeline();
@@ -2211,12 +2211,12 @@ function addNote(id) {
   if(!el)return;
   const text=el.value.trim();
   if(!text)return;
-  const items=get('wedding_timeline',DEFAULT_TL);
+  const items=get('wedding_timeline',DEFAULT_TL)||DEFAULT_TL;
   set('wedding_timeline',items.map(i=>i.id===id?{...i,notes:[...(i.notes||[]),text]}:i));
   document.getElementById('adminContent').innerHTML=renderAdminTimeline();
 }
 function removeNote(id,ni) {
-  const items=get('wedding_timeline',DEFAULT_TL);
+  const items=get('wedding_timeline',DEFAULT_TL)||DEFAULT_TL;
   set('wedding_timeline',items.map(i=>i.id===id?{...i,notes:(i.notes||[]).filter((_,j)=>j!==ni)}:i));
   document.getElementById('adminContent').innerHTML=renderAdminTimeline();
 }
@@ -2579,8 +2579,8 @@ async function pushLocalToSheets(type, localKey, useAdminScript=false) {
   if (type === 'budget') {
     const adminUrl = getAdminUrl();
     if (!adminUrl) { alert('Admin Script URL not set in Site Settings.'); return; }
-    await pushAdminData('budget_categories', get('wedding_budget_categories', INIT_CATS));
-    await pushAdminData('budget_actuals', get('wedding_budget_actuals', INIT_ACTUALS));
+    await pushAdminData('budget_categories', get('wedding_budget_categories', INIT_CATS)||INIT_CATS);
+    await pushAdminData('budget_actuals', get('wedding_budget_actuals', INIT_ACTUALS)||INIT_ACTUALS);
     await pushAdminData('headcount', get('wedding_headcount', INIT_HEADCOUNT));
   } else if (useAdminScript) {
     const adminUrl = getAdminUrl();
