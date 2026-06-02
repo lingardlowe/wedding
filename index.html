@@ -459,7 +459,7 @@
 <!-- ████ HOME PAGE ████ -->
 <div id="siteLoader" style="position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:9999;transition:opacity 0.4s;">
   <div style="text-align:center;">
-    <div style="font-family:var(--font-serif);font-size:3rem;color:var(--primary);opacity:0.4;margin-bottom:1rem;">I &amp; E</div>
+    <div id="loaderMonogram" style="font-family:var(--font-serif);font-size:3rem;color:var(--primary);opacity:0.4;margin-bottom:1rem;">E &amp; I</div>
     <div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.2em;color:var(--secondary);">Loading…</div>
   </div>
 </div>
@@ -690,7 +690,6 @@ function updateCountdown() {
   document.getElementById('cd-mins').textContent = String(mins).padStart(2,'0');
   document.getElementById('cd-secs').textContent = String(secs).padStart(2,'0');
 }
-updateCountdown();
 setInterval(updateCountdown, 1000);
 
 // ═══════════════════════════════════════════════
@@ -817,6 +816,8 @@ function applyFrontEnd() {
   // Navbar + hero title monogram (text only, always)
   const shortMono = s.monogram || ((s.nameOrder==='reversed' ? s.bride[0] : s.groom[0]) + ' & ' + (s.nameOrder==='reversed' ? s.groom[0] : s.bride[0]));
   // Update all nav logos, sidebar, and page title
+  const loaderMono = document.getElementById('loaderMonogram');
+  if (loaderMono) loaderMono.textContent = shortMono;
   ['navLogo','navLogoDetails','navLogoRSVP'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.textContent = shortMono;
@@ -930,7 +931,7 @@ function applyFrontEnd() {
 
 function renderPublicTimeline() {
   applyFrontEnd();
-  const items = [...get('wedding_timeline', DEFAULT_TIMELINE)].sort((a,b)=>a.order-b.order);
+  const items = [...(get('wedding_timeline', DEFAULT_TIMELINE)||DEFAULT_TIMELINE)].sort((a,b)=>a.order-b.order);
   const el = document.getElementById('publicTimeline');
   el.innerHTML = items.map((item, i) => `
     <div class="timeline-item" ${i===0?'style="border-top:none;padding-top:0;"':''}>
@@ -1275,35 +1276,54 @@ async function showAdmin(section) {
   const nav = document.getElementById(`nav-${section}`);
   if (nav) nav.classList.add('active');
   const el = document.getElementById('adminContent');
-  const url = getAdminUrl();
+  const siteUrl = getSiteSettings().sheetsUrl;
+  const adminUrl = getAdminUrl();
 
   if (section === 'dashboard') {
     el.innerHTML = renderAdminDashboard();
+
   } else if (section === 'rsvps') {
     el.innerHTML = renderAdminRSVPs('all');
-    if (url) loadRSVPsFromSheets();
+    if (siteUrl) loadRSVPsFromSheets();
+
   } else if (section === 'meals') {
-    if (url) await loadAdminSection('meals','wedding_meal_courses',[], d => { set('wedding_meal_courses',d); return renderAdminMeals(); });
+    // Meals — Script 1 (guests see meal options during RSVP)
+    if (siteUrl) await loadAdminSection('meals','wedding_meal_courses',[], d => { set('wedding_meal_courses',d); return renderAdminMeals(); }, false);
     else el.innerHTML = renderAdminMeals();
+
+  } else if (section === 'timeline') {
+    // Timeline — Script 1 (shown on public Details page)
+    if (siteUrl) await loadAdminSection('timeline','wedding_timeline',DEFAULT_TL, d => { set('wedding_timeline',d); renderPublicTimeline(); return renderAdminTimeline(); }, false);
+    else el.innerHTML = renderAdminTimeline();
+
   } else if (section === 'checklist') {
-    if (url) await loadAdminSection('checklist','wedding_checklist',INIT_CHECKLIST, d => { set('wedding_checklist',d); return renderAdminChecklist('All'); });
+    // Checklist — Script 2 (admin only)
+    if (adminUrl) await loadAdminSection('checklist','wedding_checklist',INIT_CHECKLIST, d => { set('wedding_checklist',d); return renderAdminChecklist('All'); }, true);
     else el.innerHTML = renderAdminChecklist('All');
+
   } else if (section === 'budget') {
-    if (url) {
+    // Budget — Script 2 (admin only)
+    if (adminUrl) {
       el.innerHTML = '<div class="empty-state" style="padding:3rem;">Loading…</div>';
       const [cats,acts,hc] = await Promise.all([
         pullAdminData('budget_categories','wedding_budget_categories',INIT_CATS),
         pullAdminData('budget_actuals','wedding_budget_actuals',INIT_ACTUALS),
         pullAdminData('headcount','wedding_headcount',INIT_HEADCOUNT),
       ]);
-      set('wedding_budget_categories',cats);
-      set('wedding_budget_actuals',acts);
-      set('wedding_headcount',hc);
+      const budgetMissing = cats === null || acts === null;
+      if (cats !== null) set('wedding_budget_categories',cats);
+      if (acts !== null) set('wedding_budget_actuals',acts);
+      if (hc !== null) set('wedding_headcount',hc);
+      if (budgetMissing) {
+        el.innerHTML = `<div style="background:hsl(38,100%,97%);border:1px solid hsl(38,85%,70%);padding:1.25rem 1.5rem;font-size:0.875rem;color:hsl(32,80%,35%);margin-bottom:1rem;">
+          <strong>No budget data in Google Sheets yet.</strong><br>Click below to push your current data up for the first time.
+          <div style="margin-top:0.75rem;"><button class="btn btn-primary btn-sm" onclick="pushLocalToSheets('budget','',true)">Push budget data to Sheets</button></div>
+        </div>` + renderAdminBudget();
+        return;
+      }
       el.innerHTML = renderAdminBudget();
     } else el.innerHTML = renderAdminBudget();
-  } else if (section === 'timeline') {
-    if (url) await loadAdminSection('timeline','wedding_timeline',DEFAULT_TL, d => { set('wedding_timeline',d); renderPublicTimeline(); return renderAdminTimeline(); });
-    else el.innerHTML = renderAdminTimeline();
+
   } else if (section === 'settings') {
     el.innerHTML = renderAdminSettings();
   }
@@ -2254,10 +2274,23 @@ function renderAdminSettings() {
             <input id="ss_monogram" value="${esc(s.monogram)}" placeholder="I & E" oninput="document.getElementById('monogramPreview').textContent=this.value" />
           </div>
           <div class="settings-field">
-            <label>Monogram image <span style="font-weight:400;color:hsl(210,15%,60%);">(watermark behind hero — optional)</span></label>
-            <input type="file" id="ss_monogramFile" accept="image/*" onchange="previewMonogram(this)" style="font-size:0.8rem;padding:0.35rem;" />
-            <small>PNG with transparency works best. Image overrides text watermark.</small>
-            ${s.monogramImage ? '<div style="margin-top:0.5rem;display:flex;align-items:center;gap:0.75rem;"><span style="font-size:0.75rem;color:var(--primary);">✓ Image uploaded</span><button class="btn-danger" onclick="clearMonogramImage()" style="font-size:0.7rem;">Remove image</button></div>' : '<div style="font-size:0.75rem;color:hsl(210,15%,60%);margin-top:0.35rem;">No image uploaded — text watermark will be used</div>'}
+            <label>Monogram image <span style="font-weight:400;color:hsl(210,15%,60%);">(watermark &amp; hero — PNG with transparency)</span></label>
+            <div style="display:flex;gap:0.5rem;align-items:center;margin-top:0.35rem;flex-wrap:wrap;">
+              <input id="ss_monogramDriveLink" value="${esc(s.monogramDriveLink||'')}" placeholder="Google Drive share link (recommended)" style="flex:1;min-width:12rem;font-size:0.8rem;" />
+              <button class="btn btn-primary btn-sm" onclick="saveDriveLink('monogram')">Save link</button>
+            </div>
+            <small>Share your image in Google Drive (Anyone with link) and paste the URL above. Syncs to all visitors instantly.</small>
+            ${s.monogramDriveLink ? '<div style="margin-top:0.35rem;font-size:0.75rem;color:var(--primary);">✓ Google Drive link saved — visible to all visitors</div>' : '<div style="margin-top:0.35rem;font-size:0.75rem;color:hsl(210,15%,60%);">No Drive link — text watermark will be used</div>'}
+            ${(s.monogramDriveLink||s.monogramImage) ? `<label style="display:flex;align-items:center;gap:0.4rem;font-size:0.8rem;cursor:pointer;margin-top:0.5rem;"><input type="checkbox" ${s.monogramAsTitle?'checked':''} onchange="toggleMonogramAsTitle(this.checked)" style="width:auto;accent-color:var(--primary);" /> Also use as the hero title (replaces text monogram)</label>` : ''}
+          </div>
+          <div class="settings-field" style="margin-top:1rem;">
+            <label>Wreath ring image <span style="font-weight:400;color:hsl(210,15%,60%);">(spinning loader — export without monogram from Figma)</span></label>
+            <div style="display:flex;gap:0.5rem;align-items:center;margin-top:0.35rem;flex-wrap:wrap;">
+              <input id="ss_wreathDriveLink" value="${esc(s.wreathDriveLink||'')}" placeholder="Google Drive share link" style="flex:1;min-width:12rem;font-size:0.8rem;" />
+              <button class="btn btn-primary btn-sm" onclick="saveDriveLink('wreath')">Save link</button>
+            </div>
+            <small>The ring that spins around your monogram on the loading screen.</small>
+            ${s.wreathDriveLink ? '<div style="margin-top:0.35rem;font-size:0.75rem;color:var(--primary);">✓ Wreath ring saved</div>' : '<div style="margin-top:0.35rem;font-size:0.75rem;color:hsl(210,15%,60%);">No wreath uploaded — placeholder used</div>'}
           </div>
         </div>
         <div>
@@ -2277,12 +2310,7 @@ function renderAdminSettings() {
             <button class="btn btn-primary btn-sm" onclick="saveDriveLink('favicon')">Save link</button>
           </div>
           <small>Square image, ideally 64×64px. Drive link syncs to all visitors. If not set, initials are used automatically.</small>
-          <div style="margin-top:0.5rem;">
-            <div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--secondary);margin-bottom:0.25rem;">Or upload directly (this device only)</div>
-            <input type="file" id="ss_faviconFile" accept="image/*" onchange="previewFavicon(this)" style="font-size:0.8rem;padding:0.35rem;" />
-          </div>
-          ${s.faviconDriveLink ? '<div style="margin-top:0.35rem;font-size:0.75rem;color:var(--primary);">✓ Google Drive link saved — visible to all visitors</div>' : ''}
-          ${s.faviconImage && !s.faviconDriveLink ? '<div style="margin-top:0.35rem;font-size:0.75rem;color:hsl(38,70%,40%);">⚠ Local upload — only visible on this device.</div>' : ''}
+          ${s.faviconDriveLink ? '<div style="margin-top:0.35rem;font-size:0.75rem;color:var(--primary);">✓ Google Drive link saved — visible to all visitors</div>' : '<div style="margin-top:0.35rem;font-size:0.75rem;color:hsl(210,15%,60%);">No favicon set — initials will be used automatically</div>'}
         </div>
       </div>
       <div class="settings-save-row">
@@ -2521,6 +2549,28 @@ function saveSettings(section) {
   }
 }
 
+async function pushLocalToSheets(type, localKey, useAdminScript=false) {
+  if (type === 'budget') {
+    const adminUrl = getAdminUrl();
+    if (!adminUrl) { alert('Admin Script URL not set in Site Settings.'); return; }
+    await pushAdminData('budget_categories', get('wedding_budget_categories', INIT_CATS));
+    await pushAdminData('budget_actuals', get('wedding_budget_actuals', INIT_ACTUALS));
+    await pushAdminData('headcount', get('wedding_headcount', INIT_HEADCOUNT));
+  } else if (useAdminScript) {
+    const adminUrl = getAdminUrl();
+    if (!adminUrl) { alert('Admin Script URL not set in Site Settings.'); return; }
+    const data = get(localKey, null);
+    if (data !== null) await pushAdminData(type, data);
+  } else {
+    const siteUrl = getSiteSettings().sheetsUrl;
+    if (!siteUrl) { alert('Site Script URL not set in Site Settings.'); return; }
+    const data = get(localKey, null);
+    if (data !== null) await pushSiteData(type, data);
+  }
+  const section = type === 'budget' ? 'budget' : type === 'meals' ? 'meals' : type === 'checklist' ? 'checklist' : type === 'timeline' ? 'timeline' : null;
+  if (section) showAdmin(section);
+}
+
 async function pushSettingsToSheets(s) {
   const url = s.sheetsUrl || getSiteSettings().sheetsUrl;
   if (!url) return;
@@ -2540,12 +2590,19 @@ async function pushSettingsToSheets(s) {
   } catch(e) { console.warn('Settings sync failed', e); }
 }
 
+function withTimeout(promise, ms=5000) {
+  return Promise.race([
+    promise,
+    new Promise((_,reject) => setTimeout(() => reject(new Error('timeout')), ms))
+  ]);
+}
+
 async function loadSettingsFromSheets() {
   const local = get('wedding_site_settings', {});
   const url = local.sheetsUrl || SETTINGS_DEFAULTS.sheetsUrl;
   if (!url) return;
   try {
-    const res = await fetch(url + '?action=getSettings');
+    const res = await withTimeout(fetch(url + '?action=getSettings'));
     const data = await res.json();
     if (data.settings) {
       // Preserve local-only fields (images, password, sheetsUrl)
@@ -2562,11 +2619,55 @@ async function loadSettingsFromSheets() {
       set('wedding_site_settings', merged);
     }
   } catch(e) { console.warn('Failed to load settings from Sheets:', e); }
+
+  // Also load public-facing data for guests
+  const siteUrl = (get('wedding_site_settings',{})).sheetsUrl || SETTINGS_DEFAULTS.sheetsUrl;
+  if (siteUrl) {
+    try {
+      const [tlRes, mealsRes] = await Promise.all([
+        withTimeout(fetch(`${siteUrl}?action=get&type=timeline`)),
+        withTimeout(fetch(`${siteUrl}?action=get&type=meals`))
+      ]);
+      const tlData = await tlRes.json();
+      const mealsData = await mealsRes.json();
+      if (tlData.data) set('wedding_timeline', tlData.data);
+      if (mealsData.data) set('wedding_meal_courses', mealsData.data);
+    } catch(e) { console.warn('Failed to load public data from Sheets:', e); }
+  }
 }
 
 // ═══════════════════════════════════════════════
 // ADMIN DATA SYNC (Google Sheets — admin script)
 // ═══════════════════════════════════════════════
+// ── Script 1 (site script) — public-facing data ──
+async function pushSiteData(type, data) {
+  const url = getSiteSettings().sheetsUrl;
+  if (!url) return;
+  try {
+    await fetch(url, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({action: 'save', type, data})
+    });
+  } catch(e) { console.warn('Site sync push failed', e); }
+}
+
+async function pullSiteData(type, localKey, fallback) {
+  const url = getSiteSettings().sheetsUrl;
+  if (!url) return null;
+  try {
+    const res = await fetch(`${url}?action=get&type=${type}`);
+    const json = await res.json();
+    if (json.data !== undefined && json.data !== null) {
+      set(localKey, json.data);
+      return json.data;
+    }
+  } catch(e) { console.warn('Site sync pull failed', e); }
+  return null;
+}
+
+// ── Script 2 (admin script) — admin-only data ──
 async function pushAdminData(type, data) {
   const url = getAdminUrl();
   if (!url) return;
@@ -2582,29 +2683,47 @@ async function pushAdminData(type, data) {
 
 async function pullAdminData(type, localKey, fallback) {
   const url = getAdminUrl();
-  if (!url) return get(localKey, fallback);
+  if (!url) return null;
   try {
     const res = await fetch(`${url}?action=get&type=${type}`);
     const json = await res.json();
-    if (json.data !== undefined) {
+    if (json.data !== undefined && json.data !== null) {
       set(localKey, json.data);
       return json.data;
     }
   } catch(e) { console.warn('Admin sync pull failed', e); }
-  return get(localKey, fallback);
+  return null;
 }
 
-async function loadAdminSection(type, localKey, fallback, renderFn) {
+async function loadAdminSection(type, localKey, fallback, renderFn, useAdminScript=false) {
   const el = document.getElementById('adminContent');
   el.innerHTML = '<div class="empty-state" style="padding:3rem;">Loading…</div>';
-  const data = await pullAdminData(type, localKey, fallback);
-  el.innerHTML = renderFn(data);
+  const data = useAdminScript
+    ? await pullAdminData(type, localKey, fallback)
+    : await pullSiteData(type, localKey, fallback);
+  if (data === null) {
+    el.innerHTML = `<div style="background:hsl(38,100%,97%);border:1px solid hsl(38,85%,70%);padding:1.25rem 1.5rem;font-size:0.875rem;color:hsl(32,80%,35%);margin-bottom:1rem;">
+      <strong>No data in Google Sheets yet for this section.</strong><br>
+      Click the button below to push your current local data up to Sheets for the first time.
+      <div style="margin-top:0.75rem;">
+        <button class="btn btn-primary btn-sm" onclick="pushLocalToSheets('${type}','${localKey}',${useAdminScript})">Push local data to Sheets</button>
+      </div>
+    </div>
+    ${renderFn(get(localKey, fallback))}`;
+  } else {
+    el.innerHTML = renderFn(data);
+  }
 }
 
 // Wrapped set that also pushes to admin sheets
+const SITE_SCRIPT_TYPES = ['meals','timeline'];
 function adminSet(key, val, sheetType) {
   set(key, val);
-  pushAdminData(sheetType, val).catch(()=>{});
+  if (SITE_SCRIPT_TYPES.includes(sheetType)) {
+    pushSiteData(sheetType, val).catch(()=>{});
+  } else {
+    pushAdminData(sheetType, val).catch(()=>{});
+  }
 }
 
 // ── Monogram image helpers
@@ -2676,17 +2795,27 @@ function toggleMonogramAsTitle(checked) {
 }
 
 // ── Init ──
-(async () => {
-  // Try to load latest settings from Sheets before rendering
-  await loadSettingsFromSheets();
-  applyFrontEnd();
-  renderPublicTimeline();
-  // Fade out loader
+function hideLoader() {
   const loader = document.getElementById('siteLoader');
-  if (loader) {
+  if (loader && loader.style.display !== 'none') {
     loader.style.opacity = '0';
-    setTimeout(() => loader.style.display = 'none', 400);
+    setTimeout(() => { loader.style.display = 'none'; }, 400);
   }
+}
+
+(async () => {
+  // Always hide loader after 6s max — never leave guests stuck
+  const safetyTimer = setTimeout(hideLoader, 6000);
+  try {
+    await loadSettingsFromSheets();
+  } catch(e) {
+    console.warn('Settings load failed, using local data', e);
+  }
+  clearTimeout(safetyTimer);
+  try { applyFrontEnd(); } catch(e) { console.warn('applyFrontEnd failed', e); }
+  try { updateCountdown(); } catch(e) { console.warn('updateCountdown failed', e); }
+  try { renderPublicTimeline(); } catch(e) { console.warn('renderPublicTimeline failed', e); }
+  hideLoader();
 })();
 </script>
 </body>
