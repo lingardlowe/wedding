@@ -1360,6 +1360,7 @@ async function showAdmin(section) {
           pullAdminData('headcount','wedding_headcount',INIT_HEADCOUNT),
         ]);
       } catch(e) { console.warn('Budget pull failed', e); }
+      // Always render — never stay on Loading
       if (cats !== null) set('wedding_budget_categories', cats);
       if (acts !== null) set('wedding_budget_actuals', acts);
       if (hc !== null) set('wedding_headcount', hc);
@@ -1369,6 +1370,7 @@ async function showAdmin(section) {
         <div style="margin-top:0.75rem;"><button class="btn btn-primary btn-sm" onclick="pushLocalToSheets('budget','',true)">Push budget data to Sheets</button></div>
       </div>` : '';
       el.innerHTML = pushBanner + renderAdminBudget();
+      return; // Always exits — never falls through to Loading
     } else el.innerHTML = renderAdminBudget();
 
   } else if (section === 'settings') {
@@ -2680,7 +2682,7 @@ async function pullSiteData(type, localKey, fallback) {
   const url = 'https://script.google.com/macros/s/AKfycbyMNg6n6bOcOzi3AtH-rVui9oMnF987eipmtK2arnVMfBJLdgt-U1rEpImkWZELQ9HdTg/exec';
   if (!url) return null;
   try {
-    const res = await fetch(`${url}?action=get&type=${type}`);
+    const res = await withTimeout(fetch(`${url}?action=get&type=${type}`));
     const json = await res.json();
     if (json.data !== undefined && json.data !== null) {
       set(localKey, json.data);
