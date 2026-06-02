@@ -742,11 +742,28 @@ function getAdminUrl() {
   return getSiteSettings().adminUrl || '';
 }
 
+function sanitiseDateFields(s) {
+  // Ensure date/time fields are always clean strings, not ISO timestamps
+  if (s.weddingDate && s.weddingDate.includes('T')) {
+    s.weddingDate = s.weddingDate.split('T')[0];
+  }
+  if (s.ceremonyTime && s.ceremonyTime.includes('T')) {
+    // Extract HH:mm from ISO timestamp
+    const t = new Date(s.ceremonyTime);
+    if (!isNaN(t)) s.ceremonyTime = String(t.getUTCHours()).padStart(2,'0') + ':' + String(t.getUTCMinutes()).padStart(2,'0');
+    else s.ceremonyTime = '13:00';
+  }
+  if (s.rsvpDeadline && s.rsvpDeadline.includes('T')) {
+    s.rsvpDeadline = s.rsvpDeadline.split('T')[0];
+  }
+  return s;
+}
+
 function getSiteSettings() {
   // Merge: defaults < sheets cache < local overrides
   const local = get('wedding_site_settings', {});
   const sheetsCache = get('wedding_site_settings_sheets', {});
-  return {...SETTINGS_DEFAULTS, ...sheetsCache, ...local};
+  return sanitiseDateFields({...SETTINGS_DEFAULTS, ...sheetsCache, ...local});
 }
 
 function driveUrl(link) {
@@ -1422,8 +1439,8 @@ function sortRSVPs(col) {
 function renderAdminRSVPs(filter) {
   rsvpFilter = filter || rsvpFilter;
   const sheetsUrl = getSiteSettings().sheetsUrl;
-  const rsvps = get('wedding_rsvps_sheets_cache', get('wedding_rsvps',[]));
-  const courses = get('wedding_meal_courses',[]);
+  const rsvps = get('wedding_rsvps_sheets_cache', get('wedding_rsvps',[]))||[];
+  const courses = get('wedding_meal_courses',[])||[];
 
   // Flatten to one row per guest
   const rows = rsvps.flatMap(r =>
@@ -1513,7 +1530,7 @@ function filterRSVPs(f) {
 let editingCourseId = null, editingOptionKey = null, addingOptionTo = null;
 
 function renderAdminMeals() {
-  const courses = get('wedding_meal_courses',[]);
+  const courses = get('wedding_meal_courses',[])||[];
   return `
     <div class="page-header-row">
       <div>
@@ -1654,7 +1671,7 @@ let checklistFilter = 'All';
 
 function renderAdminChecklist(filter) {
   checklistFilter = filter || checklistFilter;
-  const items = [...get('wedding_checklist', INIT_CHECKLIST)];
+  const items = [...(get('wedding_checklist', INIT_CHECKLIST)||INIT_CHECKLIST)];
   const filtered = items.filter(i=>checklistFilter==='All'||i.category===checklistFilter);
   filtered.sort((a,b)=>{if(a.done!==b.done)return a.done?1:-1;return new Date(a.dueDate)-new Date(b.dueDate);});
 
@@ -1727,6 +1744,7 @@ const INIT_ACTUALS = [
 ];
 // Migrate old paid:bool entries to status string
 function migrateActuals(acts) {
+  if (!acts || !Array.isArray(acts)) return INIT_ACTUALS;
   return acts.map(a => {
     if (a.status) return a;
     return {...a, status: a.paid ? 'paid' : 'scheduled', paid: undefined};
@@ -2065,7 +2083,7 @@ const DEFAULT_TL = [
 let editingTLItem = null, expandedTLItem = null;
 
 function renderAdminTimeline() {
-  const items=[...get('wedding_timeline',DEFAULT_TL)].sort((a,b)=>a.order-b.order);
+  const items=[...(get('wedding_timeline',DEFAULT_TL)||DEFAULT_TL)].sort((a,b)=>a.order-b.order);
   return `
     <h1 class="page-header">Day-of Timeline</h1>
     <p class="text-sm text-secondary mb-6">Displayed on the public Details page. Click any item to edit. Use ▲▼ to reorder.</p>
@@ -2590,7 +2608,7 @@ async function pushSettingsToSheets(s) {
   } catch(e) { console.warn('Settings sync failed', e); }
 }
 
-function withTimeout(promise, ms=5000) {
+function withTimeout(promise, ms=10000) {
   return Promise.race([
     promise,
     new Promise((_,reject) => setTimeout(() => reject(new Error('timeout')), ms))
@@ -2702,14 +2720,14 @@ async function loadAdminSection(type, localKey, fallback, renderFn, useAdminScri
     ? await pullAdminData(type, localKey, fallback)
     : await pullSiteData(type, localKey, fallback);
   if (data === null) {
+    const localData = get(localKey, fallback) || fallback;
     el.innerHTML = `<div style="background:hsl(38,100%,97%);border:1px solid hsl(38,85%,70%);padding:1.25rem 1.5rem;font-size:0.875rem;color:hsl(32,80%,35%);margin-bottom:1rem;">
       <strong>No data in Google Sheets yet for this section.</strong><br>
-      Click the button below to push your current local data up to Sheets for the first time.
+      Click below to push your current local data up to Sheets for the first time.
       <div style="margin-top:0.75rem;">
         <button class="btn btn-primary btn-sm" onclick="pushLocalToSheets('${type}','${localKey}',${useAdminScript})">Push local data to Sheets</button>
       </div>
-    </div>
-    ${renderFn(get(localKey, fallback))}`;
+    </div>` + renderFn(localData);
   } else {
     el.innerHTML = renderFn(data);
   }
