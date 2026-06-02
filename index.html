@@ -1813,7 +1813,7 @@ function nextStatus(current) {
 
 // Per-head calculation
 function getHeadcount() {
-  const hc = get('wedding_headcount', INIT_HEADCOUNT);
+  const hc = get('wedding_headcount', INIT_HEADCOUNT) || INIT_HEADCOUNT;
   const rsvps = get('wedding_rsvps',[]);
   const actualDay = rsvps.filter(r=>r.guestType==='day').flatMap(r=>r.guests).filter(g=>g.attending).length;
   const actualEvening = rsvps.filter(r=>r.guestType==='evening').flatMap(r=>r.guests).filter(g=>g.attending).length;
