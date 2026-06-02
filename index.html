@@ -669,8 +669,7 @@ const SETTINGS_DEFAULTS = {
     accomm: [],
     themeColor: '#6a9e82',
     adminPassword: 'lowe2027',
-  sheetsUrl: '',
-  adminUrl: '',
+
 };
 
 // ═══════════════════════════════════════════════
@@ -739,23 +738,30 @@ const DEFAULT_TIMELINE = [
 
 
 function getAdminUrl() {
-  return getSiteSettings().adminUrl || '';
+  return 'https://script.google.com/macros/s/AKfycbyb9D3Rb4VXHMxRdr7KWuLqhHMJf-NSBSr_87IVa2m1N-lKeC99qSFBdozdVW6wZkRt/exec';
 }
 
 function sanitiseDateFields(s) {
-  // Ensure date/time fields are always clean strings, not ISO timestamps
-  if (s.weddingDate && s.weddingDate.includes('T')) {
-    s.weddingDate = s.weddingDate.split('T')[0];
+  // Dates from Sheets arrive as ISO strings — always extract UTC date part
+  // to avoid timezone shifts (e.g. 2027-07-17T00:00:00Z becoming July 16 in UK time)
+  function toDateStr(val) {
+    if (!val) return val;
+    if (typeof val === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(val)) return val;
+    if (typeof val === 'string' && val.includes('T')) return val.split('T')[0];
+    const d = new Date(val);
+    if (!isNaN(d)) return d.toISOString().split('T')[0];
+    return val;
   }
-  if (s.ceremonyTime && s.ceremonyTime.includes('T')) {
-    // Extract HH:mm from ISO timestamp
-    const t = new Date(s.ceremonyTime);
-    if (!isNaN(t)) s.ceremonyTime = String(t.getUTCHours()).padStart(2,'0') + ':' + String(t.getUTCMinutes()).padStart(2,'0');
-    else s.ceremonyTime = '13:00';
+  function toTimeStr(val) {
+    if (!val) return '13:00';
+    if (typeof val === 'string' && /^\d{2}:\d{2}/.test(val)) return val.slice(0,5);
+    const d = new Date(val);
+    if (!isNaN(d)) return String(d.getUTCHours()).padStart(2,'0') + ':' + String(d.getUTCMinutes()).padStart(2,'0');
+    return '13:00';
   }
-  if (s.rsvpDeadline && s.rsvpDeadline.includes('T')) {
-    s.rsvpDeadline = s.rsvpDeadline.split('T')[0];
-  }
+  s.weddingDate  = toDateStr(s.weddingDate);
+  s.rsvpDeadline = toDateStr(s.rsvpDeadline);
+  s.ceremonyTime = toTimeStr(s.ceremonyTime);
   return s;
 }
 
@@ -1213,7 +1219,7 @@ async function submitRSVP() {
   const getCOpt = (cid,oid) => { const c=courses.find(x=>x.id===cid); return c?.options.find(o=>o.id===oid)?.name||oid; };
   const getCName = cid => courses.find(c=>c.id===cid)?.name||cid;
 
-  const sheetsUrl = getSiteSettings().sheetsUrl;
+  const sheetsUrl = 'https://script.google.com/macros/s/AKfycbxpIpPTt9f8_2uSBl74lo1u6wMet4VQ3EAwMwCZK24cjUVBWa-_YTQASE78Qi2ej2bwEg/exec';
   if (sheetsUrl) {
     try {
       // Build flat rows — one per guest
@@ -1293,7 +1299,7 @@ async function showAdmin(section) {
   const nav = document.getElementById(`nav-${section}`);
   if (nav) nav.classList.add('active');
   const el = document.getElementById('adminContent');
-  const siteUrl = getSiteSettings().sheetsUrl;
+  const siteUrl = 'https://script.google.com/macros/s/AKfycbxpIpPTt9f8_2uSBl74lo1u6wMet4VQ3EAwMwCZK24cjUVBWa-_YTQASE78Qi2ej2bwEg/exec';
   const adminUrl = getAdminUrl();
 
   if (section === 'dashboard') {
@@ -1322,23 +1328,23 @@ async function showAdmin(section) {
     // Budget — Script 2 (admin only)
     if (adminUrl) {
       el.innerHTML = '<div class="empty-state" style="padding:3rem;">Loading…</div>';
-      const [cats,acts,hc] = await Promise.all([
-        pullAdminData('budget_categories','wedding_budget_categories',INIT_CATS),
-        pullAdminData('budget_actuals','wedding_budget_actuals',INIT_ACTUALS),
-        pullAdminData('headcount','wedding_headcount',INIT_HEADCOUNT),
-      ]);
+      let cats = null, acts = null, hc = null;
+      try {
+        [cats, acts, hc] = await Promise.all([
+          pullAdminData('budget_categories','wedding_budget_categories',INIT_CATS),
+          pullAdminData('budget_actuals','wedding_budget_actuals',INIT_ACTUALS),
+          pullAdminData('headcount','wedding_headcount',INIT_HEADCOUNT),
+        ]);
+      } catch(e) { console.warn('Budget pull failed', e); }
+      if (cats !== null) set('wedding_budget_categories', cats);
+      if (acts !== null) set('wedding_budget_actuals', acts);
+      if (hc !== null) set('wedding_headcount', hc);
       const budgetMissing = cats === null || acts === null;
-      if (cats !== null) set('wedding_budget_categories',cats);
-      if (acts !== null) set('wedding_budget_actuals',acts);
-      if (hc !== null) set('wedding_headcount',hc);
-      if (budgetMissing) {
-        el.innerHTML = `<div style="background:hsl(38,100%,97%);border:1px solid hsl(38,85%,70%);padding:1.25rem 1.5rem;font-size:0.875rem;color:hsl(32,80%,35%);margin-bottom:1rem;">
-          <strong>No budget data in Google Sheets yet.</strong><br>Click below to push your current data up for the first time.
-          <div style="margin-top:0.75rem;"><button class="btn btn-primary btn-sm" onclick="pushLocalToSheets('budget','',true)">Push budget data to Sheets</button></div>
-        </div>` + renderAdminBudget();
-        return;
-      }
-      el.innerHTML = renderAdminBudget();
+      const pushBanner = budgetMissing ? `<div style="background:hsl(38,100%,97%);border:1px solid hsl(38,85%,70%);padding:1.25rem 1.5rem;font-size:0.875rem;color:hsl(32,80%,35%);margin-bottom:1rem;">
+        <strong>No budget data in Google Sheets yet.</strong><br>Click below to push your current data up for the first time.
+        <div style="margin-top:0.75rem;"><button class="btn btn-primary btn-sm" onclick="pushLocalToSheets('budget','',true)">Push budget data to Sheets</button></div>
+      </div>` : '';
+      el.innerHTML = pushBanner + renderAdminBudget();
     } else el.innerHTML = renderAdminBudget();
 
   } else if (section === 'settings') {
@@ -1354,13 +1360,12 @@ function renderAdminDashboard() {
   const all = cache.flatMap(r=>r.guests||[{attending:r.attending==='Yes',name:r.name}]);
   const attending = all.filter(g=>g.attending===true||g.attending==='Yes').length;
   const declined = all.filter(g=>g.attending===false||g.attending==='No').length;
-  const hasSheets = !!getSiteSettings().sheetsUrl;
+  const hasSheets = !!'https://script.google.com/macros/s/AKfycbxpIpPTt9f8_2uSBl74lo1u6wMet4VQ3EAwMwCZK24cjUVBWa-_YTQASE78Qi2ej2bwEg/exec';
   const recent = [...cache].reverse().slice(0,5);
   return `
     <h1 class="page-header">Dashboard Overview</h1>
     ${!hasSheets?`<div style="background:hsl(38,100%,97%);border:1px solid hsl(38,85%,70%);padding:0.875rem 1.25rem;margin-bottom:1.5rem;font-size:0.8rem;color:hsl(32,80%,35%);">
       ⚠ Google Sheets not connected — RSVPs are only saved locally in this browser.
-      <button onclick="showAdmin('settings');setTimeout(()=>document.getElementById('sheetsUrlInput')?.scrollIntoView({behavior:'smooth'}),100)" style="background:none;border:none;cursor:pointer;color:hsl(32,80%,35%);text-decoration:underline;font-size:0.8rem;margin-left:0.5rem;">Connect now →</button>
     </div>`:''}
     <div class="stat-grid">
       <div class="stat-card"><div class="stat-label">Total Attending</div><div class="stat-num">${attending}</div></div>
@@ -1392,7 +1397,7 @@ let expandedRSVP = null;
 let rsvpsLoading = false;
 
 async function loadRSVPsFromSheets() {
-  const url = getSiteSettings().sheetsUrl;
+  const url = 'https://script.google.com/macros/s/AKfycbxpIpPTt9f8_2uSBl74lo1u6wMet4VQ3EAwMwCZK24cjUVBWa-_YTQASE78Qi2ej2bwEg/exec';
   if (!url) return;
   rsvpsLoading = true;
   document.getElementById('adminContent').innerHTML = renderAdminRSVPs();
@@ -1438,7 +1443,7 @@ function sortRSVPs(col) {
 
 function renderAdminRSVPs(filter) {
   rsvpFilter = filter || rsvpFilter;
-  const sheetsUrl = getSiteSettings().sheetsUrl;
+  const sheetsUrl = 'https://script.google.com/macros/s/AKfycbxpIpPTt9f8_2uSBl74lo1u6wMet4VQ3EAwMwCZK24cjUVBWa-_YTQASE78Qi2ej2bwEg/exec';
   const rsvps = get('wedding_rsvps_sheets_cache', get('wedding_rsvps',[]))||[];
   const courses = get('wedding_meal_courses',[])||[];
 
@@ -2447,27 +2452,7 @@ function renderAdminSettings() {
       </div>
     </div>
 
-    <div class="settings-section">
-      <div class="settings-section-title">Google Sheets Integration</div>
-      <div class="settings-grid single" style="padding-bottom:0;">
-        <div class="settings-field">
-          <label>Site Script URL <span style="font-weight:400;color:hsl(210,15%,60%);">(wedding-site.gs — handles settings, timeline, meals)</span></label>
-          <input id="sheetsUrlInput" value="${esc(s.sheetsUrl||'')}" placeholder="https://script.google.com/macros/s/..." />
-          <small>RSVPs and public-facing data. Called on every page load.</small>
-        </div>
-        <div class="settings-field" style="margin-top:0.75rem;">
-          <label>Admin Script URL <span style="font-weight:400;color:hsl(210,15%,60%);">(wedding-admin.gs — handles budget, checklist, RSVPs)</span></label>
-          <input id="adminUrlInput" value="${esc(s.adminUrl||'')}" placeholder="https://script.google.com/macros/s/..." />
-          <small>Admin-only data. Only called when you open the admin panel.</small>
-        </div>
-      </div>
-      <div class="settings-save-row">
-        <button class="btn btn-primary btn-sm" onclick="saveSettings('sheets')">Save</button>
-        <span class="settings-saved" id="saved_sheets">Saved ✓</span>
-        <span style="font-size:0.75rem;color:${s.sheetsUrl?'var(--primary)':'hsl(210,15%,60%)'};">${s.sheetsUrl?'✓ Site connected':'Site: not connected'}</span>
-        <span style="font-size:0.75rem;color:${s.adminUrl?'var(--primary)':'hsl(210,15%,60%)'};">${s.adminUrl?'✓ Admin connected':'Admin: not connected'}</span>
-      </div>
-    </div>
+
 
     <div class="settings-section">
       <div class="settings-section-title">Admin Password</div>
@@ -2548,9 +2533,6 @@ function saveSettings(section) {
     const rawColor = (document.getElementById('ss_themeColor')||{}).value?.trim() || s.themeColor;
     s.themeColor = rawColor;
     applyThemeColor(rawColor);
-  } else if (section === 'sheets') {
-    s.sheetsUrl = (document.getElementById('sheetsUrlInput')||{}).value?.trim() || '';
-    s.adminUrl = (document.getElementById('adminUrlInput')||{}).value?.trim() || '';
   } else if (section === 'password') {
     const p1 = (document.getElementById('ss_newPwd')||{}).value;
     const p2 = (document.getElementById('ss_confirmPwd')||{}).value;
@@ -2580,7 +2562,7 @@ async function pushLocalToSheets(type, localKey, useAdminScript=false) {
     const data = get(localKey, null);
     if (data !== null) await pushAdminData(type, data);
   } else {
-    const siteUrl = getSiteSettings().sheetsUrl;
+    const siteUrl = 'https://script.google.com/macros/s/AKfycbxpIpPTt9f8_2uSBl74lo1u6wMet4VQ3EAwMwCZK24cjUVBWa-_YTQASE78Qi2ej2bwEg/exec';
     if (!siteUrl) { alert('Site Script URL not set in Site Settings.'); return; }
     const data = get(localKey, null);
     if (data !== null) await pushSiteData(type, data);
@@ -2590,7 +2572,7 @@ async function pushLocalToSheets(type, localKey, useAdminScript=false) {
 }
 
 async function pushSettingsToSheets(s) {
-  const url = s.sheetsUrl || getSiteSettings().sheetsUrl;
+  const url = s.sheetsUrl || 'https://script.google.com/macros/s/AKfycbxpIpPTt9f8_2uSBl74lo1u6wMet4VQ3EAwMwCZK24cjUVBWa-_YTQASE78Qi2ej2bwEg/exec';
   if (!url) return;
   // Strip large binary fields before sending
   const safe = {...s};
@@ -2608,7 +2590,7 @@ async function pushSettingsToSheets(s) {
   } catch(e) { console.warn('Settings sync failed', e); }
 }
 
-function withTimeout(promise, ms=10000) {
+function withTimeout(promise, ms=12000) {
   return Promise.race([
     promise,
     new Promise((_,reject) => setTimeout(() => reject(new Error('timeout')), ms))
@@ -2617,7 +2599,7 @@ function withTimeout(promise, ms=10000) {
 
 async function loadSettingsFromSheets() {
   const local = get('wedding_site_settings', {});
-  const url = local.sheetsUrl || SETTINGS_DEFAULTS.sheetsUrl;
+  const url = 'https://script.google.com/macros/s/AKfycbxpIpPTt9f8_2uSBl74lo1u6wMet4VQ3EAwMwCZK24cjUVBWa-_YTQASE78Qi2ej2bwEg/exec';
   if (!url) return;
   try {
     const res = await withTimeout(fetch(url + '?action=getSettings'));
@@ -2632,14 +2614,13 @@ async function loadSettingsFromSheets() {
       if (data.settings.faviconDriveLink)  merged.faviconDriveLink  = data.settings.faviconDriveLink;
       if (data.settings.wreathDriveLink)   merged.wreathDriveLink   = data.settings.wreathDriveLink;
       if (local.adminPassword) merged.adminPassword = local.adminPassword;
-      if (local.sheetsUrl)     merged.sheetsUrl     = local.sheetsUrl;
       set('wedding_site_settings_sheets', data.settings);
       set('wedding_site_settings', merged);
     }
   } catch(e) { console.warn('Failed to load settings from Sheets:', e); }
 
   // Also load public-facing data for guests
-  const siteUrl = (get('wedding_site_settings',{})).sheetsUrl || SETTINGS_DEFAULTS.sheetsUrl;
+  const siteUrl = 'https://script.google.com/macros/s/AKfycbxpIpPTt9f8_2uSBl74lo1u6wMet4VQ3EAwMwCZK24cjUVBWa-_YTQASE78Qi2ej2bwEg/exec';
   if (siteUrl) {
     try {
       const [tlRes, mealsRes] = await Promise.all([
@@ -2659,7 +2640,7 @@ async function loadSettingsFromSheets() {
 // ═══════════════════════════════════════════════
 // ── Script 1 (site script) — public-facing data ──
 async function pushSiteData(type, data) {
-  const url = getSiteSettings().sheetsUrl;
+  const url = 'https://script.google.com/macros/s/AKfycbxpIpPTt9f8_2uSBl74lo1u6wMet4VQ3EAwMwCZK24cjUVBWa-_YTQASE78Qi2ej2bwEg/exec';
   if (!url) return;
   try {
     await fetch(url, {
@@ -2672,7 +2653,7 @@ async function pushSiteData(type, data) {
 }
 
 async function pullSiteData(type, localKey, fallback) {
-  const url = getSiteSettings().sheetsUrl;
+  const url = 'https://script.google.com/macros/s/AKfycbxpIpPTt9f8_2uSBl74lo1u6wMet4VQ3EAwMwCZK24cjUVBWa-_YTQASE78Qi2ej2bwEg/exec';
   if (!url) return null;
   try {
     const res = await fetch(`${url}?action=get&type=${type}`);
@@ -2822,13 +2803,21 @@ function hideLoader() {
 }
 
 (async () => {
-  // Always hide loader after 6s max — never leave guests stuck
-  const safetyTimer = setTimeout(hideLoader, 6000);
+  // Keep loader visible until Sheets has responded
+  // Safety timer — never leave guests stuck beyond 10s
+  const safetyTimer = setTimeout(() => { // 15s safety net
+    try { applyFrontEnd(); } catch(e) {}
+    try { updateCountdown(); } catch(e) {}
+    try { renderPublicTimeline(); } catch(e) {}
+    hideLoader();
+  }, 15000);
+
   try {
     await loadSettingsFromSheets();
   } catch(e) {
-    console.warn('Settings load failed, using local data', e);
+    console.warn('Settings load failed, using defaults', e);
   }
+
   clearTimeout(safetyTimer);
   try { applyFrontEnd(); } catch(e) { console.warn('applyFrontEnd failed', e); }
   try { updateCountdown(); } catch(e) { console.warn('updateCountdown failed', e); }
