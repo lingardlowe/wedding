@@ -687,7 +687,8 @@ const SETTINGS_DEFAULTS = {
 // ═══════════════════════════════════════════════
 function updateCountdown() {
   const s = getSiteSettings();
-  const target = new Date(s.weddingDate + 'T' + (s.ceremonyTime||'13:00') + ':00').getTime();
+  const cleanDate = sanitiseDateFields({weddingDate: s.weddingDate, ceremonyTime: s.ceremonyTime, rsvpDeadline: ''});
+  const target = new Date(cleanDate.weddingDate + 'T' + (cleanDate.ceremonyTime||'13:00') + ':00').getTime();
   const now = Date.now();
   const diff = Math.max(0, target - now);
   const days = Math.floor(diff / 864e5);
@@ -1242,7 +1243,7 @@ async function submitRSVP() {
   const getCOpt = (cid,oid) => { const c=courses.find(x=>x.id===cid); return c?.options.find(o=>o.id===oid)?.name||oid; };
   const getCName = cid => courses.find(c=>c.id===cid)?.name||cid;
 
-  const sheetsUrl = 'https://script.google.com/macros/s/AKfycbxpIpPTt9f8_2uSBl74lo1u6wMet4VQ3EAwMwCZK24cjUVBWa-_YTQASE78Qi2ej2bwEg/exec';
+  const sheetsUrl = 'https://script.google.com/macros/s/AKfycbyMNg6n6bOcOzi3AtH-rVui9oMnF987eipmtK2arnVMfBJLdgt-U1rEpImkWZELQ9HdTg/exec';
   if (sheetsUrl) {
     try {
       // Build flat rows — one per guest
@@ -1322,7 +1323,7 @@ async function showAdmin(section) {
   const nav = document.getElementById(`nav-${section}`);
   if (nav) nav.classList.add('active');
   const el = document.getElementById('adminContent');
-  const siteUrl = 'https://script.google.com/macros/s/AKfycbxpIpPTt9f8_2uSBl74lo1u6wMet4VQ3EAwMwCZK24cjUVBWa-_YTQASE78Qi2ej2bwEg/exec';
+  const siteUrl = 'https://script.google.com/macros/s/AKfycbyMNg6n6bOcOzi3AtH-rVui9oMnF987eipmtK2arnVMfBJLdgt-U1rEpImkWZELQ9HdTg/exec';
   const adminUrl = getAdminUrl();
 
   if (section === 'dashboard') {
@@ -1383,7 +1384,7 @@ function renderAdminDashboard() {
   const all = cache.flatMap(r=>r.guests||[{attending:r.attending==='Yes',name:r.name}]);
   const attending = all.filter(g=>g.attending===true||g.attending==='Yes').length;
   const declined = all.filter(g=>g.attending===false||g.attending==='No').length;
-  const hasSheets = !!'https://script.google.com/macros/s/AKfycbxpIpPTt9f8_2uSBl74lo1u6wMet4VQ3EAwMwCZK24cjUVBWa-_YTQASE78Qi2ej2bwEg/exec';
+  const hasSheets = !!'https://script.google.com/macros/s/AKfycbyMNg6n6bOcOzi3AtH-rVui9oMnF987eipmtK2arnVMfBJLdgt-U1rEpImkWZELQ9HdTg/exec';
   const recent = [...cache].reverse().slice(0,5);
   return `
     <h1 class="page-header">Dashboard Overview</h1>
@@ -1420,7 +1421,7 @@ let expandedRSVP = null;
 let rsvpsLoading = false;
 
 async function loadRSVPsFromSheets() {
-  const url = 'https://script.google.com/macros/s/AKfycbxpIpPTt9f8_2uSBl74lo1u6wMet4VQ3EAwMwCZK24cjUVBWa-_YTQASE78Qi2ej2bwEg/exec';
+  const url = 'https://script.google.com/macros/s/AKfycbyMNg6n6bOcOzi3AtH-rVui9oMnF987eipmtK2arnVMfBJLdgt-U1rEpImkWZELQ9HdTg/exec';
   if (!url) return;
   rsvpsLoading = true;
   document.getElementById('adminContent').innerHTML = renderAdminRSVPs();
@@ -1466,7 +1467,7 @@ function sortRSVPs(col) {
 
 function renderAdminRSVPs(filter) {
   rsvpFilter = filter || rsvpFilter;
-  const sheetsUrl = 'https://script.google.com/macros/s/AKfycbxpIpPTt9f8_2uSBl74lo1u6wMet4VQ3EAwMwCZK24cjUVBWa-_YTQASE78Qi2ej2bwEg/exec';
+  const sheetsUrl = 'https://script.google.com/macros/s/AKfycbyMNg6n6bOcOzi3AtH-rVui9oMnF987eipmtK2arnVMfBJLdgt-U1rEpImkWZELQ9HdTg/exec';
   const rsvps = get('wedding_rsvps_sheets_cache', get('wedding_rsvps',[]))||[];
   const courses = get('wedding_meal_courses',[])||[];
 
@@ -2585,7 +2586,7 @@ async function pushLocalToSheets(type, localKey, useAdminScript=false) {
     const data = get(localKey, null);
     if (data !== null) await pushAdminData(type, data);
   } else {
-    const siteUrl = 'https://script.google.com/macros/s/AKfycbxpIpPTt9f8_2uSBl74lo1u6wMet4VQ3EAwMwCZK24cjUVBWa-_YTQASE78Qi2ej2bwEg/exec';
+    const siteUrl = 'https://script.google.com/macros/s/AKfycbyMNg6n6bOcOzi3AtH-rVui9oMnF987eipmtK2arnVMfBJLdgt-U1rEpImkWZELQ9HdTg/exec';
     if (!siteUrl) { alert('Site Script URL not set in Site Settings.'); return; }
     const data = get(localKey, null);
     if (data !== null) await pushSiteData(type, data);
@@ -2595,7 +2596,7 @@ async function pushLocalToSheets(type, localKey, useAdminScript=false) {
 }
 
 async function pushSettingsToSheets(s) {
-  const url = s.sheetsUrl || 'https://script.google.com/macros/s/AKfycbxpIpPTt9f8_2uSBl74lo1u6wMet4VQ3EAwMwCZK24cjUVBWa-_YTQASE78Qi2ej2bwEg/exec';
+  const url = s.sheetsUrl || 'https://script.google.com/macros/s/AKfycbyMNg6n6bOcOzi3AtH-rVui9oMnF987eipmtK2arnVMfBJLdgt-U1rEpImkWZELQ9HdTg/exec';
   if (!url) return;
   // Strip large binary fields before sending
   const safe = {...s};
@@ -2622,7 +2623,7 @@ function withTimeout(promise, ms=12000) {
 
 async function loadSettingsFromSheets() {
   const local = get('wedding_site_settings', {});
-  const url = 'https://script.google.com/macros/s/AKfycbxpIpPTt9f8_2uSBl74lo1u6wMet4VQ3EAwMwCZK24cjUVBWa-_YTQASE78Qi2ej2bwEg/exec';
+  const url = 'https://script.google.com/macros/s/AKfycbyMNg6n6bOcOzi3AtH-rVui9oMnF987eipmtK2arnVMfBJLdgt-U1rEpImkWZELQ9HdTg/exec';
   if (!url) return;
   try {
     const res = await withTimeout(fetch(url + '?action=getSettings'));
@@ -2643,7 +2644,7 @@ async function loadSettingsFromSheets() {
   } catch(e) { console.warn('Failed to load settings from Sheets:', e); }
 
   // Also load public-facing data for guests
-  const siteUrl = 'https://script.google.com/macros/s/AKfycbxpIpPTt9f8_2uSBl74lo1u6wMet4VQ3EAwMwCZK24cjUVBWa-_YTQASE78Qi2ej2bwEg/exec';
+  const siteUrl = 'https://script.google.com/macros/s/AKfycbyMNg6n6bOcOzi3AtH-rVui9oMnF987eipmtK2arnVMfBJLdgt-U1rEpImkWZELQ9HdTg/exec';
   if (siteUrl) {
     try {
       const [tlRes, mealsRes] = await Promise.all([
@@ -2663,7 +2664,7 @@ async function loadSettingsFromSheets() {
 // ═══════════════════════════════════════════════
 // ── Script 1 (site script) — public-facing data ──
 async function pushSiteData(type, data) {
-  const url = 'https://script.google.com/macros/s/AKfycbxpIpPTt9f8_2uSBl74lo1u6wMet4VQ3EAwMwCZK24cjUVBWa-_YTQASE78Qi2ej2bwEg/exec';
+  const url = 'https://script.google.com/macros/s/AKfycbyMNg6n6bOcOzi3AtH-rVui9oMnF987eipmtK2arnVMfBJLdgt-U1rEpImkWZELQ9HdTg/exec';
   if (!url) return;
   try {
     await fetch(url, {
@@ -2676,7 +2677,7 @@ async function pushSiteData(type, data) {
 }
 
 async function pullSiteData(type, localKey, fallback) {
-  const url = 'https://script.google.com/macros/s/AKfycbxpIpPTt9f8_2uSBl74lo1u6wMet4VQ3EAwMwCZK24cjUVBWa-_YTQASE78Qi2ej2bwEg/exec';
+  const url = 'https://script.google.com/macros/s/AKfycbyMNg6n6bOcOzi3AtH-rVui9oMnF987eipmtK2arnVMfBJLdgt-U1rEpImkWZELQ9HdTg/exec';
   if (!url) return null;
   try {
     const res = await fetch(`${url}?action=get&type=${type}`);
