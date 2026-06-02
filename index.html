@@ -1335,17 +1335,17 @@ async function showAdmin(section) {
 
   } else if (section === 'meals') {
     // Meals — Script 1 (guests see meal options during RSVP)
-    if (siteUrl) await loadAdminSection('meals','wedding_meal_courses',[], d => { set('wedding_meal_courses',d); return renderAdminMeals(); }, false);
+    if (siteUrl) await loadAdminSection('meals','wedding_meal_courses',[], d => { memSet('wedding_meal_courses',d); return renderAdminMeals(); }, false);
     else el.innerHTML = renderAdminMeals();
 
   } else if (section === 'timeline') {
     // Timeline — Script 1 (shown on public Details page)
-    if (siteUrl) await loadAdminSection('timeline','wedding_timeline',DEFAULT_TL, d => { set('wedding_timeline',d); renderPublicTimeline(); return renderAdminTimeline(); }, false);
+    if (siteUrl) await loadAdminSection('timeline','wedding_timeline',DEFAULT_TL, d => { memSet('wedding_timeline',d); renderPublicTimeline(); return renderAdminTimeline(); }, false);
     else el.innerHTML = renderAdminTimeline();
 
   } else if (section === 'checklist') {
     // Checklist — Script 2 (admin only)
-    if (adminUrl) await loadAdminSection('checklist','wedding_checklist',INIT_CHECKLIST, d => { set('wedding_checklist',d); return renderAdminChecklist('All'); }, true);
+    if (adminUrl) await loadAdminSection('checklist','wedding_checklist',INIT_CHECKLIST, d => { memSet('wedding_checklist',d); return renderAdminChecklist('All'); }, true);
     else el.innerHTML = renderAdminChecklist('All');
 
   } else if (section === 'budget') {
@@ -1652,7 +1652,7 @@ function cancelCourseEdit() { editingCourseId=null; document.getElementById('adm
 function deleteCourse(id) { adminSet('wedding_meal_courses',(memGet('wedding_meal_courses',[])).filter(c=>c.id!==id),'meals'); document.getElementById('adminContent').innerHTML=renderAdminMeals(); }
 function toggleGuestType(courseId, type) {
   const courses = memGet('wedding_meal_courses',[]);
-  set('wedding_meal_courses', courses.map(c=>{
+  adminSet('wedding_meal_courses', courses.map(c=>{
     if(c.id!==courseId)return c;
     const has=c.guestTypes.includes(type);
     if(has&&c.guestTypes.length===1)return c;
@@ -1668,7 +1668,7 @@ function addOption(courseId) {
   if(!name.trim())return;
   const courses=memGet('wedding_meal_courses',[]);
   const opt={id:Date.now().toString(36)+Math.random().toString(36).slice(2,5),name:name.trim(),description:desc.trim()||undefined};
-  set('wedding_meal_courses',courses.map(c=>c.id===courseId?{...c,options:[...c.options,opt]}:c));
+  adminSet('wedding_meal_courses',courses.map(c=>c.id===courseId?{...c,options:[...c.options,opt]}:c),'meals');
   addingOptionTo=null; document.getElementById('adminContent').innerHTML=renderAdminMeals();
 }
 function startEditOption(cid,oid,name,desc) { editingOptionKey=`${cid}|${oid}`; document.getElementById('adminContent').innerHTML=renderAdminMeals(); setTimeout(()=>{const el=document.getElementById('editOptName');if(el){el.focus();el.select();}},50); }
@@ -1676,11 +1676,11 @@ function saveOption(cid,oid) {
   const name=(document.getElementById('editOptName')||{}).value||'';
   const desc=(document.getElementById('editOptDesc')||{}).value||'';
   const courses=memGet('wedding_meal_courses',[]);
-  set('wedding_meal_courses',courses.map(c=>c.id!==cid?c:{...c,options:c.options.map(o=>o.id!==oid?o:{...o,name:name.trim()||o.name,description:desc.trim()||undefined})}));
+  adminSet('wedding_meal_courses',courses.map(c=>c.id!==cid?c:{...c,options:c.options.map(o=>o.id!==oid?o:{...o,name:name.trim()||o.name,description:desc.trim()||undefined})}),'meals');
   editingOptionKey=null; document.getElementById('adminContent').innerHTML=renderAdminMeals();
 }
 function cancelOptEdit() { editingOptionKey=null; document.getElementById('adminContent').innerHTML=renderAdminMeals(); }
-function deleteOption(cid,oid) { set('wedding_meal_courses',(memGet('wedding_meal_courses',[])).map(c=>c.id!==cid?c:{...c,options:c.options.filter(o=>o.id!==oid)})); document.getElementById('adminContent').innerHTML=renderAdminMeals(); }
+function deleteOption(cid,oid) { adminSet('wedding_meal_courses',(memGet('wedding_meal_courses',[])).map(c=>c.id!==cid?c:{...c,options:c.options.filter(o=>o.id!==oid)}),'meals'); document.getElementById('adminContent').innerHTML=renderAdminMeals(); }
 
 // ═══════════════════════════════════════════════
 // ADMIN CHECKLIST
@@ -1702,7 +1702,7 @@ let checklistFilter = 'All';
 
 function renderAdminChecklist(filter) {
   checklistFilter = filter || checklistFilter;
-  const items = [...(get('wedding_checklist', INIT_CHECKLIST)||INIT_CHECKLIST)];
+  const items = [...memGet('wedding_checklist', INIT_CHECKLIST)];
   const filtered = items.filter(i=>checklistFilter==='All'||i.category===checklistFilter);
   filtered.sort((a,b)=>{if(a.done!==b.done)return a.done?1:-1;return new Date(a.dueDate)-new Date(b.dueDate);});
 
@@ -1998,7 +1998,7 @@ function saveHeadcount() {
   const dayEst=parseInt((document.getElementById('phDayEst')||{}).value)||0;
   const eveningEst=parseInt((document.getElementById('phEveEst')||{}).value)||0;
   const useActual=(document.getElementById('phUseActual')||{}).checked||false;
-  set('wedding_headcount',{...get('wedding_headcount',INIT_HEADCOUNT),dayEst,eveningEst,useActual});
+  adminSet('wedding_headcount',{...memGet('wedding_headcount',INIT_HEADCOUNT),dayEst,eveningEst,useActual},'headcount');
   document.getElementById('adminContent').innerHTML=renderAdminBudget();
 }
 
@@ -2039,8 +2039,8 @@ function saveCat(id) {
 }
 function cancelCatEdit() { editingCatId=null; document.getElementById('adminContent').innerHTML=renderAdminBudget(); }
 function deleteCat(id) {
-  set('wedding_budget_categories',(memGet('wedding_budget_categories',INIT_CATS)).filter(c=>c.id!==id));
-  set('wedding_budget_actuals',migrateActuals(memGet('wedding_budget_actuals',INIT_ACTUALS)).filter(a=>a.categoryId!==id));
+  adminSet('wedding_budget_categories',(memGet('wedding_budget_categories',INIT_CATS)).filter(c=>c.id!==id),'budget_categories');
+  adminSet('wedding_budget_actuals',migrateActuals(memGet('wedding_budget_actuals',INIT_ACTUALS)).filter(a=>a.categoryId!==id),'budget_actuals');
   document.getElementById('adminContent').innerHTML=renderAdminBudget();
 }
 function addCat() {
@@ -2052,7 +2052,7 @@ function addCat() {
 }
 function cycleStatus(id) {
   const acts=migrateActuals(memGet('wedding_budget_actuals',INIT_ACTUALS));
-  set('wedding_budget_actuals',acts.map(a=>a.id===id?{...a,status:nextStatus(a.status||'scheduled')}:a));
+  adminSet('wedding_budget_actuals',acts.map(a=>a.id===id?{...a,status:nextStatus(a.status||'scheduled')}:a),'budget_actuals');
   document.getElementById('adminContent').innerHTML=renderAdminBudget();
 }
 function startEditActual(id) { currentEditId=id; editingActualId=id; document.getElementById('adminContent').innerHTML=renderAdminBudget(); setTimeout(()=>{const el=document.getElementById('editActName');if(el){el.focus();}},50); }
@@ -2070,7 +2070,7 @@ function saveActual(id) {
     amount=parseFloat((document.getElementById('editActAmt')||{}).value)||0;
   }
   const acts=migrateActuals(memGet('wedding_budget_actuals',INIT_ACTUALS));
-  set('wedding_budget_actuals',acts.map(a=>a.id===id?{...a,name:name.trim()||a.name,status,date:date||undefined,link:link||undefined,perHead:isPerHead,amount:isPerHead?0:amount||a.amount,perHeadAmount:isPerHead?perHeadAmount:undefined,perHeadType:isPerHead?perHeadType:undefined}:a));
+  adminSet('wedding_budget_actuals',acts.map(a=>a.id===id?{...a,name:name.trim()||a.name,status,date:date||undefined,link:link||undefined,perHead:isPerHead,amount:isPerHead?0:amount||a.amount,perHeadAmount:isPerHead?perHeadAmount:undefined,perHeadType:isPerHead?perHeadType:undefined}:a),'budget_actuals');
   editingActualId=null; currentEditId=null; document.getElementById('adminContent').innerHTML=renderAdminBudget();
 }
 function cancelActEdit() { editingActualId=null; currentEditId=null; document.getElementById('adminContent').innerHTML=renderAdminBudget(); }
@@ -2198,13 +2198,13 @@ function tlMoveUp(idx) {
   const items=[...memGet('wedding_timeline',DEFAULT_TL)].sort((a,b)=>a.order-b.order);
   if(idx===0)return;
   const t=items[idx].order; items[idx].order=items[idx-1].order; items[idx-1].order=t;
-  set('wedding_timeline',items); document.getElementById('adminContent').innerHTML=renderAdminTimeline();
+  adminSet('wedding_timeline',items,'timeline'); document.getElementById('adminContent').innerHTML=renderAdminTimeline();
 }
 function tlMoveDown(idx) {
   const items=[...memGet('wedding_timeline',DEFAULT_TL)].sort((a,b)=>a.order-b.order);
   if(idx===items.length-1)return;
   const t=items[idx].order; items[idx].order=items[idx+1].order; items[idx+1].order=t;
-  set('wedding_timeline',items); document.getElementById('adminContent').innerHTML=renderAdminTimeline();
+  adminSet('wedding_timeline',items,'timeline'); document.getElementById('adminContent').innerHTML=renderAdminTimeline();
 }
 function addNote(id) {
   const el=document.getElementById(`noteInput_${id}`);
@@ -2212,12 +2212,12 @@ function addNote(id) {
   const text=el.value.trim();
   if(!text)return;
   const items=memGet('wedding_timeline',DEFAULT_TL);
-  set('wedding_timeline',items.map(i=>i.id===id?{...i,notes:[...(i.notes||[]),text]}:i));
+  adminSet('wedding_timeline',items.map(i=>i.id===id?{...i,notes:[...(i.notes||[]),text]}:i),'timeline');
   document.getElementById('adminContent').innerHTML=renderAdminTimeline();
 }
 function removeNote(id,ni) {
   const items=memGet('wedding_timeline',DEFAULT_TL);
-  set('wedding_timeline',items.map(i=>i.id===id?{...i,notes:(i.notes||[]).filter((_,j)=>j!==ni)}:i));
+  adminSet('wedding_timeline',items.map(i=>i.id===id?{...i,notes:(i.notes||[]).filter((_,j)=>j!==ni)}:i),'timeline');
   document.getElementById('adminContent').innerHTML=renderAdminTimeline();
 }
 
@@ -2579,9 +2579,9 @@ async function pushLocalToSheets(type, localKey, useAdminScript=false) {
   if (type === 'budget') {
     const adminUrl = getAdminUrl();
     if (!adminUrl) { alert('Admin Script URL not set in Site Settings.'); return; }
-    await pushAdminData('budget_categories', get('wedding_budget_categories', INIT_CATS)||INIT_CATS);
-    await pushAdminData('budget_actuals', get('wedding_budget_actuals', INIT_ACTUALS)||INIT_ACTUALS);
-    await pushAdminData('headcount', get('wedding_headcount', INIT_HEADCOUNT));
+    await pushAdminData('budget_categories', memGet('wedding_budget_categories', INIT_CATS));
+    await pushAdminData('budget_actuals', memGet('wedding_budget_actuals', INIT_ACTUALS));
+    await pushAdminData('headcount', memGet('wedding_headcount', INIT_HEADCOUNT));
   } else if (useAdminScript) {
     const adminUrl = getAdminUrl();
     if (!adminUrl) { alert('Admin Script URL not set in Site Settings.'); return; }
@@ -2655,8 +2655,8 @@ async function loadSettingsFromSheets() {
       ]);
       const tlData = await tlRes.json();
       const mealsData = await mealsRes.json();
-      if (tlData.data) set('wedding_timeline', tlData.data);
-      if (mealsData.data) set('wedding_meal_courses', mealsData.data);
+      if (tlData.data) memSet('wedding_timeline', tlData.data);
+      if (mealsData.data) memSet('wedding_meal_courses', mealsData.data);
     } catch(e) { console.warn('Failed to load public data from Sheets:', e); }
   }
 }
