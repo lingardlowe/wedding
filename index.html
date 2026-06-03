@@ -428,6 +428,35 @@
 
     @keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
 
+    /* ── SAVE THE DATE ── */
+    .std-hero { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 3rem 1.5rem; position: relative; overflow: hidden; background: var(--bg); }
+    .std-hero > * { position: relative; z-index: 1; }
+    .std-eyebrow { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.35em; color: var(--secondary); margin-bottom: 2rem; }
+    .std-coming { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.25em; color: var(--secondary); margin-top: 2rem; opacity: 0.7; }
+    .std-area { font-family: var(--font-serif); font-size: 1.1rem; color: var(--secondary); margin-top: 0.5rem; font-style: italic; }
+
+    /* ── DIRECTIONS ── */
+    .directions-row { display: flex; align-items: center; gap: 0.75rem; justify-content: center; margin-top: 0.75rem; flex-wrap: wrap; }
+    .directions-btn { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.4rem 0.875rem; border: 1px solid var(--border); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.15em; color: var(--secondary); text-decoration: none; transition: all 0.2s; background: none; cursor: pointer; font-family: var(--font-sans); }
+    .directions-btn:hover { border-color: var(--primary); color: var(--primary); }
+
+    /* ── GALLERY ── */
+    .gallery-section { padding: 4rem 1.5rem; background: var(--bg); }
+    .gallery-section h2 { font-family: var(--font-serif); font-size: 2rem; color: var(--primary); text-align: center; margin-bottom: 2rem; }
+    .gallery-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 0.75rem; max-width: 56rem; margin: 0 auto; }
+    .gallery-img { width: 100%; aspect-ratio: 1; object-fit: cover; display: block; transition: opacity 0.2s; }
+    .gallery-img:hover { opacity: 0.9; }
+    @media (max-width:640px) { .gallery-grid { grid-template-columns: repeat(2,1fr); } }
+
+    /* ── LOADER TRANSITION ── */
+    #siteLoader { transition: opacity 0.6s ease; }
+    .loader-ring { width: 180px; height: 180px; position: relative; margin: 0 auto 1.5rem; }
+    .loader-ring-img { width: 100%; height: 100%; object-fit: contain; animation: spin 8s linear infinite; }
+    .loader-ring-text { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; animation: spin 8s linear infinite; }
+    .loader-ring-placeholder { width: 180px; height: 180px; border-radius: 50%; border: 1px solid var(--primary); opacity: 0.2; animation: spin 8s linear infinite; }
+    .loader-mono-wrap { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
     /* ── SITE SETTINGS ── */
     .settings-section { background: var(--white); border: 1px solid var(--border); margin-bottom: 1.5rem; overflow: hidden; }
     .settings-section-title { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.15em; color: var(--secondary); padding: 1rem 1.5rem; border-bottom: 1px solid var(--border); background: hsl(150,10%,98%); }
@@ -467,10 +496,15 @@
 <body>
 
 <!-- ████ HOME PAGE ████ -->
-<div id="siteLoader" style="position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:9999;transition:opacity 0.4s;">
+<div id="siteLoader" style="position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:9999;transition:opacity 0.6s ease;">
   <div style="text-align:center;">
-    <div id="loaderMonogram" style="font-family:var(--font-serif);font-size:3rem;color:var(--primary);opacity:0.4;margin-bottom:1rem;">E &amp; I</div>
-    <div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.2em;color:var(--secondary);">Loading…</div>
+    <div class="loader-ring" id="loaderRingWrap">
+      <div class="loader-ring-placeholder" id="loaderRingEl"></div>
+      <div class="loader-mono-wrap">
+        <div id="loaderMonogram" style="font-family:var(--font-serif);font-size:2rem;color:var(--primary);opacity:0.7;">E &amp; I</div>
+      </div>
+    </div>
+    <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.25em;color:var(--secondary);margin-top:0.5rem;">Loading…</div>
   </div>
 </div>
 
@@ -537,6 +571,46 @@
         <div id="storyText"><p>It started with a chance meeting and grew into a lifetime of shared moments, quiet Sunday mornings, and adventures around the world. We are thrilled to invite our closest family and friends to celebrate the next chapter of our story.</p><p>We can't wait to share this beautiful day with you.</p></div>
       </div>
     </section>
+    <section class="gallery-section" id="gallerySection" style="display:none;">
+      <h2>Our Photos</h2>
+      <div class="gallery-grid" id="galleryGrid"></div>
+    </section>
+  </main>
+</div>
+
+<!-- ████ SAVE THE DATE PAGE ████ -->
+<div id="saveDatePage" class="page">
+  <main>
+    <section class="std-hero">
+      <div class="hero-monogram" id="stdMonogramWrap"><span class="hero-monogram-text"></span></div>
+      <p class="std-eyebrow">Save the Date</p>
+      <div id="stdTitleArea"><h1 class="hero-title">E &amp; I</h1></div>
+      <p class="hero-names" id="stdNames">Ian &amp; Emma</p>
+      <div class="divider" style="height:2rem;"></div>
+      <p class="hero-date" id="stdDate">17th July 2027</p>
+      <p class="std-area" id="stdArea">Knutsford, Cheshire</p>
+      <div class="divider" style="height:2rem;"></div>
+      <div class="countdown" id="stdCountdown">
+        <div class="countdown-unit"><span class="countdown-num" id="std-days">000</span><span class="countdown-label">Days</span></div>
+        <span class="countdown-sep">·</span>
+        <div class="countdown-unit"><span class="countdown-num" id="std-hours">00</span><span class="countdown-label">Hours</span></div>
+        <span class="countdown-sep">·</span>
+        <div class="countdown-unit"><span class="countdown-num" id="std-mins">00</span><span class="countdown-label">Minutes</span></div>
+        <span class="countdown-sep">·</span>
+        <div class="countdown-unit"><span class="countdown-num" id="std-secs">00</span><span class="countdown-label">Seconds</span></div>
+      </div>
+      <div class="divider" style="height:2rem;"></div>
+      <div class="cal-section">
+        <p class="cal-eyebrow">Add to Calendar</p>
+        <div class="cal-options" style="display:flex;animation:none;" id="stdCalOptions">
+          <a id="stdCalGoogle" href="#" target="_blank" class="cal-opt-btn">Google</a>
+          <button class="cal-opt-btn" onclick="downloadSaveTheDateICS()">Apple</button>
+          <button class="cal-opt-btn" onclick="downloadSaveTheDateICS()">Outlook</button>
+          <button class="cal-opt-btn" onclick="downloadSaveTheDateICS()">Other (.ics)</button>
+        </div>
+      </div>
+      <p class="std-coming">Formal invitation to follow</p>
+    </section>
   </main>
 </div>
 
@@ -557,6 +631,20 @@
       <p class="section-eyebrow">The Venue</p>
       <h2 class="venue-name" id="detailsVenueName">The Oak Tree of Peover</h2>
       <p class="venue-addr" id="detailsVenueAddr">Plumley Moor Road, Lower Peover, Knutsford WA16 9RX</p>
+      <div class="directions-row" id="directionsRow">
+        <a id="googleMapsBtn" href="#" target="_blank" rel="noopener" class="directions-btn">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          Google Maps
+        </a>
+        <a id="wazeMapsBtn" href="#" target="_blank" rel="noopener" class="directions-btn">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+          Waze
+        </a>
+        <a id="appleMapsBtn" href="#" target="_blank" rel="noopener" class="directions-btn">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          Apple Maps
+        </a>
+      </div>
       <p class="venue-desc" id="detailsVenueDesc">A beautiful rustic venue set in the heart of the Cheshire countryside. The ceremony and reception will both be held here.</p>
     </section>
     <section id="detailsDressSection" style="text-align:center;margin-bottom:3rem;display:none;">
@@ -613,6 +701,7 @@
     </div>
     <nav class="sidebar-nav">
       <button class="sidebar-link" id="nav-dashboard" onclick="showAdmin('dashboard')">Overview</button>
+      <button class="sidebar-link" id="nav-guestlist" onclick="showAdmin('guestlist')">Guest List</button>
       <button class="sidebar-link" id="nav-rsvps" onclick="showAdmin('rsvps')">RSVPs</button>
       <button class="sidebar-link" id="nav-meals" onclick="showAdmin('meals')">Meal Options</button>
       <button class="sidebar-link" id="nav-checklist" onclick="showAdmin('checklist')">Checklist</button>
@@ -641,14 +730,24 @@ function set(key, val) {
 // NAVIGATION
 // ═══════════════════════════════════════════════
 function showPage(name) {
-  ['homePage','detailsPage','rsvpPage'].forEach(id => {
+  ['homePage','saveDatePage','detailsPage','rsvpPage'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.classList.remove('active');
   });
   document.getElementById('adminLoginPage').classList.remove('active');
   document.getElementById('adminPage').classList.remove('active');
 
-  if (name === 'home') { document.getElementById('homePage').classList.add('active'); applyFrontEnd(); }
+  const s = getSiteSettings();
+  const previewFull = new URLSearchParams(window.location.search).get('preview') === 'full';
+  if (name === 'home') {
+    if (s.saveTheDateMode && !previewFull) {
+      document.getElementById('saveDatePage').classList.add('active');
+      applyFrontEnd();
+    } else {
+      document.getElementById('homePage').classList.add('active');
+      applyFrontEnd();
+    }
+  }
   else if (name === 'details') { document.getElementById('detailsPage').classList.add('active'); renderPublicTimeline(); }
   else if (name === 'rsvp') { document.getElementById('rsvpPage').classList.add('active'); initRSVP(); }
   else if (name === 'admin') {
@@ -679,7 +778,12 @@ const SETTINGS_DEFAULTS = {
     accomm: [],
     themeColor: '#6a9e82',
     adminPassword: 'lowe2027',
-
+    saveTheDateMode: false,
+    venueArea: 'Knutsford, Cheshire',
+    galleryImages: [],
+    monogramDriveLink: '',
+    wreathDriveLink: '',
+    faviconDriveLink: '',
 };
 
 // ═══════════════════════════════════════════════
@@ -688,17 +792,31 @@ const SETTINGS_DEFAULTS = {
 function updateCountdown() {
   const s = getSiteSettings();
   const cleanDate = sanitiseDateFields({weddingDate: s.weddingDate, ceremonyTime: s.ceremonyTime, rsvpDeadline: ''});
-  const target = new Date(cleanDate.weddingDate + 'T' + (cleanDate.ceremonyTime||'13:00') + ':00').getTime();
+  const target = new Date(cleanDate.weddingDate + 'T12:00:00').getTime();
   const now = Date.now();
   const diff = Math.max(0, target - now);
   const days = Math.floor(diff / 864e5);
   const hours = Math.floor((diff / 36e5) % 24);
   const mins = Math.floor((diff / 6e4) % 60);
   const secs = Math.floor((diff / 1e3) % 60);
-  document.getElementById('cd-days').textContent = String(days).padStart(3,'0');
-  document.getElementById('cd-hours').textContent = String(hours).padStart(2,'0');
-  document.getElementById('cd-mins').textContent = String(mins).padStart(2,'0');
-  document.getElementById('cd-secs').textContent = String(secs).padStart(2,'0');
+  // Main countdown
+  const cdDays = document.getElementById('cd-days');
+  if (cdDays) cdDays.textContent = String(days).padStart(3,'0');
+  const cdHours = document.getElementById('cd-hours');
+  if (cdHours) cdHours.textContent = String(hours).padStart(2,'0');
+  const cdMins = document.getElementById('cd-mins');
+  if (cdMins) cdMins.textContent = String(mins).padStart(2,'0');
+  const cdSecs = document.getElementById('cd-secs');
+  if (cdSecs) cdSecs.textContent = String(secs).padStart(2,'0');
+  // Save the date countdown
+  const stdDays = document.getElementById('std-days');
+  if (stdDays) stdDays.textContent = String(days).padStart(3,'0');
+  const stdHours = document.getElementById('std-hours');
+  if (stdHours) stdHours.textContent = String(hours).padStart(2,'0');
+  const stdMins = document.getElementById('std-mins');
+  if (stdMins) stdMins.textContent = String(mins).padStart(2,'0');
+  const stdSecs = document.getElementById('std-secs');
+  if (stdSecs) stdSecs.textContent = String(secs).padStart(2,'0');
 }
 setInterval(updateCountdown, 1000);
 
@@ -723,6 +841,20 @@ function toggleCalType(type) {
     const p = new URLSearchParams({ action:'TEMPLATE', text:e.title, dates:`${e.startUtc}/${e.endUtc}`, details:e.desc, location:LOCATION });
     document.getElementById('calGoogle').href = `https://calendar.google.com/calendar/render?${p}`;
   }
+}
+
+function downloadSaveTheDateICS() {
+  const s = getSiteSettings();
+  const clean = sanitiseDateFields({weddingDate: s.weddingDate, ceremonyTime: '13:00', rsvpDeadline: ''});
+  const dateStr = clean.weddingDate.replace(/-/g,'');
+  const title = `Save the Date — ${s.groomFull} & ${s.brideFull}`;
+  const ics = ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//E & I Wedding//EN','CALSCALE:GREGORIAN','METHOD:PUBLISH',
+    'BEGIN:VEVENT',`DTSTART;VALUE=DATE:${dateStr}`,`DTEND;VALUE=DATE:${dateStr}`,
+    `SUMMARY:${title}`,`LOCATION:${s.venueArea||'Knutsford, Cheshire'}`,
+    `DESCRIPTION:Save the Date - formal invitation to follow.`,
+    'STATUS:CONFIRMED','END:VEVENT','END:VCALENDAR'].join('\r\n');
+  const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(new Blob([ics],{type:'text/calendar'})), download: 'save-the-date.ics' });
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
 }
 
 function downloadICS() {
@@ -974,6 +1106,70 @@ function applyFrontEnd() {
     rsvpDl.textContent = 'Kindly respond by ' + new Date(s.rsvpDeadline + 'T12:00:00').toLocaleDateString('en-GB', {day:'numeric',month:'long',year:'numeric'}) + '.';
     rsvpDl.style.display = '';
   } else if (rsvpDl) { rsvpDl.style.display = 'none'; }
+
+  // ── Save the Date page ──
+  const clean = sanitiseDateFields({weddingDate: s.weddingDate, ceremonyTime: s.ceremonyTime||'13:00', rsvpDeadline: ''});
+  const stdTitle = document.querySelector('#saveDatePage #stdTitleArea');
+  if (stdTitle) stdTitle.innerHTML = `<h1 class="hero-title">${esc(shortMono)}</h1>`;
+  const stdNames = document.getElementById('stdNames');
+  const fn = s.nameOrder==='reversed' ? s.bride : s.groom;
+  const sn = s.nameOrder==='reversed' ? s.groom : s.bride;
+  if (stdNames) stdNames.textContent = fn + ' & ' + sn;
+  const stdDate = document.getElementById('stdDate');
+  if (stdDate && clean.weddingDate) stdDate.textContent = new Date(clean.weddingDate+'T12:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
+  const stdArea = document.getElementById('stdArea');
+  if (stdArea) stdArea.textContent = s.venueArea || 'Knutsford, Cheshire';
+  // STD monogram watermark
+  const stdWrap = document.querySelector('#saveDatePage .hero-monogram');
+  if (stdWrap) {
+    const monoSrc = resolveImage(s.monogramDriveLink, s.monogramImage);
+    if (monoSrc) stdWrap.innerHTML = `<img class="hero-monogram-img" src="${monoSrc}" alt="" />`;
+    else stdWrap.innerHTML = `<span class="hero-monogram-text">${esc(s.monogram||shortMono)}</span>`;
+  }
+  // STD Google calendar link
+  const stdDateStr = clean.weddingDate ? clean.weddingDate.replace(/-/g,'') : '20270717';
+  const stdGoogleUrl = new URL('https://calendar.google.com/calendar/render');
+  stdGoogleUrl.searchParams.set('action','TEMPLATE');
+  stdGoogleUrl.searchParams.set('text', `Save the Date — ${s.groomFull} & ${s.brideFull}`);
+  stdGoogleUrl.searchParams.set('dates', `${stdDateStr}/${stdDateStr}`);
+  stdGoogleUrl.searchParams.set('details', 'Save the Date - formal invitation to follow.');
+  stdGoogleUrl.searchParams.set('location', s.venueArea||'Knutsford, Cheshire');
+  const stdGoogleBtn = document.getElementById('stdCalGoogle');
+  if (stdGoogleBtn) stdGoogleBtn.href = stdGoogleUrl.toString();
+
+  // ── Directions buttons ──
+  const encodedAddr = encodeURIComponent(s.venueAddr || 'The Oak Tree of Peover, Knutsford');
+  const googleMapsBtn = document.getElementById('googleMapsBtn');
+  if (googleMapsBtn) googleMapsBtn.href = `https://www.google.com/maps/dir/?api=1&destination=${encodedAddr}`;
+  const wazeMapsBtn = document.getElementById('wazeMapsBtn');
+  if (wazeMapsBtn) wazeMapsBtn.href = `https://waze.com/ul?q=${encodedAddr}&navigate=yes`;
+  const appleMapsBtn = document.getElementById('appleMapsBtn');
+  if (appleMapsBtn) appleMapsBtn.href = `https://maps.apple.com/?daddr=${encodedAddr}`;
+
+  // ── Gallery ──
+  const gallerySection = document.getElementById('gallerySection');
+  const galleryGrid = document.getElementById('galleryGrid');
+  const images = s.galleryImages || [];
+  if (gallerySection && galleryGrid) {
+    if (images.length > 0) {
+      gallerySection.style.display = '';
+      galleryGrid.innerHTML = images.map(img => {
+        const src = driveUrl(img.link);
+        return src ? `<img class="gallery-img" src="${src}" alt="${esc(img.caption||'')}" loading="lazy" />` : '';
+      }).join('');
+    } else {
+      gallerySection.style.display = 'none';
+    }
+  }
+
+  // ── Loader ring — use wreath Drive link if available ──
+  const loaderRingEl = document.getElementById('loaderRingEl');
+  if (loaderRingEl) {
+    const wreathSrc = driveUrl(s.wreathDriveLink);
+    if (wreathSrc) {
+      loaderRingEl.outerHTML = `<img class="loader-ring-img" id="loaderRingEl" src="${wreathSrc}" alt="" />`;
+    }
+  }
 }
 
 function renderPublicTimeline() {
@@ -993,17 +1189,17 @@ function renderPublicTimeline() {
 // ═══════════════════════════════════════════════
 // RSVP FLOW
 // ═══════════════════════════════════════════════
-let rsvpState = { step:'type', guestType:null, guests:[], mealChoices:{}, notes:'' };
+let rsvpState = { step:'lookup', code:'', guestType:null, guestEntry:null, guests:[], mealChoices:{}, notes:'' };
 
 function initRSVP() {
-  rsvpState = { step:'type', guestType:null, guests:[{name:'',email:'',phone:'',attending:''}], mealChoices:{}, notes:'' };
+  rsvpState = { step:'lookup', code:'', guestType:null, guestEntry:null, guests:[{name:'',email:'',phone:'',attending:''}], mealChoices:{}, notes:'' };
   renderRSVP();
 }
 
 function renderStepIndicator() {
   if (rsvpState.step === 'done') { document.getElementById('rsvpStepIndicator').innerHTML = ''; return; }
-  const steps = ['type','guests','meals','notes'];
-  const labels = ['Guest Type','Details','Meals','Notes'];
+  const steps = ['guests','meals','notes'];
+  const labels = ['Details','Meals','Notes'];
   const cur = steps.indexOf(rsvpState.step);
   const courses = memGet('wedding_meal_courses',[]);
   const hasMeals = courses.some(c => rsvpState.guestType && c.guestTypes.includes(rsvpState.guestType) && c.options.length > 0);
@@ -1024,29 +1220,55 @@ function renderStepIndicator() {
 function renderRSVP() {
   renderStepIndicator();
   const el = document.getElementById('rsvpContent');
-  if (rsvpState.step === 'type') el.innerHTML = renderTypeStep();
+  if (rsvpState.step === 'lookup') el.innerHTML = renderLookupStep();
   else if (rsvpState.step === 'guests') el.innerHTML = renderGuestsStep();
   else if (rsvpState.step === 'meals') el.innerHTML = renderMealsStep();
   else if (rsvpState.step === 'notes') el.innerHTML = renderNotesStep();
   else if (rsvpState.step === 'done') el.innerHTML = renderDoneStep();
 }
 
-function renderTypeStep() {
-  return `<div>
-    <p style="text-align:center;font-size:0.7rem;text-transform:uppercase;letter-spacing:0.2em;color:var(--secondary);margin-bottom:2rem;">Are you joining us as a…</p>
-    <div class="type-grid">
-      <div class="type-card" onclick="selectGuestType('day')">
-        <h3>Day Guest</h3><p>Ceremony &amp; reception</p>
-      </div>
-      <div class="type-card" onclick="selectGuestType('evening')">
-        <h3>Evening Guest</h3><p>Evening celebration</p>
-      </div>
+function renderLookupStep() {
+  return `<div class="form-card">
+    <div style="text-align:center;margin-bottom:2rem;">
+      <p style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.2em;color:var(--secondary);margin-bottom:0.5rem;">Find your invitation</p>
+      <p style="font-size:0.875rem;color:var(--secondary);">Enter your initial and surname as shown on your invitation<br><span style="font-size:0.8rem;opacity:0.7;">e.g. E LINGARD or J SMITH</span></p>
+    </div>
+    <div style="max-width:20rem;margin:0 auto;">
+      <input id="rsvpCodeInput" placeholder="e.g. E LINGARD" style="text-align:center;text-transform:uppercase;font-size:1rem;padding:0.75rem;margin-bottom:1rem;" oninput="this.value=this.value.toUpperCase()" onkeydown="if(event.key==='Enter')lookupRSVPCode()" />
+      <div id="lookupError" style="display:none;color:var(--red);font-size:0.8rem;text-align:center;margin-bottom:0.75rem;"></div>
+      <button class="btn btn-primary btn-full" onclick="lookupRSVPCode()">Find My Invitation</button>
     </div>
   </div>`;
 }
 
-function selectGuestType(type) {
-  rsvpState.guestType = type;
+async function lookupRSVPCode() {
+  const code = (document.getElementById('rsvpCodeInput').value||'').trim().toUpperCase();
+  if (!code) return;
+  // Load guest list from sheets if not in memory
+  let guests = memGet('wedding_guest_list', null);
+  if (!guests) {
+    try {
+      const SITE_URL = 'https://script.google.com/macros/s/AKfycbwZwUoBgxuEQQe8TJ8vSwJDNAoH_QJqK-9yv-hj2QibthgNef2hLeXhNvC6PnIGKUTjfg/exec';
+      const res = await withTimeout(fetch(`${SITE_URL}?action=get&type=guestlist`));
+      const json = await res.json();
+      if (json.data) { memSet('wedding_guest_list', json.data); guests = json.data; }
+    } catch(e) {}
+  }
+  if (!guests) guests = [];
+  // Find matching entry
+  const entry = guests.find(g => g.code === code);
+  if (!entry) {
+    document.getElementById('lookupError').style.display = 'block';
+    document.getElementById('lookupError').textContent = "We couldn't find that code. Please check your invitation and try again.";
+    return;
+  }
+  // Found — pre-fill guests
+  rsvpState.guestEntry = entry;
+  rsvpState.guestType = entry.type;
+  rsvpState.code = code;
+  // Pre-fill lead guest + any additional guests
+  const allNames = [entry.lead, ...(entry.others||[])];
+  rsvpState.guests = allNames.map(name => ({name, email:'', phone:'', attending:''}));
   rsvpState.step = 'guests';
   renderRSVP();
 }
@@ -1058,10 +1280,10 @@ function renderGuestsStep() {
       <button class="back-btn" onclick="rsvpBack()">
         <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
       </button>
-      <span class="form-eyebrow">${rsvpState.guestType === 'day' ? 'Day' : 'Evening'} Guest</span>
+      <span class="form-eyebrow">${rsvpState.guestType === 'day' ? 'Day' : 'Evening'} Guest${rsvpState.guestEntry ? ' — ' + rsvpState.code : ''}</span>
     </div>
     <div style="margin-bottom:1rem;">
-      <label style="font-size:0.75rem;text-transform:uppercase;letter-spacing:0.15em;color:var(--secondary);">Guest Details <span style="normal-case;text-transform:none;letter-spacing:normal;color:hsl(210,15%,60%);"> — one row per person</span></label>
+      <label style="font-size:0.75rem;text-transform:uppercase;letter-spacing:0.15em;color:var(--secondary);">Please confirm your details</label>
     </div>
     ${guests.map((g,i) => `
     <div class="guest-block" id="guestBlock${i}">
@@ -1091,10 +1313,10 @@ function renderGuestsStep() {
         </div>
       </div>
     </div>`).join('')}
-    <button class="add-guest-btn" onclick="addGuest()">
+    ${!rsvpState.guestEntry ? `<button class="add-guest-btn" onclick="addGuest()">
       <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       Add another guest
-    </button>
+    </button>` : ''}
     <div id="guestErrors"></div>
     <button class="btn btn-primary btn-full" style="margin-top:1.5rem;" onclick="guestsNext()">Continue</button>
   </div>`;
@@ -1243,7 +1465,7 @@ async function submitRSVP() {
   const getCOpt = (cid,oid) => { const c=courses.find(x=>x.id===cid); return c?.options.find(o=>o.id===oid)?.name||oid; };
   const getCName = cid => courses.find(c=>c.id===cid)?.name||cid;
 
-  const sheetsUrl = 'https://script.google.com/macros/s/AKfycbyMNg6n6bOcOzi3AtH-rVui9oMnF987eipmtK2arnVMfBJLdgt-U1rEpImkWZELQ9HdTg/exec';
+  const sheetsUrl = 'https://script.google.com/macros/s/AKfycbwZwUoBgxuEQQe8TJ8vSwJDNAoH_QJqK-9yv-hj2QibthgNef2hLeXhNvC6PnIGKUTjfg/exec';
   if (sheetsUrl) {
     try {
       // Build flat rows — one per guest
@@ -1323,7 +1545,7 @@ async function showAdmin(section) {
   const nav = document.getElementById(`nav-${section}`);
   if (nav) nav.classList.add('active');
   const el = document.getElementById('adminContent');
-  const siteUrl = 'https://script.google.com/macros/s/AKfycbyMNg6n6bOcOzi3AtH-rVui9oMnF987eipmtK2arnVMfBJLdgt-U1rEpImkWZELQ9HdTg/exec';
+  const siteUrl = 'https://script.google.com/macros/s/AKfycbwZwUoBgxuEQQe8TJ8vSwJDNAoH_QJqK-9yv-hj2QibthgNef2hLeXhNvC6PnIGKUTjfg/exec';
   const adminUrl = getAdminUrl();
 
   if (section === 'dashboard') {
@@ -1386,7 +1608,7 @@ function renderAdminDashboard() {
   const all = cache.flatMap(r=>r.guests||[{attending:r.attending==='Yes',name:r.name}]);
   const attending = all.filter(g=>g.attending===true||g.attending==='Yes').length;
   const declined = all.filter(g=>g.attending===false||g.attending==='No').length;
-  const hasSheets = !!'https://script.google.com/macros/s/AKfycbyMNg6n6bOcOzi3AtH-rVui9oMnF987eipmtK2arnVMfBJLdgt-U1rEpImkWZELQ9HdTg/exec';
+  const hasSheets = !!'https://script.google.com/macros/s/AKfycbwZwUoBgxuEQQe8TJ8vSwJDNAoH_QJqK-9yv-hj2QibthgNef2hLeXhNvC6PnIGKUTjfg/exec';
   const recent = [...cache].reverse().slice(0,5);
   return `
     <h1 class="page-header">Dashboard Overview</h1>
@@ -1416,6 +1638,122 @@ function renderAdminDashboard() {
 }
 
 // ═══════════════════════════════════════════════
+// ADMIN GUEST LIST
+// ═══════════════════════════════════════════════
+function renderAdminGuestList() {
+  const guests = memGet('wedding_guest_list',[]);
+  return `
+    <div class="page-header-row">
+      <div>
+        <h1 class="page-header" style="margin-bottom:0.25rem;">Guest List</h1>
+        <p class="page-header-sub">${guests.length} household${guests.length!==1?'s':''} · ${guests.filter(g=>g.type==='day').length} day · ${guests.filter(g=>g.type==='evening').length} evening</p>
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="addGuestEntry()">+ Add Guest</button>
+    </div>
+    <div style="background:var(--white);border:1px solid var(--border);overflow-x:auto;">
+      <table style="width:100%;border-collapse:collapse;font-size:0.8rem;">
+        <thead>
+          <tr style="background:hsl(150,10%,98%);border-bottom:1px solid var(--border);">
+            <th style="padding:0.625rem 1rem;text-align:left;font-size:0.65rem;text-transform:uppercase;letter-spacing:0.12em;color:var(--secondary);">Lookup Code</th>
+            <th style="padding:0.625rem 1rem;text-align:left;font-size:0.65rem;text-transform:uppercase;letter-spacing:0.12em;color:var(--secondary);">Lead Name</th>
+            <th style="padding:0.625rem 1rem;text-align:left;font-size:0.65rem;text-transform:uppercase;letter-spacing:0.12em;color:var(--secondary);">Additional Guests</th>
+            <th style="padding:0.625rem 1rem;text-align:left;font-size:0.65rem;text-transform:uppercase;letter-spacing:0.12em;color:var(--secondary);">Type</th>
+            <th style="padding:0.625rem 1rem;text-align:left;font-size:0.65rem;text-transform:uppercase;letter-spacing:0.12em;color:var(--secondary);"></th>
+          </tr>
+        </thead>
+        <tbody>
+          ${guests.length===0?`<tr><td colspan="5" style="padding:2rem;text-align:center;color:var(--secondary);font-style:italic;">No guests added yet</td></tr>`:''}
+          ${guests.map((g,i) => `
+          <tr style="border-bottom:1px solid hsl(150,10%,93%);">
+            <td style="padding:0.5rem 1rem;font-weight:500;color:var(--primary);font-family:var(--font-sans);letter-spacing:0.05em;">${esc(g.code||'')}</td>
+            <td style="padding:0.5rem 1rem;">${esc(g.lead||'')}</td>
+            <td style="padding:0.5rem 1rem;color:var(--secondary);">${esc((g.others||[]).join(', '))||'—'}</td>
+            <td style="padding:0.5rem 1rem;"><span class="badge badge-${g.type||'day'}">${g.type||'day'}</span></td>
+            <td style="padding:0.5rem 1rem;text-align:right;">
+              <button class="btn btn-outline btn-sm" onclick="editGuestEntry(${i})" style="margin-right:0.5rem;">Edit</button>
+              <button class="btn-danger" onclick="removeGuestEntry(${i})">Remove</button>
+            </td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+    <div id="guestEntryForm" style="display:none;background:var(--white);border:1px solid var(--border);padding:1.5rem;margin-top:1rem;">
+      <div class="settings-section-title" style="margin-bottom:1rem;">Add / Edit Guest</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;">
+        <div class="settings-field">
+          <label>Lookup code <span style="font-weight:400;color:hsl(210,15%,60%);">(e.g. J SMITH)</span></label>
+          <input id="ge_code" placeholder="J SMITH" style="text-transform:uppercase;" oninput="this.value=this.value.toUpperCase()" />
+        </div>
+        <div class="settings-field">
+          <label>Guest type</label>
+          <select id="ge_type">
+            <option value="day">Day guest</option>
+            <option value="evening">Evening guest</option>
+          </select>
+        </div>
+        <div class="settings-field">
+          <label>Lead guest full name</label>
+          <input id="ge_lead" placeholder="Emma Lingard" />
+        </div>
+        <div class="settings-field">
+          <label>Additional guests <span style="font-weight:400;color:hsl(210,15%,60%);">(comma separated)</span></label>
+          <input id="ge_others" placeholder="John Smith, Jane Smith" />
+        </div>
+      </div>
+      <input type="hidden" id="ge_editIndex" value="-1" />
+      <div style="display:flex;gap:0.75rem;">
+        <button class="btn btn-primary btn-sm" onclick="saveGuestEntry()">Save Guest</button>
+        <button class="btn btn-ghost btn-sm" onclick="document.getElementById('guestEntryForm').style.display='none'">Cancel</button>
+      </div>
+    </div>`;
+}
+
+function addGuestEntry() {
+  document.getElementById('guestEntryForm').style.display = 'block';
+  document.getElementById('ge_editIndex').value = '-1';
+  document.getElementById('ge_code').value = '';
+  document.getElementById('ge_lead').value = '';
+  document.getElementById('ge_others').value = '';
+  document.getElementById('ge_type').value = 'day';
+  document.getElementById('ge_code').focus();
+}
+
+function editGuestEntry(i) {
+  const guests = memGet('wedding_guest_list',[]);
+  const g = guests[i];
+  document.getElementById('guestEntryForm').style.display = 'block';
+  document.getElementById('ge_editIndex').value = i;
+  document.getElementById('ge_code').value = g.code||'';
+  document.getElementById('ge_lead').value = g.lead||'';
+  document.getElementById('ge_others').value = (g.others||[]).join(', ');
+  document.getElementById('ge_type').value = g.type||'day';
+  document.getElementById('ge_code').focus();
+}
+
+function saveGuestEntry() {
+  const code = (document.getElementById('ge_code').value||'').trim().toUpperCase();
+  const lead = (document.getElementById('ge_lead').value||'').trim();
+  const type = document.getElementById('ge_type').value;
+  const othersRaw = (document.getElementById('ge_others').value||'').trim();
+  const others = othersRaw ? othersRaw.split(',').map(s=>s.trim()).filter(Boolean) : [];
+  if (!code || !lead) return;
+  const guests = [...memGet('wedding_guest_list',[])];
+  const idx = parseInt(document.getElementById('ge_editIndex').value);
+  const entry = {code, lead, others, type};
+  if (idx >= 0) guests[idx] = entry;
+  else guests.push(entry);
+  adminSet('wedding_guest_list', guests, 'guestlist');
+  document.getElementById('adminContent').innerHTML = renderAdminGuestList();
+}
+
+function removeGuestEntry(i) {
+  const guests = [...memGet('wedding_guest_list',[])];
+  guests.splice(i,1);
+  adminSet('wedding_guest_list', guests, 'guestlist');
+  document.getElementById('adminContent').innerHTML = renderAdminGuestList();
+}
+
+// ═══════════════════════════════════════════════
 // ADMIN RSVPs
 // ═══════════════════════════════════════════════
 let rsvpFilter = 'all';
@@ -1423,7 +1761,7 @@ let expandedRSVP = null;
 let rsvpsLoading = false;
 
 async function loadRSVPsFromSheets() {
-  const url = 'https://script.google.com/macros/s/AKfycbyMNg6n6bOcOzi3AtH-rVui9oMnF987eipmtK2arnVMfBJLdgt-U1rEpImkWZELQ9HdTg/exec';
+  const url = 'https://script.google.com/macros/s/AKfycbwZwUoBgxuEQQe8TJ8vSwJDNAoH_QJqK-9yv-hj2QibthgNef2hLeXhNvC6PnIGKUTjfg/exec';
   if (!url) return;
   rsvpsLoading = true;
   document.getElementById('adminContent').innerHTML = renderAdminRSVPs();
@@ -1469,7 +1807,7 @@ function sortRSVPs(col) {
 
 function renderAdminRSVPs(filter) {
   rsvpFilter = filter || rsvpFilter;
-  const sheetsUrl = 'https://script.google.com/macros/s/AKfycbyMNg6n6bOcOzi3AtH-rVui9oMnF987eipmtK2arnVMfBJLdgt-U1rEpImkWZELQ9HdTg/exec';
+  const sheetsUrl = 'https://script.google.com/macros/s/AKfycbwZwUoBgxuEQQe8TJ8vSwJDNAoH_QJqK-9yv-hj2QibthgNef2hLeXhNvC6PnIGKUTjfg/exec';
   const rsvps = get('wedding_rsvps_sheets_cache', [])||[]||[];
   const courses = memGet('wedding_meal_courses',[])||[];
 
@@ -2393,6 +2731,30 @@ function renderAdminSettings() {
     </div>
 
     <div class="settings-section">
+      <div class="settings-section-title">Site Mode</div>
+      <div style="padding:1.5rem;">
+        <div class="settings-field">
+          <label>Display mode</label>
+          <div style="display:flex;gap:1.5rem;margin-top:0.5rem;">
+            <label style="display:flex;align-items:center;gap:0.4rem;font-size:0.875rem;cursor:pointer;">
+              <input type="radio" name="siteMode" value="full" ${!s.saveTheDateMode?'checked':''} style="width:auto;accent-color:var(--primary);" />
+              Full site
+            </label>
+            <label style="display:flex;align-items:center;gap:0.4rem;font-size:0.875rem;cursor:pointer;">
+              <input type="radio" name="siteMode" value="std" ${s.saveTheDateMode?'checked':''} style="width:auto;accent-color:var(--primary);" />
+              Save the Date mode
+            </label>
+          </div>
+          <small>Save the Date mode shows only date, countdown, area and add to calendar. Everything else is hidden.</small>
+        </div>
+      </div>
+      <div class="settings-save-row">
+        <button class="btn btn-primary btn-sm" onclick="saveSettings('siteMode')">Save</button>
+        <span class="settings-saved" id="saved_siteMode">Saved ✓</span>
+      </div>
+    </div>
+
+    <div class="settings-section">
       <div class="settings-section-title">Venue</div>
       <div class="settings-grid single">
         <div class="settings-field">
@@ -2400,8 +2762,12 @@ function renderAdminSettings() {
           <input id="ss_venueName" value="${esc(s.venueName)}" placeholder="The Oak Tree of Peover" />
         </div>
         <div class="settings-field">
-          <label>Address</label>
+          <label>Address <span style="font-weight:400;color:hsl(210,15%,60%);">(used for directions buttons)</span></label>
           <input id="ss_venueAddr" value="${esc(s.venueAddr)}" placeholder="Plumley Moor Road, Lower Peover, Knutsford WA16 9RX" />
+        </div>
+        <div class="settings-field">
+          <label>Area <span style="font-weight:400;color:hsl(210,15%,60%);">(shown on Save the Date — no full address)</span></label>
+          <input id="ss_venueArea" value="${esc(s.venueArea||'Knutsford, Cheshire')}" placeholder="Knutsford, Cheshire" />
         </div>
         <div class="settings-field">
           <label>Venue description</label>
@@ -2449,6 +2815,26 @@ function renderAdminSettings() {
       <div class="settings-save-row">
         <button class="btn btn-primary btn-sm" onclick="saveSettings('accomm')">Save Accommodation</button>
         <span class="settings-saved" id="saved_accomm">Saved ✓</span>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-section-title">Photo Gallery <span style="font-weight:400;text-transform:none;letter-spacing:normal;font-size:0.7rem;">(shown on home page)</span></div>
+      <div id="galleryAdminList" style="padding:1rem 1.5rem 0;">
+        ${(s.galleryImages||[]).map((img,i) => `
+        <div style="display:flex;gap:0.75rem;align-items:center;padding:0.5rem 0;border-bottom:1px solid var(--border);">
+          <input value="${esc(img.link||'')}" placeholder="Google Drive share link" oninput="updateGalleryImg(${i},'link',this.value)" style="flex:1;height:1.9rem;font-size:0.8rem;" />
+          <input value="${esc(img.caption||'')}" placeholder="Caption (optional)" oninput="updateGalleryImg(${i},'caption',this.value)" style="width:10rem;height:1.9rem;font-size:0.8rem;" />
+          <button class="btn-danger" onclick="removeGalleryImg(${i})">✕</button>
+        </div>`).join('')}
+      </div>
+      <div style="padding:0.75rem 1.5rem;">
+        <button class="btn btn-outline btn-sm" onclick="addGalleryImg()">+ Add Photo</button>
+      </div>
+      <div class="settings-save-row">
+        <button class="btn btn-primary btn-sm" onclick="saveSettings('gallery')">Save Gallery</button>
+        <span class="settings-saved" id="saved_gallery">Saved ✓</span>
+        <small>Upload photos to Google Drive (Anyone with link) and paste the share links here.</small>
       </div>
     </div>
 
@@ -2501,6 +2887,20 @@ function renderAdminSettings() {
 }
 
 let _accommTemp = null;
+let _galleryTemp = null;
+function getGalleryTemp() {
+  if (!_galleryTemp) _galleryTemp = [...(getSiteSettings().galleryImages||[])];
+  return _galleryTemp;
+}
+function updateGalleryImg(i, field, val) { getGalleryTemp()[i][field] = val; }
+function addGalleryImg() {
+  getGalleryTemp().push({link:'',caption:''});
+  document.getElementById('adminContent').innerHTML = renderAdminSettings();
+}
+function removeGalleryImg(i) {
+  getGalleryTemp().splice(i,1);
+  document.getElementById('adminContent').innerHTML = renderAdminSettings();
+}
 function getAccommTemp() {
   if (!_accommTemp) _accommTemp = [...(getSiteSettings().accomm||[])];
   return _accommTemp;
@@ -2549,12 +2949,19 @@ function saveSettings(section) {
     s.venueName = (document.getElementById('ss_venueName')||{}).value?.trim() || s.venueName;
     s.venueAddr = (document.getElementById('ss_venueAddr')||{}).value?.trim() || s.venueAddr;
     s.venueDesc = (document.getElementById('ss_venueDesc')||{}).value?.trim() || s.venueDesc;
+    s.venueArea = (document.getElementById('ss_venueArea')||{}).value?.trim() || s.venueArea;
     s.dressCode = (document.getElementById('ss_dressCode')||{}).value?.trim() || '';
+  } else if (section === 'siteMode') {
+    const modeEl = document.querySelector('input[name="siteMode"]:checked');
+    s.saveTheDateMode = modeEl ? modeEl.value === 'std' : false;
   } else if (section === 'story') {
     s.story = (document.getElementById('ss_story')||{}).value || s.story;
   } else if (section === 'accomm') {
     s.accomm = getAccommTemp().filter(a => a.name.trim());
     _accommTemp = null;
+  } else if (section === 'gallery') {
+    s.galleryImages = getGalleryTemp().filter(img => img.link.trim());
+    _galleryTemp = null;
   } else if (section === 'theme') {
     const rawColor = (document.getElementById('ss_themeColor')||{}).value?.trim() || s.themeColor;
     s.themeColor = rawColor;
@@ -2588,7 +2995,7 @@ async function pushLocalToSheets(type, localKey, useAdminScript=false) {
     const data = get(localKey, null);
     if (data !== null) await pushAdminData(type, data);
   } else {
-    const siteUrl = 'https://script.google.com/macros/s/AKfycbyMNg6n6bOcOzi3AtH-rVui9oMnF987eipmtK2arnVMfBJLdgt-U1rEpImkWZELQ9HdTg/exec';
+    const siteUrl = 'https://script.google.com/macros/s/AKfycbwZwUoBgxuEQQe8TJ8vSwJDNAoH_QJqK-9yv-hj2QibthgNef2hLeXhNvC6PnIGKUTjfg/exec';
     if (!siteUrl) { alert('Site Script URL not set in Site Settings.'); return; }
     const data = get(localKey, null);
     if (data !== null) await pushSiteData(type, data);
@@ -2598,7 +3005,7 @@ async function pushLocalToSheets(type, localKey, useAdminScript=false) {
 }
 
 async function pushSettingsToSheets(s) {
-  const url = s.sheetsUrl || 'https://script.google.com/macros/s/AKfycbyMNg6n6bOcOzi3AtH-rVui9oMnF987eipmtK2arnVMfBJLdgt-U1rEpImkWZELQ9HdTg/exec';
+  const url = s.sheetsUrl || 'https://script.google.com/macros/s/AKfycbwZwUoBgxuEQQe8TJ8vSwJDNAoH_QJqK-9yv-hj2QibthgNef2hLeXhNvC6PnIGKUTjfg/exec';
   if (!url) return;
   // Strip large binary fields before sending
   const safe = {...s};
@@ -2625,7 +3032,7 @@ function withTimeout(promise, ms=12000) {
 
 async function loadSettingsFromSheets() {
   const local = get('wedding_site_settings', {});
-  const url = 'https://script.google.com/macros/s/AKfycbyMNg6n6bOcOzi3AtH-rVui9oMnF987eipmtK2arnVMfBJLdgt-U1rEpImkWZELQ9HdTg/exec';
+  const url = 'https://script.google.com/macros/s/AKfycbwZwUoBgxuEQQe8TJ8vSwJDNAoH_QJqK-9yv-hj2QibthgNef2hLeXhNvC6PnIGKUTjfg/exec';
   if (!url) return;
   try {
     const res = await withTimeout(fetch(url + '?action=getSettings'));
@@ -2646,7 +3053,7 @@ async function loadSettingsFromSheets() {
   } catch(e) { console.warn('Failed to load settings from Sheets:', e); }
 
   // Also load public-facing data for guests
-  const siteUrl = 'https://script.google.com/macros/s/AKfycbyMNg6n6bOcOzi3AtH-rVui9oMnF987eipmtK2arnVMfBJLdgt-U1rEpImkWZELQ9HdTg/exec';
+  const siteUrl = 'https://script.google.com/macros/s/AKfycbwZwUoBgxuEQQe8TJ8vSwJDNAoH_QJqK-9yv-hj2QibthgNef2hLeXhNvC6PnIGKUTjfg/exec';
   if (siteUrl) {
     try {
       const [tlRes, mealsRes] = await Promise.all([
@@ -2666,7 +3073,7 @@ async function loadSettingsFromSheets() {
 // ═══════════════════════════════════════════════
 // ── Script 1 (site script) — public-facing data ──
 async function pushSiteData(type, data) {
-  const url = 'https://script.google.com/macros/s/AKfycbyMNg6n6bOcOzi3AtH-rVui9oMnF987eipmtK2arnVMfBJLdgt-U1rEpImkWZELQ9HdTg/exec';
+  const url = 'https://script.google.com/macros/s/AKfycbwZwUoBgxuEQQe8TJ8vSwJDNAoH_QJqK-9yv-hj2QibthgNef2hLeXhNvC6PnIGKUTjfg/exec';
   if (!url) return;
   try {
     await fetch(url, {
@@ -2679,7 +3086,7 @@ async function pushSiteData(type, data) {
 }
 
 async function pullSiteData(type, localKey, fallback) {
-  const url = 'https://script.google.com/macros/s/AKfycbyMNg6n6bOcOzi3AtH-rVui9oMnF987eipmtK2arnVMfBJLdgt-U1rEpImkWZELQ9HdTg/exec';
+  const url = 'https://script.google.com/macros/s/AKfycbwZwUoBgxuEQQe8TJ8vSwJDNAoH_QJqK-9yv-hj2QibthgNef2hLeXhNvC6PnIGKUTjfg/exec';
   if (!url) return null;
   try {
     const res = await withTimeout(fetch(`${url}?action=get&type=${type}`));
