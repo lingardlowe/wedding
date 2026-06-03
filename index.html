@@ -999,7 +999,7 @@ function driveUrl(link) {
   if (m1) id = m1[1];
   else if (m2) id = m2[1];
   else if (/^[a-zA-Z0-9_-]{20,}$/.test(link.trim())) id = link.trim();
-  return id ? `https://drive.google.com/uc?export=view&id=${id}` : null;
+  return id ? `https://lh3.googleusercontent.com/d/${id}` : null;
 }
 
 function resolveImage(driveLink, base64) {
