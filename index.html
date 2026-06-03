@@ -5,7 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
   <title>E &amp; I Wedding</title>
   <script>
-    // Set title immediately from localStorage before page renders
+    // Set title and monogram immediately before page renders
+    const HARDCODED_MONOGRAM_URL = 'https://lh3.googleusercontent.com/d/1Fv5uIZhy3TJfZo7fjszpRaly3q7DPYeB';
     try {
       const s = JSON.parse(localStorage.getItem('wedding_site_settings')||'{}');
       const sc = JSON.parse(localStorage.getItem('wedding_site_settings_sheets')||'{}');
@@ -458,8 +459,8 @@
     .loader-inner { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1.5rem; }
     .loader-ring { position: relative; width: 220px; height: 220px; flex-shrink: 0; }
     .loader-ring-placeholder { position: absolute; inset: 0; border-radius: 50%; border: 1px solid var(--primary); opacity: 0.3; animation: spin 8s linear infinite; }
-    .loader-ring-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; animation: spin 8s linear infinite; }
-    .loader-mono-wrap { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+    .loader-ring-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; animation: spin 8s linear infinite; z-index: 1; }
+    .loader-mono-wrap { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 2; }
     .loader-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.25em; color: var(--secondary); }
     @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
@@ -508,7 +509,7 @@
       <img class="loader-ring-img" id="loaderRingEl" src="https://lh3.googleusercontent.com/d/10RJEKQzzObsI3Vt-JIOXOlSohmXr8ytM" alt="" />
 
       <div class="loader-mono-wrap">
-        <div id="loaderMonogram" style="font-family:var(--font-serif);font-size:2rem;color:var(--primary);opacity:0.8;">E &amp; I</div>
+        <img id="loaderMonogramImg" src="https://lh3.googleusercontent.com/d/1ZaLV0Eax6rWQEyeC_6IAdixy-PH6GLSx" alt="E & I" style="width:60%;height:60%;object-fit:contain;" />
       </div>
     </div>
     <p class="loader-label">Loading…</p>
@@ -1003,9 +1004,9 @@ function driveUrl(link) {
   return id ? `https://lh3.googleusercontent.com/d/${id}` : null;
 }
 
-function resolveImage(driveLink, base64) {
+function resolveImage(driveLink, base64, hardcoded) {
   const drive = driveUrl(driveLink);
-  return drive || base64 || null;
+  return drive || base64 || hardcoded || null;
 }
 
 function applyThemeColor(hex) {
@@ -1045,7 +1046,7 @@ function applyFrontEnd() {
   // Monogram watermark — image takes priority over text
   const wrap = document.getElementById('heroMonogramWrap');
   if (wrap) {
-    const monoSrc = resolveImage(s.monogramDriveLink, s.monogramImage);
+    const monoSrc = resolveImage(s.monogramDriveLink, s.monogramImage, HARDCODED_MONOGRAM_URL);
     if (monoSrc) {
       wrap.innerHTML = `<img class="hero-monogram-img" src="${monoSrc}" alt="" />`;
     } else {
@@ -1080,7 +1081,7 @@ function applyFrontEnd() {
   const favicon = document.getElementById('faviconLink');
   if (favicon) {
     const faviconSrc = resolveImage(s.faviconDriveLink, s.faviconImage);
-    const monoSrcFav = resolveImage(s.monogramDriveLink, s.monogramImage);
+    const monoSrcFav = resolveImage(s.monogramDriveLink, s.monogramImage, HARDCODED_MONOGRAM_URL);
     if (faviconSrc) {
       favicon.href = faviconSrc;
     } else if (monoSrcFav) {
@@ -1105,7 +1106,7 @@ function applyFrontEnd() {
   }
   const titleArea = document.getElementById('heroTitleArea');
   if (titleArea) {
-    const monoTitleSrc = resolveImage(s.monogramDriveLink, s.monogramImage);
+    const monoTitleSrc = resolveImage(s.monogramDriveLink, s.monogramImage, HARDCODED_MONOGRAM_URL);
     if (monoTitleSrc && s.monogramAsTitle) {
       titleArea.innerHTML = `<img class="hero-title-img" src="${monoTitleSrc}" alt="${esc(shortMono)}" />`;
     } else {
