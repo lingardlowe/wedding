@@ -57,9 +57,11 @@
     }
     .nav-inner { max-width: 64rem; margin: 0 auto; padding: 0 1.5rem; display: flex; justify-content: space-between; align-items: center; }
     .nav-logo { font-family: var(--font-serif); font-size: 1.5rem; letter-spacing: 0.1em; color: var(--primary); cursor: pointer; text-decoration: none; }
-    .nav-links { display: flex; gap: 2rem; }
+    .nav-links { display: flex; gap: 2rem; align-items: center; }
     .nav-link { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.2em; color: var(--secondary); cursor: pointer; transition: color 0.2s; text-decoration: none; background: none; border: none; font-family: var(--font-sans); }
     .nav-link:hover { color: var(--primary); }
+    .nav-btn { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.2em; color: #fff; background: var(--primary); cursor: pointer; transition: background 0.2s; text-decoration: none; border: none; font-family: var(--font-sans); padding: 0.3rem 1rem; line-height: 1.5; }
+    .nav-btn:hover { background: hsl(150,20%,44%); }
 
     /* ── BUTTONS ── */
     .btn { display: inline-flex; align-items: center; justify-content: center; padding: 0.75rem 2rem; font-size: 0.75rem; font-family: var(--font-sans); text-transform: uppercase; letter-spacing: 0.2em; border: none; cursor: pointer; transition: all 0.2s; font-weight: 500; }
@@ -520,8 +522,9 @@
     <div class="nav-inner">
       <a class="nav-logo" id="navLogo" onclick="showPage('home')">I &amp; E</a>
       <div class="nav-links">
-        <a class="nav-link" onclick="showPage('details')">Details</a>
-        <a class="nav-link" onclick="showPage('rsvp')">RSVP</a>
+        <a class="nav-link" onclick="showPage('details')">The Day</a>
+        <a class="nav-link" onclick="showPage('stay')">Stay</a>
+        <a class="nav-btn" onclick="showPage('rsvp')">RSVP</a>
       </div>
     </div>
   </nav>
@@ -635,13 +638,14 @@
     <div class="nav-inner">
       <a class="nav-logo" id="navLogoDetails" onclick="showPage('home')">I &amp; E</a>
       <div class="nav-links">
-        <a class="nav-link" onclick="showPage('details')">Details</a>
-        <a class="nav-link" onclick="showPage('rsvp')">RSVP</a>
+        <a class="nav-link" onclick="showPage('details')">The Day</a>
+        <a class="nav-link" onclick="showPage('stay')">Stay</a>
+        <a class="nav-btn" onclick="showPage('rsvp')">RSVP</a>
       </div>
     </div>
   </nav>
   <main class="details-main">
-    <h1 class="page-title">The Details</h1>
+    <h1 class="page-title">The Day</h1>
     <section class="venue-section" id="detailsVenueSection">
       <p class="section-eyebrow">The Venue</p>
       <h2 class="venue-name" id="detailsVenueName">The Oak Tree of Peover</h2>
@@ -663,13 +667,33 @@
       <p class="section-eyebrow">Dress Code</p>
       <p id="detailsDressCode" style="color:var(--secondary);margin-top:0.5rem;"></p>
     </section>
-    <section id="detailsAccommSection" style="margin-bottom:3rem;display:none;">
-      <p class="section-eyebrow" style="text-align:center;margin-bottom:1.5rem;">Accommodation</p>
-      <div id="detailsAccomm" style="max-width:28rem;margin:0 auto;"></div>
-    </section>
+
     <section>
       <p class="section-eyebrow" style="text-align:center;margin-bottom:2rem;">Order of the Day</p>
       <div class="timeline-list" id="publicTimeline"></div>
+    </section>
+  </main>
+</div>
+
+<!-- ████ STAY PAGE ████ -->
+<div id="stayPage" class="page">
+  <nav class="main-nav">
+    <div class="nav-inner">
+      <a class="nav-logo" id="navLogoStay" onclick="showPage('home')">E &amp; I</a>
+      <div class="nav-links">
+        <a class="nav-link" onclick="showPage('details')">The Day</a>
+        <a class="nav-link" onclick="showPage('stay')">Stay</a>
+        <a class="nav-btn" onclick="showPage('rsvp')">RSVP</a>
+      </div>
+    </div>
+  </nav>
+  <main class="details-main">
+    <h1 class="page-title">Where to Stay</h1>
+    <section id="stayAccommSection">
+      <div id="stayAccomm" style="max-width:36rem;margin:0 auto;"></div>
+    </section>
+    <section id="stayPracticalSection" style="margin-top:3rem;">
+      <div id="stayPracticalItems" style="max-width:36rem;margin:0 auto;"></div>
     </section>
   </main>
 </div>
@@ -680,8 +704,9 @@
     <div class="nav-inner">
       <a class="nav-logo" id="navLogoRSVP" onclick="showPage('home')">I &amp; E</a>
       <div class="nav-links">
-        <a class="nav-link" onclick="showPage('details')">Details</a>
-        <a class="nav-link" onclick="showPage('rsvp')">RSVP</a>
+        <a class="nav-link" onclick="showPage('details')">The Day</a>
+        <a class="nav-link" onclick="showPage('stay')">Stay</a>
+        <a class="nav-btn" onclick="showPage('rsvp')">RSVP</a>
       </div>
     </div>
   </nav>
@@ -746,7 +771,7 @@ function set(key, val) {
 // NAVIGATION
 // ═══════════════════════════════════════════════
 function showPage(name) {
-  ['homePage','saveDatePage','detailsPage','rsvpPage'].forEach(id => {
+  ['homePage','saveDatePage','detailsPage','stayPage','rsvpPage'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.classList.remove('active');
   });
@@ -765,6 +790,7 @@ function showPage(name) {
     }
   }
   else if (name === 'details') { document.getElementById('detailsPage').classList.add('active'); renderPublicTimeline(); }
+  else if (name === 'stay') { document.getElementById('stayPage').classList.add('active'); renderStayPage(); }
   else if (name === 'rsvp') { document.getElementById('rsvpPage').classList.add('active'); initRSVP(); }
   else if (name === 'admin') {
     const isAuth = sessionStorage.getItem('wedding_admin_auth') === 'true';
@@ -792,6 +818,10 @@ const SETTINGS_DEFAULTS = {
     dressCode: '',
     rsvpDeadline: '',
     accomm: [],
+    breakfast: '',
+    parking: '',
+    taxi: '',
+    practicalNotes: '',
     themeColor: '#6a9e82',
     adminPassword: 'lowe2027',
     saveTheDateMode: false,
@@ -1060,7 +1090,7 @@ function applyFrontEnd() {
   // Update all nav logos, sidebar, and page title
   const loaderMono = document.getElementById('loaderMonogram');
   if (loaderMono) loaderMono.textContent = shortMono;
-  ['navLogo','navLogoDetails','navLogoRSVP'].forEach(id => {
+  ['navLogo','navLogoDetails','navLogoStay','navLogoRSVP'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.textContent = shortMono;
   });
@@ -1242,6 +1272,48 @@ function applyFrontEnd() {
   const loaderImg = document.getElementById('loaderRingEl');
   if (loaderImg && wreathSrc && loaderImg.src !== wreathSrc) {
     loaderImg.src = wreathSrc;
+  }
+}
+
+function renderStayPage() {
+  const s = getSiteSettings();
+  const accomm = s.accomm || [];
+  const practical = [
+    { label: 'Breakfast', value: s.breakfast, icon: '☕' },
+    { label: 'Parking', value: s.parking, icon: '🚗' },
+    { label: 'Taxis', value: s.taxi, icon: '🚕' },
+    { label: 'Other Info', value: s.practicalNotes, icon: 'ℹ️' },
+  ].filter(p => p.value);
+
+  const accommEl = document.getElementById('stayAccomm');
+  if (accommEl) {
+    if (accomm.length > 0) {
+      accommEl.innerHTML = `
+        <p class="section-eyebrow" style="text-align:center;margin-bottom:1.5rem;">Accommodation</p>
+        ${accomm.map(a => `
+        <div style="display:flex;justify-content:space-between;align-items:start;padding:1rem 0;border-bottom:1px solid var(--border);">
+          <div>
+            <p style="font-weight:500;">${esc(a.name)}</p>
+            ${a.detail ? `<p style="font-size:0.875rem;color:var(--secondary);margin-top:0.25rem;">${esc(a.detail)}</p>` : ''}
+          </div>
+          ${a.link ? `<a href="${esc(a.link)}" target="_blank" class="directions-btn" style="margin-left:1rem;flex-shrink:0;">↗ Link</a>` : ''}
+        </div>`).join('')}`;
+    } else {
+      accommEl.innerHTML = '<p style="text-align:center;color:var(--secondary);font-size:0.875rem;">Accommodation details coming soon.</p>';
+    }
+  }
+
+  const practicalEl = document.getElementById('stayPracticalItems');
+  if (practicalEl && practical.length > 0) {
+    practicalEl.innerHTML = `
+      <p class="section-eyebrow" style="text-align:center;margin-bottom:1.5rem;">Good to Know</p>
+      ${practical.map(p => `
+      <div style="padding:1rem 0;border-bottom:1px solid var(--border);">
+        <p style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.15em;color:var(--secondary);margin-bottom:0.35rem;">${p.icon} ${esc(p.label)}</p>
+        <p style="color:var(--fg);">${esc(p.value)}</p>
+      </div>`).join('')}`;
+  } else if (practicalEl) {
+    practicalEl.innerHTML = '';
   }
 }
 
@@ -2857,7 +2929,33 @@ function renderAdminSettings() {
     </div>
 
     <div class="settings-section">
-      <div class="settings-section-title">Accommodation <span style="font-weight:400;text-transform:none;letter-spacing:normal;font-size:0.7rem;">(shown on Details page)</span></div>
+      <div class="settings-section-title">Stay Page — Accommodation &amp; Practical Info</div>
+      <div class="settings-grid single" style="padding-bottom:0;">
+        <div class="settings-field">
+          <label>Breakfast info</label>
+          <input id="ss_breakfast" value="${esc(s.breakfast||'')}" placeholder="e.g. Breakfast available at the venue from 8am" />
+        </div>
+        <div class="settings-field">
+          <label>Parking</label>
+          <input id="ss_parking" value="${esc(s.parking||'')}" placeholder="e.g. Free parking available on site" />
+        </div>
+        <div class="settings-field">
+          <label>Taxis</label>
+          <input id="ss_taxi" value="${esc(s.taxi||'')}" placeholder="e.g. Knutsford Taxis: 01565 123456" />
+        </div>
+        <div class="settings-field">
+          <label>Other practical notes</label>
+          <textarea id="ss_practicalNotes">${esc(s.practicalNotes||'')}</textarea>
+        </div>
+      </div>
+      <div class="settings-save-row">
+        <button class="btn btn-primary btn-sm" onclick="saveSettings('practical')">Save</button>
+        <span class="settings-saved" id="saved_practical">Saved ✓</span>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-section-title">Accommodation <span style="font-weight:400;text-transform:none;letter-spacing:normal;font-size:0.7rem;">(shown on Stay page)</span></div>
       <div id="accommList" style="padding:1rem 1.5rem 0;">
         ${(s.accomm||[]).map((a,i) => `
         <div class="accomm-item" id="accomm_${i}">
@@ -3020,6 +3118,11 @@ function saveSettings(section) {
     s.saveTheDateMode = modeEl ? modeEl.value === 'std' : false;
   } else if (section === 'story') {
     s.story = (document.getElementById('ss_story')||{}).value || s.story;
+  } else if (section === 'practical') {
+    s.breakfast = (document.getElementById('ss_breakfast')||{}).value?.trim() || '';
+    s.parking = (document.getElementById('ss_parking')||{}).value?.trim() || '';
+    s.taxi = (document.getElementById('ss_taxi')||{}).value?.trim() || '';
+    s.practicalNotes = (document.getElementById('ss_practicalNotes')||{}).value?.trim() || '';
   } else if (section === 'accomm') {
     s.accomm = getAccommTemp().filter(a => a.name.trim());
     _accommTemp = null;
