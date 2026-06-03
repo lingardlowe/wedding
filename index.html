@@ -6,7 +6,6 @@
   <title>E &amp; I Wedding</title>
   <script>
     // Set title and monogram immediately before page renders
-    const HARDCODED_MONOGRAM_URL = 'https://lh3.googleusercontent.com/d/1Fv5uIZhy3TJfZo7fjszpRaly3q7DPYeB';
     try {
       const s = JSON.parse(localStorage.getItem('wedding_site_settings')||'{}');
       const sc = JSON.parse(localStorage.getItem('wedding_site_settings_sheets')||'{}');
@@ -509,7 +508,7 @@
       <img class="loader-ring-img" id="loaderRingEl" src="https://lh3.googleusercontent.com/d/10RJEKQzzObsI3Vt-JIOXOlSohmXr8ytM" alt="" />
 
       <div class="loader-mono-wrap">
-        <img id="loaderMonogramImg" src="https://lh3.googleusercontent.com/d/1ZaLV0Eax6rWQEyeC_6IAdixy-PH6GLSx" alt="E & I" style="width:60%;height:60%;object-fit:contain;" />
+        <img id="loaderMonogramImg" src="https://lh3.googleusercontent.com/d/1ZaLV0Eax6rWQEyeC_6IAdixy-PH6GLSx" alt="E & I" style="width:100%;height:100%;object-fit:contain;" />
       </div>
     </div>
     <p class="loader-label">Loading…</p>
@@ -728,6 +727,10 @@
 </div>
 
 <script>
+const HARDCODED_MONOGRAM_URL = 'https://lh3.googleusercontent.com/d/1Fv5uIZhy3TJfZo7fjszpRaly3q7DPYeB';
+const HARDCODED_WREATH_URL = 'https://lh3.googleusercontent.com/d/10RJEKQzzObsI3Vt-JIOXOlSohmXr8ytM';
+const HARDCODED_FAVICON_URL = 'https://lh3.googleusercontent.com/d/1lo3Q6Odp2PV477r2432vZS0j4EaKM6ec';
+
 // ═══════════════════════════════════════════════
 // STORAGE HELPERS
 // ═══════════════════════════════════════════════
@@ -794,9 +797,6 @@ const SETTINGS_DEFAULTS = {
     saveTheDateMode: false,
     venueArea: 'Knutsford, Cheshire',
     galleryImages: [],
-    monogramDriveLink: 'https://lh3.googleusercontent.com/d/1Fv5uIZhy3TJfZo7fjszpRaly3q7DPYeB',
-    wreathDriveLink: 'https://lh3.googleusercontent.com/d/10RJEKQzzObsI3Vt-JIOXOlSohmXr8ytM',
-    faviconDriveLink: '',
 };
 
 // ═══════════════════════════════════════════════
@@ -1005,8 +1005,8 @@ function driveUrl(link) {
 }
 
 function resolveImage(driveLink, base64, hardcoded) {
-  const drive = driveUrl(driveLink);
-  return drive || base64 || hardcoded || null;
+  // Hardcoded takes priority — avoids stale settings overriding correct images
+  return hardcoded || driveUrl(driveLink) || base64 || null;
 }
 
 function applyThemeColor(hex) {
@@ -1046,7 +1046,7 @@ function applyFrontEnd() {
   // Monogram watermark — image takes priority over text
   const wrap = document.getElementById('heroMonogramWrap');
   if (wrap) {
-    const monoSrc = resolveImage(s.monogramDriveLink, s.monogramImage, HARDCODED_MONOGRAM_URL);
+    const monoSrc = resolveImage(null, s.monogramImage, HARDCODED_MONOGRAM_URL);
     if (monoSrc) {
       wrap.innerHTML = `<img class="hero-monogram-img" src="${monoSrc}" alt="" />`;
     } else {
@@ -1080,8 +1080,8 @@ function applyFrontEnd() {
   // Favicon — use monogram image if available, otherwise generate text favicon
   const favicon = document.getElementById('faviconLink');
   if (favicon) {
-    const faviconSrc = resolveImage(s.faviconDriveLink, s.faviconImage);
-    const monoSrcFav = resolveImage(s.monogramDriveLink, s.monogramImage, HARDCODED_MONOGRAM_URL);
+    const faviconSrc = HARDCODED_FAVICON_URL;
+    const monoSrcFav = resolveImage(null, s.monogramImage, HARDCODED_MONOGRAM_URL);
     if (faviconSrc) {
       favicon.href = faviconSrc;
     } else if (monoSrcFav) {
@@ -1106,7 +1106,7 @@ function applyFrontEnd() {
   }
   const titleArea = document.getElementById('heroTitleArea');
   if (titleArea) {
-    const monoTitleSrc = resolveImage(s.monogramDriveLink, s.monogramImage, HARDCODED_MONOGRAM_URL);
+    const monoTitleSrc = resolveImage(null, s.monogramImage, HARDCODED_MONOGRAM_URL);
     if (monoTitleSrc && s.monogramAsTitle) {
       titleArea.innerHTML = `<img class="hero-title-img" src="${monoTitleSrc}" alt="${esc(shortMono)}" />`;
     } else {
@@ -1185,7 +1185,7 @@ function applyFrontEnd() {
   // STD monogram watermark
   const stdWrap = document.querySelector('#saveDatePage .hero-monogram');
   if (stdWrap) {
-    const monoSrc = resolveImage(s.monogramDriveLink, s.monogramImage);
+    const monoSrc = resolveImage(null, s.monogramImage, HARDCODED_MONOGRAM_URL);
     if (monoSrc) stdWrap.innerHTML = `<img class="hero-monogram-img" src="${monoSrc}" alt="" />`;
     else stdWrap.innerHTML = `<span class="hero-monogram-text">${esc(s.monogram||shortMono)}</span>`;
   }
@@ -1238,7 +1238,7 @@ function applyFrontEnd() {
   }
 
   // ── Loader ring — update src if settings have a different wreath ──
-  const wreathSrc = driveUrl(s.wreathDriveLink);
+  const wreathSrc = HARDCODED_WREATH_URL;
   const loaderImg = document.getElementById('loaderRingEl');
   if (loaderImg && wreathSrc && loaderImg.src !== wreathSrc) {
     loaderImg.src = wreathSrc;
@@ -2739,43 +2739,23 @@ function renderAdminSettings() {
             <input id="ss_monogram" value="${esc(s.monogram)}" placeholder="I & E" oninput="document.getElementById('monogramPreview').textContent=this.value" />
           </div>
           <div class="settings-field">
-            <label>Monogram image <span style="font-weight:400;color:hsl(210,15%,60%);">(watermark &amp; hero — PNG with transparency)</span></label>
-            <div style="display:flex;gap:0.5rem;align-items:center;margin-top:0.35rem;flex-wrap:wrap;">
-              <input id="ss_monogramDriveLink" value="${esc(s.monogramDriveLink||'')}" placeholder="Google Drive share link (recommended)" style="flex:1;min-width:12rem;font-size:0.8rem;" />
-              <button class="btn btn-primary btn-sm" onclick="saveDriveLink('monogram')">Save link</button>
-            </div>
-            <small>Share your image in Google Drive (Anyone with link) and paste the URL above. Syncs to all visitors instantly.</small>
-            ${s.monogramDriveLink ? '<div style="margin-top:0.35rem;font-size:0.75rem;color:var(--primary);">✓ Google Drive link saved — visible to all visitors</div>' : '<div style="margin-top:0.35rem;font-size:0.75rem;color:hsl(210,15%,60%);">No Drive link — text watermark will be used</div>'}
-            ${(s.monogramDriveLink||s.monogramImage) ? `<label style="display:flex;align-items:center;gap:0.4rem;font-size:0.8rem;cursor:pointer;margin-top:0.5rem;"><input type="checkbox" ${s.monogramAsTitle?'checked':''} onchange="toggleMonogramAsTitle(this.checked)" style="width:auto;accent-color:var(--primary);" /> Also use as the hero title (replaces text monogram)</label>` : ''}
-          </div>
-          <div class="settings-field" style="margin-top:1rem;">
-            <label>Wreath ring image <span style="font-weight:400;color:hsl(210,15%,60%);">(spinning loader — export without monogram from Figma)</span></label>
-            <div style="display:flex;gap:0.5rem;align-items:center;margin-top:0.35rem;flex-wrap:wrap;">
-              <input id="ss_wreathDriveLink" value="${esc(s.wreathDriveLink||'')}" placeholder="Google Drive share link" style="flex:1;min-width:12rem;font-size:0.8rem;" />
-              <button class="btn btn-primary btn-sm" onclick="saveDriveLink('wreath')">Save link</button>
-            </div>
-            <small>The ring that spins around your monogram on the loading screen.</small>
-            ${s.wreathDriveLink ? '<div style="margin-top:0.35rem;font-size:0.75rem;color:var(--primary);">✓ Wreath ring saved</div>' : '<div style="margin-top:0.35rem;font-size:0.75rem;color:hsl(210,15%,60%);">No wreath uploaded — placeholder used</div>'}
+            <label>Monogram image</label>
+            <small>Monogram and wreath images are managed via the website code. Contact your developer to update them.</small>
+            <div style="margin-top:0.5rem;font-size:0.75rem;color:var(--primary);">✓ Images configured</div>
           </div>
         </div>
         <div>
           <div class="settings-field" style="margin-bottom:0.5rem;"><label>Watermark preview</label></div>
           <div style="position:relative;width:100%;height:10rem;background:var(--muted);display:flex;align-items:center;justify-content:center;overflow:hidden;">
-            ${(s.monogramDriveLink||s.monogramImage)
-              ? `<img src="${resolveImage(s.monogramDriveLink,s.monogramImage)||''}" style="max-width:80%;max-height:80%;object-fit:contain;opacity:0.15;" />`
-              : `<span id="monogramPreview" style="font-family:var(--font-serif);font-size:3.5rem;color:var(--primary);opacity:0.15;line-height:1;">${esc(s.monogram)}</span>`}
+            <img src="${HARDCODED_MONOGRAM_URL}" style="max-width:80%;max-height:80%;object-fit:contain;opacity:0.15;" />
           </div>
         </div>
       </div>
       <div style="padding:0 1.5rem 1.5rem;">
         <div class="settings-field">
           <label>Browser tab icon (favicon) <span style="font-weight:400;color:hsl(210,15%,60%);">— small square image</span></label>
-          <div style="display:flex;gap:0.5rem;align-items:center;margin-top:0.35rem;flex-wrap:wrap;">
-            <input id="ss_faviconDriveLink" value="${esc(s.faviconDriveLink||'')}" placeholder="Google Drive share link (recommended)" style="flex:1;min-width:12rem;font-size:0.8rem;" />
-            <button class="btn btn-primary btn-sm" onclick="saveDriveLink('favicon')">Save link</button>
-          </div>
-          <small>Square image, ideally 64×64px. Drive link syncs to all visitors. If not set, initials are used automatically.</small>
-          ${s.faviconDriveLink ? '<div style="margin-top:0.35rem;font-size:0.75rem;color:var(--primary);">✓ Google Drive link saved — visible to all visitors</div>' : '<div style="margin-top:0.35rem;font-size:0.75rem;color:hsl(210,15%,60%);">No favicon set — initials will be used automatically</div>'}
+          <small>Favicon is managed via the website code. Contact your developer to update it.</small>
+          <div style="margin-top:0.35rem;font-size:0.75rem;color:var(--primary);">✓ Favicon configured</div>
         </div>
       </div>
       <div class="settings-save-row">
@@ -3127,9 +3107,6 @@ async function loadSettingsFromSheets() {
       if (local.monogramImage) merged.monogramImage = local.monogramImage;
       if (local.faviconImage)  merged.faviconImage  = local.faviconImage;
       // Drive links come FROM sheets — don't override with local
-      if (data.settings.monogramDriveLink) merged.monogramDriveLink = data.settings.monogramDriveLink;
-      if (data.settings.faviconDriveLink)  merged.faviconDriveLink  = data.settings.faviconDriveLink;
-      if (data.settings.wreathDriveLink)   merged.wreathDriveLink   = data.settings.wreathDriveLink;
       if (local.adminPassword) merged.adminPassword = local.adminPassword;
       set('wedding_site_settings_sheets', data.settings);
       set('wedding_site_settings', merged);
@@ -3281,21 +3258,7 @@ function previewMonogram(input) {
   reader.readAsDataURL(file);
 }
 
-function saveDriveLink(type) {
-  const s = {...getSiteSettings()};
-  if (type === 'monogram') {
-    s.monogramDriveLink = (document.getElementById('ss_monogramDriveLink')||{}).value?.trim() || '';
-  } else if (type === 'wreath') {
-    s.wreathDriveLink = (document.getElementById('ss_wreathDriveLink')||{}).value?.trim() || '';
-  } else if (type === 'favicon') {
-    s.faviconDriveLink = (document.getElementById('ss_faviconDriveLink')||{}).value?.trim() || '';
-  }
-  set('wedding_site_settings', s);
-  pushSettingsToSheets(s).catch(()=>{});
-  applyFrontEnd();
-  showSaved('saved_monogram');
-  document.getElementById('adminContent').innerHTML = renderAdminSettings();
-}
+
 
 function clearFaviconImage() {
   const s = {...getSiteSettings(), faviconImage: null};
