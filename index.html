@@ -505,8 +505,8 @@
 <div id="siteLoader" style="position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:9999;transition:opacity 0.6s ease;">
   <div class="loader-inner">
     <div class="loader-ring" id="loaderRingWrap">
-      <img class="loader-ring-img" id="loaderRingEl" src="" alt="" style="display:none;" />
-      <div class="loader-ring-placeholder" id="loaderRingPlaceholder"></div>
+      <img class="loader-ring-img" id="loaderRingEl" src="https://lh3.googleusercontent.com/d/10RJEKQzzObsI3Vt-JIOXOlSohmXr8ytM" alt="" />
+
       <div class="loader-mono-wrap">
         <div id="loaderMonogram" style="font-family:var(--font-serif);font-size:2rem;color:var(--primary);opacity:0.8;">E &amp; I</div>
       </div>
@@ -793,8 +793,8 @@ const SETTINGS_DEFAULTS = {
     saveTheDateMode: false,
     venueArea: 'Knutsford, Cheshire',
     galleryImages: [],
-    monogramDriveLink: '',
-    wreathDriveLink: '',
+    monogramDriveLink: 'https://lh3.googleusercontent.com/d/1Fv5uIZhy3TJfZo7fjszpRaly3q7DPYeB',
+    wreathDriveLink: 'https://lh3.googleusercontent.com/d/10RJEKQzzObsI3Vt-JIOXOlSohmXr8ytM',
     faviconDriveLink: '',
 };
 
@@ -1236,17 +1236,11 @@ function applyFrontEnd() {
     }
   }
 
-  // ── Loader ring — use wreath Drive link if available ──
+  // ── Loader ring — update src if settings have a different wreath ──
   const wreathSrc = driveUrl(s.wreathDriveLink);
   const loaderImg = document.getElementById('loaderRingEl');
-  const loaderPlaceholder = document.getElementById('loaderRingPlaceholder');
-  if (loaderImg && wreathSrc) {
+  if (loaderImg && wreathSrc && loaderImg.src !== wreathSrc) {
     loaderImg.src = wreathSrc;
-    loaderImg.style.display = '';
-    if (loaderPlaceholder) loaderPlaceholder.style.display = 'none';
-  } else if (loaderImg) {
-    loaderImg.style.display = 'none';
-    if (loaderPlaceholder) loaderPlaceholder.style.display = '';
   }
 }
 
