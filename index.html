@@ -1530,21 +1530,15 @@ function renderGuestsStep() {
           </div>
         </div>
       </div>
-    </div>`).join('')}
-    ${rsvpState.guests[0]&&rsvpState.guests[0].plusOneAllowed && !rsvpState.guests.find(g=>g.isPlusOne) ? `
-    <div style="margin:1rem 0;padding:1rem;background:hsl(150,10%,97%);border:1px solid var(--border);">
+    </div>
+    ${g.plusOneAllowed && !g.isPlusOne ? `
+    <div style="padding:0.75rem 1rem;background:hsl(150,10%,97%);border:1px solid var(--border);margin-top:0.5rem;">
       <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;font-size:0.875rem;">
-        <input type="checkbox" id="plusOneCheck" style="width:auto;accent-color:var(--primary);" onchange="togglePlusOne(this.checked)" />
+        <input type="checkbox" id="plusOneCheck${i}" ${rsvpState.guests[i+1]&&rsvpState.guests[i+1].isPlusOneOf===i?'checked':''} style="width:auto;accent-color:var(--primary);" onchange="togglePlusOne(${i},this.checked)" />
         I'm bringing a plus one
       </label>
     </div>` : ''}
-    ${rsvpState.guests.length > 1 && rsvpState.guests.find(g=>g.isPlusOne) ? `
-    <div style="margin:1rem 0;padding:1rem;background:hsl(150,10%,97%);border:1px solid var(--border);">
-      <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;font-size:0.875rem;">
-        <input type="checkbox" id="plusOneCheck" checked style="width:auto;accent-color:var(--primary);" onchange="togglePlusOne(this.checked)" />
-        I'm bringing a plus one
-      </label>
-    </div>` : ''}
+    `).join('')}
     <div id="guestErrors"></div>
     <div style="margin-top:1.5rem;padding:1.25rem;background:hsl(150,10%,97%);border:1px solid var(--border);">
       <p style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.15em;color:var(--secondary);margin-bottom:0.6rem;">RSVP for another guest at the same time?</p>
@@ -1763,14 +1757,18 @@ function renderDoneStep() {
 }
 
 async function addAnotherGuestInline() {
+  const btn = document.querySelector('#rsvpContent .btn-outline[onclick="addAnotherGuestInline()"]');
+  if (btn) { btn.disabled = true; btn.textContent = 'Looking…'; }
   const code = (document.getElementById('rsvpExtraCode').value||'').trim().toUpperCase();
   const errEl = document.getElementById('rsvpExtraCodeError');
-  if (!code) return;
+  if (!code) { if (btn) { btn.disabled = false; btn.textContent = 'Add'; } return; }
   errEl.style.display = 'none';
 
   // Check not already added
   if (rsvpState.guests.find(g => g.code === code)) {
-    errEl.style.display = 'block'; errEl.textContent = 'This guest has already been added.'; return;
+    errEl.style.display = 'block'; errEl.textContent = 'This guest has already been added.';
+    if (btn) { btn.disabled = false; btn.textContent = 'Add'; }
+    return;
   }
 
   // Load guest list
@@ -1787,7 +1785,9 @@ async function addAnotherGuestInline() {
 
   const entry = guestList.find(g => g.code === code);
   if (!entry) {
-    errEl.style.display = 'block'; errEl.textContent = "We couldn't find that code. Please check the invitation."; return;
+    errEl.style.display = 'block'; errEl.textContent = "We couldn't find that code. Please check the invitation.";
+    if (btn) { btn.disabled = false; btn.textContent = 'Add'; }
+    return;
   }
 
   const existing = await getExistingRSVP(code);
@@ -1808,13 +1808,23 @@ async function addAnotherGuestInline() {
   renderRSVP();
 }
 
-function togglePlusOne(checked) {
+function togglePlusOne(guestIndex, checked) {
   if (checked) {
-    // Add plus one guest
-    rsvpState.guests.push({name:'', email:'', phone:'', attending:'yes', isPlusOne:true});
+    // Insert plus one immediately after the guest at guestIndex
+    const plusOne = {name:'', email:'', phone:'', attending:'yes', isPlusOne:true, isPlusOneOf:guestIndex};
+    const insertAt = guestIndex + 1;
+    rsvpState.guests.splice(insertAt, 0, plusOne);
+    // Update isPlusOneOf indexes for any subsequent guests
+    for (let i = insertAt + 1; i < rsvpState.guests.length; i++) {
+      if (rsvpState.guests[i].isPlusOneOf >= insertAt) rsvpState.guests[i].isPlusOneOf++;
+    }
   } else {
-    // Remove plus one guest
-    rsvpState.guests = rsvpState.guests.filter(g => !g.isPlusOne);
+    // Remove the plus one associated with this guest
+    rsvpState.guests = rsvpState.guests.filter(g => !(g.isPlusOne && g.isPlusOneOf === guestIndex));
+    // Re-index isPlusOneOf for remaining guests
+    rsvpState.guests.forEach((g,i) => {
+      if (g.isPlusOneOf > guestIndex) g.isPlusOneOf--;
+    });
   }
   renderRSVP();
 }
