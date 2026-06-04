@@ -194,7 +194,7 @@
     .option-pill.has-error { border-color: hsl(0,70%,80%); }
     .option-pill input { display: none; }
 
-    .done-card { background: var(--white); border: 1px solid var(--border); padding: 3rem; text-align: center; }
+    .done-card { background: var(--white); border: 1px solid var(--border); padding: 2rem; text-align: center; max-width: 32rem; margin: 0 auto; }
     .done-card h2 { font-family: var(--font-serif); font-size: 2rem; margin-bottom: 1rem; }
     .done-card p { color: var(--secondary); }
 
@@ -1757,7 +1757,7 @@ function togglePlusOne(checked) {
 function rsvpBack() {
   const courses = memGet('wedding_meal_courses',[]);
   const hasMeals = courses.some(c=>rsvpState.guestType && c.guestTypes.includes(rsvpState.guestType) && c.options.length>0);
-  if (rsvpState.step === 'guests') rsvpState.step = 'type';
+  if (rsvpState.step === 'guests') rsvpState.step = 'lookup';
   else if (rsvpState.step === 'meals') rsvpState.step = 'guests';
   else if (rsvpState.step === 'notes') rsvpState.step = hasMeals ? 'meals' : 'guests';
   renderRSVP();
@@ -1923,16 +1923,19 @@ async function lookupFromDone() {
   const entry = guestList.find(g => g.code === code);
   if (!entry) {
     if (errEl) { errEl.style.display='block'; errEl.textContent="We couldn't find that code. Please check and try again."; }
+    else alert("We couldn't find that code. Please check and try again.");
     return;
   }
   const existing = (get('wedding_rsvps',[])||[]).find(r => r.code === code) ||
                    (get('wedding_rsvps_sheets_cache',[])||[]).find(r => r.code === code);
+  const prevCompleted = rsvpState.completedEntries || [];
   rsvpState.guestEntry = entry;
   rsvpState.guestType = entry.type;
   rsvpState.code = code;
   rsvpState.guests = [{name: entry.name, email: existing?.email||'', phone: existing?.phone||'', attending: existing ? (existing.attending==='Yes'?'yes':'no') : '', isExisting: !!existing, existingData: existing||null, plusOneAllowed: !!entry.plusOne}];
   rsvpState.mealChoices = {};
   rsvpState.notes = existing?.notes || '';
+  rsvpState.completedEntries = prevCompleted;
   rsvpState.step = 'guests';
   renderRSVP();
 }
