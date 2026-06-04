@@ -431,7 +431,7 @@
     @keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
 
     /* ── SAVE THE DATE ── */
-    .std-hero { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 3rem 1.5rem; position: relative; overflow: hidden; background: var(--bg); }
+    .std-hero { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 3rem 1.5rem; position: relative; overflow: visible; background: var(--bg); }
     .std-hero > * { position: relative; z-index: 1; }
     .std-eyebrow { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.35em; color: var(--secondary); margin-bottom: 2rem; }
     .std-coming { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.25em; color: var(--secondary); margin-top: 2rem; opacity: 0.7; }
@@ -517,7 +517,7 @@
   </div>
 </div>
 
-<div id="homePage" class="page active">
+<div id="homePage" class="page">
   <nav class="main-nav">
     <div class="nav-inner">
       <a class="nav-logo" id="navLogo" onclick="showPage('home')">I &amp; E</a>
@@ -598,8 +598,8 @@
     <section class="std-hero">
       <div class="hero-monogram" id="stdMonogramWrap"><span class="hero-monogram-text"></span></div>
       <p class="std-eyebrow">Save the Date</p>
-      <div id="stdTitleArea"><h1 class="hero-title">E &amp; I</h1></div>
-      <p class="hero-names" id="stdNames">Ian &amp; Emma</p>
+      <div id="stdTitleArea"><img src="https://lh3.googleusercontent.com/d/1Fv5uIZhy3TJfZo7fjszpRaly3q7DPYeB" alt="E &amp; I" style="max-width:clamp(14rem,45vw,24rem);max-height:clamp(10rem,25vw,16rem);object-fit:contain;opacity:0.95;" /></div>
+      <p class="hero-names" id="stdNames">Emma Charlotte Lingard &amp; Ian James Lowe</p>
       <div class="divider" style="height:2rem;"></div>
       <p class="hero-date" id="stdDate">17th July 2027</p>
       <p class="std-area" id="stdArea">Knutsford, Cheshire</p>
@@ -1217,10 +1217,10 @@ function applyFrontEnd() {
   // ── Save the Date page ──
   const clean = sanitiseDateFields({weddingDate: s.weddingDate, ceremonyTime: s.ceremonyTime||'13:00', rsvpDeadline: ''});
   const stdTitle = document.querySelector('#saveDatePage #stdTitleArea');
-  if (stdTitle) stdTitle.innerHTML = `<h1 class="hero-title">${esc(shortMono)}</h1>`;
+  if (stdTitle) stdTitle.innerHTML = `<img src="${HARDCODED_MONOGRAM_URL}" alt="${esc(shortMono)}" style="max-width:clamp(14rem,45vw,24rem);max-height:clamp(10rem,25vw,16rem);object-fit:contain;opacity:0.95;" />`;
   const stdNames = document.getElementById('stdNames');
-  const fn = s.nameOrder==='reversed' ? s.bride : s.groom;
-  const sn = s.nameOrder==='reversed' ? s.groom : s.bride;
+  const fn = s.nameOrder==='reversed' ? s.brideFull : s.groomFull;
+  const sn = s.nameOrder==='reversed' ? s.groomFull : s.brideFull;
   if (stdNames) stdNames.textContent = fn + ' & ' + sn;
   const stdDate = document.getElementById('stdDate');
   if (stdDate && clean.weddingDate) stdDate.textContent = new Date(clean.weddingDate+'T12:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
@@ -1228,11 +1228,7 @@ function applyFrontEnd() {
   if (stdArea) stdArea.textContent = s.venueArea || 'Knutsford, Cheshire';
   // STD monogram watermark
   const stdWrap = document.querySelector('#saveDatePage .hero-monogram');
-  if (stdWrap) {
-    const monoSrc = resolveImage(null, s.monogramImage, HARDCODED_MONOGRAM_URL);
-    if (monoSrc) stdWrap.innerHTML = `<img class="hero-monogram-img" src="${monoSrc}" alt="" />`;
-    else stdWrap.innerHTML = `<span class="hero-monogram-text">${esc(s.monogram||shortMono)}</span>`;
-  }
+  if (stdWrap) stdWrap.innerHTML = `<img class="hero-monogram-img" src="${HARDCODED_MONOGRAM_URL}" alt="" />`;
   // STD Google calendar link
   const stdDateStr = clean.weddingDate ? clean.weddingDate.replace(/-/g,'') : '20270717';
   const stdGoogleUrl = new URL('https://calendar.google.com/calendar/render');
