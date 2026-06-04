@@ -1348,10 +1348,10 @@ function renderPublicTimeline() {
 // ═══════════════════════════════════════════════
 // RSVP FLOW
 // ═══════════════════════════════════════════════
-let rsvpState = { step:'lookup', code:'', guestType:null, guestEntry:null, guests:[], mealChoices:{}, notes:'' };
+let rsvpState = { step:'lookup', code:'', guestType:null, guestEntry:null, guests:[], mealChoices:{}, notes:'', completedEntries:[], addingAnother:false };
 
 function initRSVP() {
-  rsvpState = { step:'lookup', code:'', guestType:null, guestEntry:null, guests:[{name:'',email:'',phone:'',attending:''}], mealChoices:{}, notes:'' };
+  rsvpState = { step:'lookup', code:'', guestType:null, guestEntry:null, guests:[], mealChoices:{}, notes:'', completedEntries:[], addingAnother:false };
   renderRSVP();
 }
 
@@ -1387,7 +1387,19 @@ function renderRSVP() {
 }
 
 function renderLookupStep() {
+  const hasCompleted = rsvpState.completedEntries && rsvpState.completedEntries.length > 0;
   return `<div class="form-card">
+    ${hasCompleted ? `
+    <div style="background:hsl(150,20%,96%);border:1px solid hsl(150,20%,80%);padding:1rem 1.25rem;margin-bottom:1.5rem;">
+      <p style="font-size:0.75rem;font-weight:600;color:var(--primary);margin-bottom:0.5rem;">✓ RSVPs submitted for:</p>
+      ${rsvpState.completedEntries.map(e => `<p style="font-size:0.8rem;color:var(--secondary);">${esc(e.name)} (${e.code})</p>`).join('')}
+    </div>
+    <div style="margin-bottom:1.5rem;">
+      <p style="font-size:0.75rem;text-transform:uppercase;letter-spacing:0.15em;color:var(--secondary);margin-bottom:0.75rem;">RSVP for another guest</p>
+      <input id="rsvpAddCodeInput" placeholder="e.g. J SMITH" style="text-transform:uppercase;font-size:1rem;padding:0.75rem;margin-bottom:0.5rem;width:100%;box-sizing:border-box;" oninput="this.value=this.value.toUpperCase()" onkeydown="if(event.key==='Enter')lookupRSVPCode(true)" />
+      <div id="rsvpAddCodeError" style="display:none;color:var(--red);font-size:0.8rem;margin-bottom:0.5rem;"></div>
+      <button class="btn btn-primary btn-full" onclick="lookupRSVPCode(true)">Find Guest</button>
+    </div>` : `
     <div style="text-align:center;margin-bottom:2rem;">
       <p style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.2em;color:var(--secondary);margin-bottom:0.5rem;">Find your invitation</p>
       <p style="font-size:0.875rem;color:var(--secondary);">Enter your initial and surname as shown on your invitation<br><span style="font-size:0.8rem;opacity:0.7;">e.g. E LINGARD or J SMITH</span></p>
@@ -1396,38 +1408,72 @@ function renderLookupStep() {
       <input id="rsvpCodeInput" placeholder="e.g. E LINGARD" style="text-align:center;text-transform:uppercase;font-size:1rem;padding:0.75rem;margin-bottom:1rem;" oninput="this.value=this.value.toUpperCase()" onkeydown="if(event.key==='Enter')lookupRSVPCode()" />
       <div id="lookupError" style="display:none;color:var(--red);font-size:0.8rem;text-align:center;margin-bottom:0.75rem;"></div>
       <button class="btn btn-primary btn-full" onclick="lookupRSVPCode()">Find My Invitation</button>
-    </div>
+    </div>`}
   </div>`;
 }
 
-async function lookupRSVPCode() {
-  const code = (document.getElementById('rsvpCodeInput').value||'').trim().toUpperCase();
+async function lookupRSVPCode(isAddingAnother=false) {
+  const inputId = isAddingAnother ? 'rsvpAddCodeInput' : 'rsvpCodeInput';
+  const errorId = isAddingAnother ? 'rsvpAddCodeError' : 'lookupError';
+  const code = (document.getElementById(inputId).value||'').trim().toUpperCase();
   if (!code) return;
-  // Load guest list from sheets if not in memory
-  let guests = memGet('wedding_guest_list', null);
-  if (!guests) {
+
+  // Load guest list
+  let guestList = memGet('wedding_guest_list', null);
+  if (!guestList) {
     try {
       const SITE_URL = 'https://script.google.com/macros/s/AKfycbwZwUoBgxuEQQe8TJ8vSwJDNAoH_QJqK-9yv-hj2QibthgNef2hLeXhNvC6PnIGKUTjfg/exec';
       const res = await withTimeout(fetch(`${SITE_URL}?action=get&type=guestlist`));
       const json = await res.json();
-      if (json.data) { memSet('wedding_guest_list', json.data); guests = json.data; }
+      if (json.data) { memSet('wedding_guest_list', json.data); guestList = json.data; }
     } catch(e) {}
   }
-  if (!guests) guests = [];
-  // Find matching entry
-  const entry = guests.find(g => g.code === code);
+  if (!guestList) guestList = [];
+
+  const entry = guestList.find(g => g.code === code);
   if (!entry) {
-    document.getElementById('lookupError').style.display = 'block';
-    document.getElementById('lookupError').textContent = "We couldn't find that code. Please check your invitation and try again.";
+    const errEl = document.getElementById(errorId);
+    if (errEl) { errEl.style.display='block'; errEl.textContent="We couldn't find that code. Please check your invitation and try again."; }
     return;
   }
-  // Found — pre-fill guests
+
+  // Check RSVP deadline
+  const s = getSiteSettings();
+  const clean = sanitiseDateFields({weddingDate:'',ceremonyTime:'',rsvpDeadline:s.rsvpDeadline});
+  if (clean.rsvpDeadline) {
+    const deadline = new Date(clean.rsvpDeadline + 'T23:59:59');
+    if (new Date() > deadline) {
+      const errEl = document.getElementById(errorId);
+      if (errEl) { errEl.style.display='block'; errEl.textContent="The RSVP deadline has passed. Please contact us directly."; }
+      return;
+    }
+  }
+
+  // Check for existing RSVP
+  const existing = (get('wedding_rsvps',[])||[]).find(r => r.code === code) ||
+                   (get('wedding_rsvps_sheets_cache',[])||[]).find(r => r.code === code);
+
+  if (isAddingAnother) {
+    // Adding another guest to current session
+    rsvpState.addingAnother = true;
+    rsvpState.guestEntry = entry;
+    rsvpState.guestType = entry.type;
+    rsvpState.code = code;
+    rsvpState.guests = [{name: entry.name, email:'', phone:'', attending:'', isExisting: !!existing, existingData: existing||null, plusOneAllowed: !!entry.plusOne}];
+    rsvpState.mealChoices = {};
+    rsvpState.notes = '';
+    rsvpState.step = 'guests';
+    renderRSVP();
+    return;
+  }
+
+  // First lookup
   rsvpState.guestEntry = entry;
   rsvpState.guestType = entry.type;
   rsvpState.code = code;
-  // Pre-fill lead guest + any additional guests
-  const allNames = [entry.lead, ...(entry.others||[])];
-  rsvpState.guests = allNames.map(name => ({name, email:'', phone:'', attending:''}));
+  rsvpState.guests = [{name: entry.name, email: existing?.email||'', phone: existing?.phone||'', attending: existing ? (existing.attending==='Yes' ? 'yes' : 'no') : '', isExisting: !!existing, existingData: existing||null, plusOneAllowed: !!entry.plusOne}];
+  rsvpState.mealChoices = {};
+  rsvpState.notes = existing?.notes || '';
   rsvpState.step = 'guests';
   renderRSVP();
 }
@@ -1441,6 +1487,10 @@ function renderGuestsStep() {
       </button>
       <span class="form-eyebrow">${rsvpState.guestType === 'day' ? 'Day' : 'Evening'} Guest${rsvpState.guestEntry ? ' — ' + rsvpState.code : ''}</span>
     </div>
+    ${rsvpState.guests[0]&&rsvpState.guests[0].isExisting ? `
+    <div style="background:hsl(38,100%,97%);border:1px solid hsl(38,85%,70%);padding:0.875rem 1.25rem;margin-bottom:1.25rem;font-size:0.8rem;color:hsl(32,80%,35%);">
+      You've already submitted an RSVP. Your previous answers are shown below — feel free to update them.
+    </div>` : ''}
     <div style="margin-bottom:1rem;">
       <label style="font-size:0.75rem;text-transform:uppercase;letter-spacing:0.15em;color:var(--secondary);">Please confirm your details</label>
     </div>
@@ -1472,10 +1522,20 @@ function renderGuestsStep() {
         </div>
       </div>
     </div>`).join('')}
-    ${!rsvpState.guestEntry ? `<button class="add-guest-btn" onclick="addGuest()">
-      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-      Add another guest
-    </button>` : ''}
+    ${rsvpState.guests[0]&&rsvpState.guests[0].plusOneAllowed && !rsvpState.guests.find(g=>g.isPlusOne) ? `
+    <div style="margin:1rem 0;padding:1rem;background:hsl(150,10%,97%);border:1px solid var(--border);">
+      <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;font-size:0.875rem;">
+        <input type="checkbox" id="plusOneCheck" style="width:auto;accent-color:var(--primary);" onchange="togglePlusOne(this.checked)" />
+        I'm bringing a plus one
+      </label>
+    </div>` : ''}
+    ${rsvpState.guests.length > 1 && rsvpState.guests.find(g=>g.isPlusOne) ? `
+    <div style="margin:1rem 0;padding:1rem;background:hsl(150,10%,97%);border:1px solid var(--border);">
+      <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;font-size:0.875rem;">
+        <input type="checkbox" id="plusOneCheck" checked style="width:auto;accent-color:var(--primary);" onchange="togglePlusOne(this.checked)" />
+        I'm bringing a plus one
+      </label>
+    </div>` : ''}
     <div id="guestErrors"></div>
     <button class="btn btn-primary btn-full" style="margin-top:1.5rem;" onclick="guestsNext()">Continue</button>
   </div>`;
@@ -1653,6 +1713,11 @@ async function submitRSVP() {
   // Always save locally as backup
   const rsvps = get('wedding_rsvps',[])||[];
   set('wedding_rsvps', [...rsvps, entry]);
+  // Track completed entries for multi-guest session
+  rsvpState.completedEntries = [...(rsvpState.completedEntries||[]), {
+    name: rsvpState.guests[0]?.name || rsvpState.code,
+    code: rsvpState.code
+  }];
   rsvpState.step = 'done';
   renderRSVP();
 }
@@ -1662,6 +1727,17 @@ function renderDoneStep() {
     <h2>Thank You</h2>
     <p>Your response has been warmly received.</p>
   </div>`;
+}
+
+function togglePlusOne(checked) {
+  if (checked) {
+    // Add plus one guest
+    rsvpState.guests.push({name:'', email:'', phone:'', attending:'yes', isPlusOne:true});
+  } else {
+    // Remove plus one guest
+    rsvpState.guests = rsvpState.guests.filter(g => !g.isPlusOne);
+  }
+  renderRSVP();
 }
 
 function rsvpBack() {
@@ -1815,16 +1891,35 @@ function renderAdminDashboard() {
     </div>`;
 }
 
+async function lookupFromDone() {
+  const code = (document.getElementById('rsvpAddCodeInput2').value||'').trim().toUpperCase();
+  if (!code) return;
+  document.getElementById('rsvpAddCodeInput').value = code;
+  await lookupRSVPCode(true);
+}
+
 // ═══════════════════════════════════════════════
 // ADMIN GUEST LIST
 // ═══════════════════════════════════════════════
+function autoGenerateCode(name) {
+  // Generate code from name: "Emma Lingard" -> "E LINGARD"
+  const parts = name.trim().split(/\s+/);
+  if (parts.length < 2) return name.toUpperCase();
+  return (parts[0][0] + ' ' + parts.slice(1).join(' ')).toUpperCase();
+}
+
+function formatGuestName(name) {
+  // Force "firstname lastname" format with capitals
+  return name.trim().split(/\s+/).map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+}
+
 function renderAdminGuestList() {
   const guests = memGet('wedding_guest_list',[]);
   return `
     <div class="page-header-row">
       <div>
         <h1 class="page-header" style="margin-bottom:0.25rem;">Guest List</h1>
-        <p class="page-header-sub">${guests.length} household${guests.length!==1?'s':''} · ${guests.filter(g=>g.type==='day').length} day · ${guests.filter(g=>g.type==='evening').length} evening</p>
+        <p class="page-header-sub">${guests.length} guest${guests.length!==1?'s':''} · ${guests.filter(g=>g.type==='day').length} day · ${guests.filter(g=>g.type==='evening').length} evening</p>
       </div>
       <button class="btn btn-primary btn-sm" onclick="addGuestEntry()">+ Add Guest</button>
     </div>
@@ -1833,9 +1928,9 @@ function renderAdminGuestList() {
         <thead>
           <tr style="background:hsl(150,10%,98%);border-bottom:1px solid var(--border);">
             <th style="padding:0.625rem 1rem;text-align:left;font-size:0.65rem;text-transform:uppercase;letter-spacing:0.12em;color:var(--secondary);">Lookup Code</th>
-            <th style="padding:0.625rem 1rem;text-align:left;font-size:0.65rem;text-transform:uppercase;letter-spacing:0.12em;color:var(--secondary);">Lead Name</th>
-            <th style="padding:0.625rem 1rem;text-align:left;font-size:0.65rem;text-transform:uppercase;letter-spacing:0.12em;color:var(--secondary);">Additional Guests</th>
+            <th style="padding:0.625rem 1rem;text-align:left;font-size:0.65rem;text-transform:uppercase;letter-spacing:0.12em;color:var(--secondary);">Name</th>
             <th style="padding:0.625rem 1rem;text-align:left;font-size:0.65rem;text-transform:uppercase;letter-spacing:0.12em;color:var(--secondary);">Type</th>
+            <th style="padding:0.625rem 1rem;text-align:left;font-size:0.65rem;text-transform:uppercase;letter-spacing:0.12em;color:var(--secondary);">Plus One</th>
             <th style="padding:0.625rem 1rem;text-align:left;font-size:0.65rem;text-transform:uppercase;letter-spacing:0.12em;color:var(--secondary);"></th>
           </tr>
         </thead>
@@ -1844,9 +1939,9 @@ function renderAdminGuestList() {
           ${guests.map((g,i) => `
           <tr style="border-bottom:1px solid hsl(150,10%,93%);">
             <td style="padding:0.5rem 1rem;font-weight:500;color:var(--primary);font-family:var(--font-sans);letter-spacing:0.05em;">${esc(g.code||'')}</td>
-            <td style="padding:0.5rem 1rem;">${esc(g.lead||'')}</td>
-            <td style="padding:0.5rem 1rem;color:var(--secondary);">${esc((g.others||[]).join(', '))||'—'}</td>
+            <td style="padding:0.5rem 1rem;">${esc(g.name||'')}</td>
             <td style="padding:0.5rem 1rem;"><span class="badge badge-${g.type||'day'}">${g.type||'day'}</span></td>
+            <td style="padding:0.5rem 1rem;text-align:center;">${g.plusOne ? '✓' : '—'}</td>
             <td style="padding:0.5rem 1rem;text-align:right;">
               <button class="btn btn-outline btn-sm" onclick="editGuestEntry(${i})" style="margin-right:0.5rem;">Edit</button>
               <button class="btn-danger" onclick="removeGuestEntry(${i})">Remove</button>
@@ -1859,8 +1954,20 @@ function renderAdminGuestList() {
       <div class="settings-section-title" style="margin-bottom:1rem;">Add / Edit Guest</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;">
         <div class="settings-field">
-          <label>Lookup code <span style="font-weight:400;color:hsl(210,15%,60%);">(e.g. J SMITH)</span></label>
-          <input id="ge_code" placeholder="J SMITH" style="text-transform:uppercase;" oninput="this.value=this.value.toUpperCase()" />
+          <label>Full name <span style="font-weight:400;color:hsl(210,15%,60%);">Firstname Lastname</span></label>
+          <input id="ge_name" placeholder="Emma Lingard"
+            oninput="
+              const parts=this.value.split(' ');
+              const fmt=parts.map((w,i)=>i===parts.length-1&&!w?w:w.charAt(0).toUpperCase()+w.slice(1).toLowerCase()).join(' ');
+              if(fmt!==this.value){const pos=this.selectionStart;this.value=fmt;this.setSelectionRange(pos,pos);}
+              const codeEl=document.getElementById('ge_code');
+              if(codeEl&&!codeEl.dataset.edited) codeEl.value=autoGenerateCode(this.value);
+            " />
+        </div>
+        <div class="settings-field">
+          <label>Lookup code <span style="font-weight:400;color:hsl(210,15%,60%);">auto-generated, editable</span></label>
+          <input id="ge_code" placeholder="E LINGARD" style="text-transform:uppercase;"
+            oninput="this.value=this.value.toUpperCase();this.dataset.edited='true';" />
         </div>
         <div class="settings-field">
           <label>Guest type</label>
@@ -1869,13 +1976,9 @@ function renderAdminGuestList() {
             <option value="evening">Evening guest</option>
           </select>
         </div>
-        <div class="settings-field">
-          <label>Lead guest full name</label>
-          <input id="ge_lead" placeholder="Emma Lingard" />
-        </div>
-        <div class="settings-field">
-          <label>Additional guests <span style="font-weight:400;color:hsl(210,15%,60%);">(comma separated)</span></label>
-          <input id="ge_others" placeholder="John Smith, Jane Smith" />
+        <div class="settings-field" style="display:flex;align-items:center;gap:0.5rem;padding-top:1.5rem;">
+          <input type="checkbox" id="ge_plusOne" style="width:auto;accent-color:var(--primary);" />
+          <label for="ge_plusOne" style="cursor:pointer;font-size:0.875rem;">Allow plus one</label>
         </div>
       </div>
       <input type="hidden" id="ge_editIndex" value="-1" />
@@ -1887,45 +1990,61 @@ function renderAdminGuestList() {
 }
 
 function addGuestEntry() {
-  // Always re-render to ensure form is in DOM
   const adminEl = document.getElementById('adminContent');
   if (adminEl) adminEl.innerHTML = renderAdminGuestList();
   const form = document.getElementById('guestEntryForm');
-  if (!form) { console.warn('guestEntryForm not found after render'); return; }
+  if (!form) return;
   form.style.display = 'block';
   document.getElementById('ge_editIndex').value = '-1';
-  document.getElementById('ge_code').value = '';
-  document.getElementById('ge_lead').value = '';
-  document.getElementById('ge_others').value = '';
+  document.getElementById('ge_name').value = '';
+  const codeEl = document.getElementById('ge_code');
+  codeEl.value = '';
+  delete codeEl.dataset.edited;
   document.getElementById('ge_type').value = 'day';
+  document.getElementById('ge_plusOne').checked = false;
   setTimeout(() => {
     form.scrollIntoView({behavior:'smooth', block:'nearest'});
-    document.getElementById('ge_code').focus();
+    document.getElementById('ge_name').focus();
   }, 50);
 }
 
 function editGuestEntry(i) {
   const guests = memGet('wedding_guest_list',[]);
   const g = guests[i];
-  document.getElementById('guestEntryForm').style.display = 'block';
+  const adminEl = document.getElementById('adminContent');
+  if (adminEl) adminEl.innerHTML = renderAdminGuestList();
+  const form = document.getElementById('guestEntryForm');
+  if (!form) return;
+  form.style.display = 'block';
   document.getElementById('ge_editIndex').value = i;
-  document.getElementById('ge_code').value = g.code||'';
-  document.getElementById('ge_lead').value = g.lead||'';
-  document.getElementById('ge_others').value = (g.others||[]).join(', ');
+  document.getElementById('ge_name').value = g.name||'';
+  const codeEl = document.getElementById('ge_code');
+  codeEl.value = g.code||'';
+  codeEl.dataset.edited = 'true';
   document.getElementById('ge_type').value = g.type||'day';
-  document.getElementById('ge_code').focus();
+  document.getElementById('ge_plusOne').checked = !!g.plusOne;
+  setTimeout(() => {
+    form.scrollIntoView({behavior:'smooth', block:'nearest'});
+    document.getElementById('ge_name').focus();
+  }, 50);
 }
 
 function saveGuestEntry() {
+  const nameRaw = (document.getElementById('ge_name').value||'').trim();
   const code = (document.getElementById('ge_code').value||'').trim().toUpperCase();
-  const lead = (document.getElementById('ge_lead').value||'').trim();
   const type = document.getElementById('ge_type').value;
-  const othersRaw = (document.getElementById('ge_others').value||'').trim();
-  const others = othersRaw ? othersRaw.split(',').map(s=>s.trim()).filter(Boolean) : [];
-  if (!code || !lead) return;
+  const plusOne = document.getElementById('ge_plusOne').checked;
+  if (!nameRaw || !code) { alert('Please enter a name and code.'); return; }
+  // Validate name format — two words
+  const nameParts = nameRaw.split(' ').filter(Boolean);
+  if (nameParts.length < 2) { alert('Please enter a full name (First Last).'); return; }
+  const name = nameParts.map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+  // Check for duplicate code
   const guests = [...memGet('wedding_guest_list',[])];
   const idx = parseInt(document.getElementById('ge_editIndex').value);
-  const entry = {code, lead, others, type};
+  const dupIdx = guests.findIndex((g,i) => g.code === code && i !== idx);
+  if (dupIdx >= 0) { alert(`Code "${code}" is already used by ${guests[dupIdx].name}. Please use a different code.`); return; }
+  const entry = {code, name, type, plusOne};
   if (idx >= 0) guests[idx] = entry;
   else guests.push(entry);
   adminSet('wedding_guest_list', guests, 'guestlist');
