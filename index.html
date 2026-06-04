@@ -1417,7 +1417,15 @@ async function getExistingRSVP(code) {
   try {
     const res = await withTimeout(fetch(`https://script.google.com/macros/s/AKfycbwZwUoBgxuEQQe8TJ8vSwJDNAoH_QJqK-9yv-hj2QibthgNef2hLeXhNvC6PnIGKUTjfg/exec?action=get`));
     const json = await res.json();
-    if (json.rows) return json.rows.find(r => r.code === code) || null;
+    if (json.rows) {
+      // Match on code first, then fall back to name match
+      const guestList = memGet('wedding_guest_list', []) || [];
+      const guestEntry = guestList.find(g => g.code === code);
+      const guestName = guestEntry ? guestEntry.name.toLowerCase() : null;
+      return json.rows.find(r => r.code === code) ||
+             (guestName ? json.rows.find(r => (r.name||'').toLowerCase() === guestName) : null) ||
+             null;
+    }
   } catch(e) {}
   return null;
 }
@@ -1706,6 +1714,7 @@ async function submitRSVP() {
         submissionId: entry.id,
         submittedAt: entry.submittedAt,
         guestType: entry.guestType,
+        code: g.code || entry.code,
         name: g.name,
         email: g.email,
         phone: g.phone,
@@ -1724,11 +1733,16 @@ async function submitRSVP() {
     }
   }
 
-  // Track completed entries for multi-guest session
-  rsvpState.completedEntries = [...(rsvpState.completedEntries||[]), {
-    name: rsvpState.guests[0]?.name || rsvpState.code,
-    code: rsvpState.code
-  }];
+  // Track completed entries — include all guests with their own codes
+  const newEntries = [];
+  rsvpState.guests.forEach(g => {
+    if (g.isPlusOne) return; // Plus ones don't have their own code
+    newEntries.push({
+      name: g.name || rsvpState.code,
+      code: g.code || rsvpState.code
+    });
+  });
+  rsvpState.completedEntries = [...(rsvpState.completedEntries||[]), ...newEntries];
   rsvpState.step = 'done';
   renderRSVP();
 }
@@ -1736,7 +1750,7 @@ async function submitRSVP() {
 function renderDoneStep() {
   const completed = rsvpState.completedEntries || [];
   return `<div class="done-card">
-    <div style="font-size:2.5rem;margin-bottom:1rem;">🎉</div>
+    <p style="font-family:var(--font-serif);font-size:0.9rem;color:var(--primary);letter-spacing:0.3em;margin-bottom:1rem;">✦</p>
     <h2>Thank You</h2>
     <p>Your response has been warmly received.</p>
     ${completed.length > 0 ? `
@@ -3714,6 +3728,7 @@ function hideLoader() {
   try { applyFrontEnd(); } catch(e) { console.warn('applyFrontEnd failed', e); }
   try { updateCountdown(); } catch(e) { console.warn('updateCountdown failed', e); }
   try { renderPublicTimeline(); } catch(e) { console.warn('renderPublicTimeline failed', e); }
+  try { showPage('home'); } catch(e) { console.warn('showPage failed', e); }
   hideLoader();
 })();
 </script>
