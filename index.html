@@ -1710,6 +1710,25 @@ async function showAdmin(section) {
   if (section === 'dashboard') {
     el.innerHTML = renderAdminDashboard();
 
+  } else if (section === 'guestlist') {
+    el.innerHTML = '<div class="empty-state" style="padding:3rem;">Loading…</div>';
+    let glData = null;
+    try {
+      glData = await pullSiteData('guestlist','wedding_guest_list',[]);
+      if (glData !== null) memSet('wedding_guest_list', glData);
+    } catch(e) { console.warn('Guest list load failed', e); }
+    if (glData === null) {
+      el.innerHTML = `<div style="background:hsl(38,100%,97%);border:1px solid hsl(38,85%,70%);padding:1.25rem 1.5rem;font-size:0.875rem;color:hsl(32,80%,35%);margin-bottom:1rem;">
+        <strong>No data in Google Sheets yet for this section.</strong><br>
+        Click below to push your current local data up to Sheets for the first time.
+        <div style="margin-top:0.75rem;">
+          <button class="btn btn-primary btn-sm" onclick="pushLocalToSheets('guestlist','wedding_guest_list',false)">Push local data to Sheets</button>
+        </div>
+      </div>` + renderAdminGuestList();
+    } else {
+      el.innerHTML = renderAdminGuestList();
+    }
+
   } else if (section === 'rsvps') {
     el.innerHTML = renderAdminRSVPs('all');
     if (siteUrl) loadRSVPsFromSheets();
@@ -1868,27 +1887,20 @@ function renderAdminGuestList() {
 }
 
 function addGuestEntry() {
-  // Ensure guest list is rendered in adminContent
+  // Always re-render to ensure form is in DOM
   const adminEl = document.getElementById('adminContent');
-  if (!document.getElementById('guestEntryForm') && adminEl) {
-    adminEl.innerHTML = renderAdminGuestList();
-  }
+  if (adminEl) adminEl.innerHTML = renderAdminGuestList();
   const form = document.getElementById('guestEntryForm');
-  if (!form) { console.warn('guestEntryForm not found'); return; }
+  if (!form) { console.warn('guestEntryForm not found after render'); return; }
   form.style.display = 'block';
-  const editIndex = document.getElementById('ge_editIndex');
-  const code = document.getElementById('ge_code');
-  const lead = document.getElementById('ge_lead');
-  const others = document.getElementById('ge_others');
-  const type = document.getElementById('ge_type');
-  if (editIndex) editIndex.value = '-1';
-  if (code) code.value = '';
-  if (lead) lead.value = '';
-  if (others) others.value = '';
-  if (type) type.value = 'day';
+  document.getElementById('ge_editIndex').value = '-1';
+  document.getElementById('ge_code').value = '';
+  document.getElementById('ge_lead').value = '';
+  document.getElementById('ge_others').value = '';
+  document.getElementById('ge_type').value = 'day';
   setTimeout(() => {
     form.scrollIntoView({behavior:'smooth', block:'nearest'});
-    if (code) code.focus();
+    document.getElementById('ge_code').focus();
   }, 50);
 }
 
