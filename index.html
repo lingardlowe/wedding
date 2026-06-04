@@ -1868,22 +1868,27 @@ function renderAdminGuestList() {
 }
 
 function addGuestEntry() {
-  // Re-render guest list to ensure form is in DOM
-  const el = document.getElementById('adminContent');
-  if (!document.getElementById('guestEntryForm')) {
-    el.innerHTML = renderAdminGuestList();
+  // Ensure guest list is rendered in adminContent
+  const adminEl = document.getElementById('adminContent');
+  if (!document.getElementById('guestEntryForm') && adminEl) {
+    adminEl.innerHTML = renderAdminGuestList();
   }
   const form = document.getElementById('guestEntryForm');
-  if (!form) return;
+  if (!form) { console.warn('guestEntryForm not found'); return; }
   form.style.display = 'block';
-  document.getElementById('ge_editIndex').value = '-1';
-  document.getElementById('ge_code').value = '';
-  document.getElementById('ge_lead').value = '';
-  document.getElementById('ge_others').value = '';
-  document.getElementById('ge_type').value = 'day';
+  const editIndex = document.getElementById('ge_editIndex');
+  const code = document.getElementById('ge_code');
+  const lead = document.getElementById('ge_lead');
+  const others = document.getElementById('ge_others');
+  const type = document.getElementById('ge_type');
+  if (editIndex) editIndex.value = '-1';
+  if (code) code.value = '';
+  if (lead) lead.value = '';
+  if (others) others.value = '';
+  if (type) type.value = 'day';
   setTimeout(() => {
     form.scrollIntoView({behavior:'smooth', block:'nearest'});
-    document.getElementById('ge_code').focus();
+    if (code) code.focus();
   }, 50);
 }
 
