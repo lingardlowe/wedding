@@ -1723,9 +1723,23 @@ async function submitRSVP() {
 }
 
 function renderDoneStep() {
+  const completed = rsvpState.completedEntries || [];
   return `<div class="done-card">
+    <div style="font-size:2.5rem;margin-bottom:1rem;">🎉</div>
     <h2>Thank You</h2>
     <p>Your response has been warmly received.</p>
+    ${completed.length > 0 ? `
+    <div style="margin-top:1rem;padding:0.75rem 1rem;background:hsl(150,20%,96%);border:1px solid hsl(150,20%,80%);text-align:left;">
+      <p style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.12em;color:var(--primary);margin-bottom:0.4rem;">RSVPs submitted</p>
+      ${completed.map(e=>`<p style="font-size:0.8rem;color:var(--secondary);">${esc(e.name)} (${esc(e.code)})</p>`).join('')}
+    </div>` : ''}
+    <button class="btn btn-outline" onclick="showPage('home')" style="margin-top:1.5rem;">Back to home</button>
+    <div style="margin-top:2rem;padding-top:1.5rem;border-top:1px solid var(--border);text-align:left;">
+      <p style="font-size:0.75rem;text-transform:uppercase;letter-spacing:0.15em;color:var(--secondary);margin-bottom:0.75rem;">RSVP for another guest?</p>
+      <input id="rsvpAddCodeInput2" placeholder="Enter their code e.g. J SMITH" style="text-transform:uppercase;font-size:0.9rem;padding:0.65rem;margin-bottom:0.5rem;width:100%;box-sizing:border-box;" oninput="this.value=this.value.toUpperCase()" onkeydown="if(event.key==='Enter')lookupFromDone()" />
+      <div id="rsvpAddCodeError2" style="display:none;color:var(--red);font-size:0.8rem;margin-bottom:0.5rem;"></div>
+      <button class="btn btn-primary btn-full" onclick="lookupFromDone()">Find Guest</button>
+    </div>
   </div>`;
 }
 
@@ -1894,8 +1908,33 @@ function renderAdminDashboard() {
 async function lookupFromDone() {
   const code = (document.getElementById('rsvpAddCodeInput2').value||'').trim().toUpperCase();
   if (!code) return;
-  document.getElementById('rsvpAddCodeInput').value = code;
-  await lookupRSVPCode(true);
+  const errEl = document.getElementById('rsvpAddCodeError2');
+  // Load guest list
+  let guestList = memGet('wedding_guest_list', null);
+  if (!guestList) {
+    try {
+      const SITE_URL = 'https://script.google.com/macros/s/AKfycbwZwUoBgxuEQQe8TJ8vSwJDNAoH_QJqK-9yv-hj2QibthgNef2hLeXhNvC6PnIGKUTjfg/exec';
+      const res = await withTimeout(fetch(`${SITE_URL}?action=get&type=guestlist`));
+      const json = await res.json();
+      if (json.data) { memSet('wedding_guest_list', json.data); guestList = json.data; }
+    } catch(e) {}
+  }
+  if (!guestList) guestList = [];
+  const entry = guestList.find(g => g.code === code);
+  if (!entry) {
+    if (errEl) { errEl.style.display='block'; errEl.textContent="We couldn't find that code. Please check and try again."; }
+    return;
+  }
+  const existing = (get('wedding_rsvps',[])||[]).find(r => r.code === code) ||
+                   (get('wedding_rsvps_sheets_cache',[])||[]).find(r => r.code === code);
+  rsvpState.guestEntry = entry;
+  rsvpState.guestType = entry.type;
+  rsvpState.code = code;
+  rsvpState.guests = [{name: entry.name, email: existing?.email||'', phone: existing?.phone||'', attending: existing ? (existing.attending==='Yes'?'yes':'no') : '', isExisting: !!existing, existingData: existing||null, plusOneAllowed: !!entry.plusOne}];
+  rsvpState.mealChoices = {};
+  rsvpState.notes = existing?.notes || '';
+  rsvpState.step = 'guests';
+  renderRSVP();
 }
 
 // ═══════════════════════════════════════════════
