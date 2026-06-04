@@ -1110,12 +1110,26 @@ function applyFrontEnd() {
   // Favicon — use monogram image if available, otherwise generate text favicon
   const favicon = document.getElementById('faviconLink');
   if (favicon) {
-    const faviconSrc = HARDCODED_FAVICON_URL;
-    const monoSrcFav = resolveImage(null, s.monogramImage, HARDCODED_MONOGRAM_URL);
-    if (faviconSrc) {
-      favicon.href = faviconSrc;
-    } else if (monoSrcFav) {
-      favicon.href = monoSrcFav;
+    // Always use canvas-drawn initials for favicon — clean and crisp at small size
+    if (true) {
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = canvas.height = 64;
+        const ctx = canvas.getContext('2d');
+        const color = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim() || '#6a9e82';
+        ctx.fillStyle = color;
+        ctx.fillRect(0, 0, 64, 64);
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 28px serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        const first = s.nameOrder === 'reversed' ? (s.bride||'E')[0] : (s.groom||'I')[0];
+        const second = s.nameOrder === 'reversed' ? (s.groom||'I')[0] : (s.bride||'E')[0];
+        ctx.fillText(first + second, 32, 34);
+        favicon.href = canvas.toDataURL();
+      } catch(e) {}
+    }
+    if (false) {
     } else {
       // Draw text favicon on canvas
       try {
@@ -2764,19 +2778,19 @@ function renderAdminSettings() {
       <div class="settings-section-title">Names</div>
       <div class="settings-grid">
         <div class="settings-field">
-          <label>Partner 1 — first name</label>
+          <label>Groom's first name</label>
           <input id="ss_groom" value="${esc(s.groom)}" placeholder="Ian" />
         </div>
         <div class="settings-field">
-          <label>Partner 2 — first name</label>
+          <label>Bride's first name</label>
           <input id="ss_bride" value="${esc(s.bride)}" placeholder="Emma" />
         </div>
         <div class="settings-field">
-          <label>Partner 1 — full name</label>
+          <label>Groom's full name</label>
           <input id="ss_groomFull" value="${esc(s.groomFull)}" placeholder="Ian James Lowe" />
         </div>
         <div class="settings-field">
-          <label>Partner 2 — full name</label>
+          <label>Bride's full name</label>
           <input id="ss_brideFull" value="${esc(s.brideFull)}" placeholder="Emma Charlotte Lingard" />
         </div>
       </div>
@@ -2786,11 +2800,11 @@ function renderAdminSettings() {
           <div style="display:flex;gap:0.75rem;margin-top:0.35rem;">
             <label style="display:flex;align-items:center;gap:0.4rem;font-size:0.8rem;cursor:pointer;">
               <input type="radio" name="nameOrder" value="default" ${(s.nameOrder||'default')==='default'?'checked':''} style="width:auto;accent-color:var(--primary);" />
-              Partner 1 first
+              Groom first
             </label>
             <label style="display:flex;align-items:center;gap:0.4rem;font-size:0.8rem;cursor:pointer;">
               <input type="radio" name="nameOrder" value="reversed" ${s.nameOrder==='reversed'?'checked':''} style="width:auto;accent-color:var(--primary);" />
-              Partner 2 first
+              Bride first
             </label>
           </div>
           <small style="margin-top:0.35rem;">Controls which name appears first on the home page</small>
@@ -2810,11 +2824,7 @@ function renderAdminSettings() {
             <label>Text monogram <span style="font-weight:400;color:hsl(210,15%,60%);">(used as navbar logo &amp; hero title)</span></label>
             <input id="ss_monogram" value="${esc(s.monogram)}" placeholder="I & E" oninput="document.getElementById('monogramPreview').textContent=this.value" />
           </div>
-          <div class="settings-field">
-            <label>Monogram image</label>
-            <small>Monogram and wreath images are managed via the website code. Contact your developer to update them.</small>
-            <div style="margin-top:0.5rem;font-size:0.75rem;color:var(--primary);">✓ Images configured</div>
-          </div>
+
         </div>
         <div>
           <div class="settings-field" style="margin-bottom:0.5rem;"><label>Watermark preview</label></div>
@@ -3048,6 +3058,7 @@ function getGalleryTemp() {
   if (!_galleryTemp) _galleryTemp = [...(getSiteSettings().galleryImages||[])];
   return _galleryTemp;
 }
+function resetGalleryTemp() { _galleryTemp = null; }
 function updateGalleryImg(i, field, val) { getGalleryTemp()[i][field] = val; }
 function addGalleryImg() {
   getGalleryTemp().push({link:'',caption:''});
@@ -3062,6 +3073,7 @@ function getAccommTemp() {
   if (!_accommTemp) _accommTemp = [...(getSiteSettings().accomm||[])];
   return _accommTemp;
 }
+function resetAccommTemp() { _accommTemp = null; }
 function updateAccomm(i, field, val) { getAccommTemp()[i][field] = val; }
 function addAccomm() {
   getAccommTemp().push({name:'',detail:'',link:''});
@@ -3125,10 +3137,10 @@ function saveSettings(section) {
     s.practicalNotes = (document.getElementById('ss_practicalNotes')||{}).value?.trim() || '';
   } else if (section === 'accomm') {
     s.accomm = getAccommTemp().filter(a => a.name.trim());
-    _accommTemp = null;
+    resetAccommTemp();
   } else if (section === 'gallery') {
     s.galleryImages = getGalleryTemp().filter(img => img.link.trim());
-    _galleryTemp = null;
+    resetGalleryTemp();
   } else if (section === 'theme') {
     const rawColor = (document.getElementById('ss_themeColor')||{}).value?.trim() || s.themeColor;
     s.themeColor = rawColor;
