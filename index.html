@@ -1407,7 +1407,7 @@ function renderLookupStep() {
     <div style="max-width:20rem;margin:0 auto;">
       <input id="rsvpCodeInput" placeholder="e.g. E LINGARD" style="text-align:center;text-transform:uppercase;font-size:1rem;padding:0.75rem;margin-bottom:1rem;" oninput="this.value=this.value.toUpperCase()" onkeydown="if(event.key==='Enter')lookupRSVPCode()" />
       <div id="lookupError" style="display:none;color:var(--red);font-size:0.8rem;text-align:center;margin-bottom:0.75rem;"></div>
-      <button class="btn btn-primary btn-full" onclick="lookupRSVPCode()">Find My Invitation</button>
+      <button class="btn btn-primary btn-full" id="findInvitationBtn" onclick="lookupRSVPCode()">Find My Invitation</button>
     </div>`}
   </div>`;
 }
@@ -1427,6 +1427,10 @@ async function lookupRSVPCode(isAddingAnother=false) {
   const errorId = isAddingAnother ? 'rsvpAddCodeError' : 'lookupError';
   const code = (document.getElementById(inputId).value||'').trim().toUpperCase();
   if (!code) return;
+  // Show loading state
+  const findBtn = document.getElementById('findInvitationBtn');
+  if (findBtn) { findBtn.disabled = true; findBtn.textContent = 'Searching…'; }
+  const restoreBtn = () => { if (findBtn) { findBtn.disabled = false; findBtn.textContent = 'Find My Invitation'; } };
 
   // Load guest list
   let guestList = memGet('wedding_guest_list', null);
@@ -1444,6 +1448,7 @@ async function lookupRSVPCode(isAddingAnother=false) {
   if (!entry) {
     const errEl = document.getElementById(errorId);
     if (errEl) { errEl.style.display='block'; errEl.textContent="We couldn't find that code. Please check your invitation and try again."; }
+    restoreBtn();
     return;
   }
 
@@ -1532,11 +1537,12 @@ function renderGuestsStep() {
       </div>
     </div>
     ${g.plusOneAllowed && !g.isPlusOne ? `
-    <div style="padding:0.75rem 1rem;background:hsl(150,10%,97%);border:1px solid var(--border);margin-top:0.5rem;">
-      <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;font-size:0.875rem;">
-        <input type="checkbox" id="plusOneCheck${i}" ${rsvpState.guests[i+1]&&rsvpState.guests[i+1].isPlusOneOf===i?'checked':''} style="width:auto;accent-color:var(--primary);" onchange="togglePlusOne(${i},this.checked)" />
-        I'm bringing a plus one
-      </label>
+    <div style="padding:0.75rem 1rem;background:hsl(150,10%,97%);border:1px solid var(--border);margin-top:0.5rem;display:flex;align-items:center;justify-content:space-between;">
+      <span style="font-size:0.8rem;color:var(--secondary);text-transform:uppercase;letter-spacing:0.1em;">Plus one</span>
+      <div style="display:flex;gap:0;border:1px solid var(--border);overflow:hidden;">
+        <button onclick="togglePlusOne(${i},false)" style="padding:0.35rem 0.875rem;font-size:0.75rem;border:none;cursor:pointer;font-family:var(--font-sans);letter-spacing:0.1em;text-transform:uppercase;${!(rsvpState.guests[i+1]&&rsvpState.guests[i+1].isPlusOneOf===i)?'background:var(--primary);color:#fff;':'background:transparent;color:var(--secondary);'}">No</button>
+        <button onclick="togglePlusOne(${i},true)" style="padding:0.35rem 0.875rem;font-size:0.75rem;border:none;border-left:1px solid var(--border);cursor:pointer;font-family:var(--font-sans);letter-spacing:0.1em;text-transform:uppercase;${(rsvpState.guests[i+1]&&rsvpState.guests[i+1].isPlusOneOf===i)?'background:var(--primary);color:#fff;':'background:transparent;color:var(--secondary);'}">Yes</button>
+      </div>
     </div>` : ''}
     `).join('')}
     <div id="guestErrors"></div>
@@ -1582,14 +1588,6 @@ function guestsNext() {
   });
   if (errs.length) {
     document.getElementById('guestErrors').innerHTML = `<div class="error-box"><ul>${errs.map(e=>`<li>${e}</li>`).join('')}</ul></div>`;
-    return;
-  }
-  // Also check sheets cache
-  const sheetsCache = get('wedding_rsvps_sheets_cache',[]);
-  sheetsCache.forEach(r => { if(r.name && !existing.includes(r.name.toLowerCase())) existing.push(r.name.toLowerCase()); });
-  const dupes = guests.map(g=>g.name.trim()).filter(n=>existing.includes(n.toLowerCase()));
-  if (dupes.length) {
-    document.getElementById('guestErrors').innerHTML = `<div class="error-box">"${dupes.join('", "')}" ${dupes.length>1?'have':'has'} already submitted an RSVP. Please contact us if you need to make changes.</div>`;
     return;
   }
   const courses = memGet('wedding_meal_courses',[]);
