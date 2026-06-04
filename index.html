@@ -1412,6 +1412,16 @@ function renderLookupStep() {
   </div>`;
 }
 
+async function getExistingRSVP(code) {
+  // Always fetch from Sheets — no localStorage
+  try {
+    const res = await withTimeout(fetch(`https://script.google.com/macros/s/AKfycbwZwUoBgxuEQQe8TJ8vSwJDNAoH_QJqK-9yv-hj2QibthgNef2hLeXhNvC6PnIGKUTjfg/exec?action=get`));
+    const json = await res.json();
+    if (json.rows) return json.rows.find(r => r.code === code) || null;
+  } catch(e) {}
+  return null;
+}
+
 async function lookupRSVPCode(isAddingAnother=false) {
   const inputId = isAddingAnother ? 'rsvpAddCodeInput' : 'rsvpCodeInput';
   const errorId = isAddingAnother ? 'rsvpAddCodeError' : 'lookupError';
@@ -1450,8 +1460,7 @@ async function lookupRSVPCode(isAddingAnother=false) {
   }
 
   // Check for existing RSVP
-  const existing = (get('wedding_rsvps',[])||[]).find(r => r.code === code) ||
-                   (get('wedding_rsvps_sheets_cache',[])||[]).find(r => r.code === code);
+  const existing = await getExistingRSVP(code);
 
   if (isAddingAnother) {
     // Adding another guest to current session
@@ -1537,7 +1546,16 @@ function renderGuestsStep() {
       </label>
     </div>` : ''}
     <div id="guestErrors"></div>
-    <button class="btn btn-primary btn-full" style="margin-top:1.5rem;" onclick="guestsNext()">Continue</button>
+    <div style="margin-top:1.5rem;padding:1.25rem;background:hsl(150,10%,97%);border:1px solid var(--border);">
+      <p style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.15em;color:var(--secondary);margin-bottom:0.6rem;">RSVP for another guest at the same time?</p>
+      <div style="display:flex;gap:0.5rem;">
+        <input id="rsvpExtraCode" placeholder="e.g. J SMITH" style="flex:1;text-transform:uppercase;font-size:0.875rem;padding:0.5rem;" oninput="this.value=this.value.toUpperCase()" onkeydown="if(event.key==='Enter')addAnotherGuestInline()" />
+        <button class="btn btn-outline btn-sm" onclick="addAnotherGuestInline()" style="white-space:nowrap;">Add</button>
+      </div>
+      <div id="rsvpExtraCodeError" style="display:none;color:var(--red);font-size:0.75rem;margin-top:0.4rem;"></div>
+      ${rsvpState.guests.filter(g=>g.isAdded).map(g=>`<p style="font-size:0.75rem;color:var(--primary);margin-top:0.4rem;">✓ ${esc(g.name)} added</p>`).join('')}
+    </div>
+    <button class="btn btn-primary btn-full" style="margin-top:1rem;" onclick="guestsNext()">Continue</button>
   </div>`;
 }
 
@@ -1572,7 +1590,6 @@ function guestsNext() {
     document.getElementById('guestErrors').innerHTML = `<div class="error-box"><ul>${errs.map(e=>`<li>${e}</li>`).join('')}</ul></div>`;
     return;
   }
-  const existing = get('wedding_rsvps',[])||[].flatMap(r=>r.guests.map(g=>g.name.toLowerCase()));
   // Also check sheets cache
   const sheetsCache = get('wedding_rsvps_sheets_cache',[]);
   sheetsCache.forEach(r => { if(r.name && !existing.includes(r.name.toLowerCase())) existing.push(r.name.toLowerCase()); });
@@ -1669,6 +1686,7 @@ async function submitRSVP() {
   const courses = memGet('wedding_meal_courses',[]);
   const entry = {
     id: Date.now().toString(),
+    code: rsvpState.code,
     guestType: rsvpState.guestType,
     guests: rsvpState.guests.map((g,i) => ({
       name: g.name.trim(), email: g.email.trim(),
@@ -1677,7 +1695,11 @@ async function submitRSVP() {
       mealChoices: rsvpState.mealChoices[i] || {}
     })),
     message: rsvpState.notes.trim(),
-    submittedAt: new Date().toISOString()
+    submittedAt: new Date().toISOString(),
+    email: rsvpState.guests[0]?.email?.trim()||'',
+    phone: rsvpState.guests[0]?.phone?.replace(/\s+/g,'')||'',
+    attending: rsvpState.guests[0]?.attending||'',
+    notes: rsvpState.notes.trim()
   };
 
   // Resolve meal choice names for readability in the sheet
@@ -1710,9 +1732,6 @@ async function submitRSVP() {
     }
   }
 
-  // Always save locally as backup
-  const rsvps = get('wedding_rsvps',[])||[];
-  set('wedding_rsvps', [...rsvps, entry]);
   // Track completed entries for multi-guest session
   rsvpState.completedEntries = [...(rsvpState.completedEntries||[]), {
     name: rsvpState.guests[0]?.name || rsvpState.code,
@@ -1741,6 +1760,52 @@ function renderDoneStep() {
       <button class="btn btn-primary btn-full" onclick="lookupFromDone()">Find Guest</button>
     </div>
   </div>`;
+}
+
+async function addAnotherGuestInline() {
+  const code = (document.getElementById('rsvpExtraCode').value||'').trim().toUpperCase();
+  const errEl = document.getElementById('rsvpExtraCodeError');
+  if (!code) return;
+  errEl.style.display = 'none';
+
+  // Check not already added
+  if (rsvpState.guests.find(g => g.code === code)) {
+    errEl.style.display = 'block'; errEl.textContent = 'This guest has already been added.'; return;
+  }
+
+  // Load guest list
+  let guestList = memGet('wedding_guest_list', null);
+  if (!guestList) {
+    try {
+      const SITE_URL = 'https://script.google.com/macros/s/AKfycbwZwUoBgxuEQQe8TJ8vSwJDNAoH_QJqK-9yv-hj2QibthgNef2hLeXhNvC6PnIGKUTjfg/exec';
+      const res = await withTimeout(fetch(`${SITE_URL}?action=get&type=guestlist`));
+      const json = await res.json();
+      if (json.data) { memSet('wedding_guest_list', json.data); guestList = json.data; }
+    } catch(e) {}
+  }
+  if (!guestList) guestList = [];
+
+  const entry = guestList.find(g => g.code === code);
+  if (!entry) {
+    errEl.style.display = 'block'; errEl.textContent = "We couldn't find that code. Please check the invitation."; return;
+  }
+
+  const existing = await getExistingRSVP(code);
+
+  rsvpState.guests.push({
+    name: entry.name,
+    email: existing?.email||'',
+    phone: existing?.phone||'',
+    attending: existing ? (existing.attending==='Yes'?'yes':'no') : '',
+    code: code,
+    guestType: entry.type,
+    isAdded: true,
+    isExisting: !!existing,
+    plusOneAllowed: !!entry.plusOne
+  });
+
+  document.getElementById('rsvpExtraCode').value = '';
+  renderRSVP();
 }
 
 function togglePlusOne(checked) {
@@ -1872,7 +1937,7 @@ async function showAdmin(section) {
 // ADMIN DASHBOARD
 // ═══════════════════════════════════════════════
 function renderAdminDashboard() {
-  const cache = get('wedding_rsvps_sheets_cache', [])||[];
+  const cache = memGet('wedding_rsvps_sheets_cache',[])||[];
   const all = cache.flatMap(r=>r.guests||[{attending:r.attending==='Yes',name:r.name}]);
   const attending = all.filter(g=>g.attending===true||g.attending==='Yes').length;
   const declined = all.filter(g=>g.attending===false||g.attending==='No').length;
@@ -1926,8 +1991,7 @@ async function lookupFromDone() {
     else alert("We couldn't find that code. Please check and try again.");
     return;
   }
-  const existing = (get('wedding_rsvps',[])||[]).find(r => r.code === code) ||
-                   (get('wedding_rsvps_sheets_cache',[])||[]).find(r => r.code === code);
+  const existing = await getExistingRSVP(code);
   const prevCompleted = rsvpState.completedEntries || [];
   rsvpState.guestEntry = entry;
   rsvpState.guestType = entry.type;
@@ -2135,7 +2199,7 @@ async function loadRSVPsFromSheets() {
         });
       });
       const rsvps = Object.values(groups).sort((a,b)=>new Date(b.submittedAt)-new Date(a.submittedAt));
-      set('wedding_rsvps_sheets_cache', rsvps);
+      memSet('wedding_rsvps_sheets_cache', rsvps);
       set('wedding_rsvps', rsvps); // keep local in sync
     }
   } catch(e) { console.warn('Failed to load from Sheets:', e); }
@@ -2155,7 +2219,7 @@ function sortRSVPs(col) {
 function renderAdminRSVPs(filter) {
   rsvpFilter = filter || rsvpFilter;
   const sheetsUrl = 'https://script.google.com/macros/s/AKfycbwZwUoBgxuEQQe8TJ8vSwJDNAoH_QJqK-9yv-hj2QibthgNef2hLeXhNvC6PnIGKUTjfg/exec';
-  const rsvps = get('wedding_rsvps_sheets_cache', [])||[]||[];
+  const rsvps = memGet('wedding_rsvps_sheets_cache',[])||[];
   const courses = memGet('wedding_meal_courses',[])||[];
 
   // Flatten to one row per guest
@@ -2499,7 +2563,7 @@ function nextStatus(current) {
 // Per-head calculation
 function getHeadcount() {
   const hc = memGet('wedding_headcount',INIT_HEADCOUNT);
-  const rsvps = get('wedding_rsvps',[])||[];
+  const rsvps = memGet('wedding_rsvps_sheets_cache',[])||[];
   const actualDay = rsvps.filter(r=>r.guestType==='day').flatMap(r=>r.guests).filter(g=>g.attending).length;
   const actualEvening = rsvps.filter(r=>r.guestType==='evening').flatMap(r=>r.guests).filter(g=>g.attending).length;
   return {
