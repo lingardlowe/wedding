@@ -432,7 +432,7 @@
 
     /* ── SAVE THE DATE ── */
     .std-hero { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 3rem 1.5rem; position: relative; overflow: visible; background: var(--bg); }
-    .std-hero > * { position: relative; z-index: 1; }
+    .std-hero > * { position: relative; }
     .std-eyebrow { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.35em; color: var(--secondary); margin-bottom: 2rem; }
     .std-coming { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.25em; color: var(--secondary); margin-top: 2rem; opacity: 0.7; }
     .std-area { font-family: var(--font-serif); font-size: 1.1rem; color: var(--secondary); margin-top: 0.5rem; font-style: italic; }
@@ -599,10 +599,10 @@
       <div class="hero-monogram" id="stdMonogramWrap"><span class="hero-monogram-text"></span></div>
       <p class="std-eyebrow">Save the Date</p>
       <div id="stdTitleArea"><img src="https://lh3.googleusercontent.com/d/1Fv5uIZhy3TJfZo7fjszpRaly3q7DPYeB" alt="E &amp; I" style="max-width:clamp(14rem,45vw,24rem);max-height:clamp(10rem,25vw,16rem);object-fit:contain;opacity:0.95;" /></div>
-      <p class="hero-names" id="stdNames">Emma Charlotte Lingard &amp; Ian James Lowe</p>
+      <p class="hero-names" id="stdNames">Emma Charlotte Lingard<br><em>and</em><br>Ian James Lowe</p>
       <div class="divider" style="height:2rem;"></div>
       <p class="hero-date" id="stdDate">17th July 2027</p>
-      <p class="std-area" id="stdArea">Knutsford, Cheshire</p>
+      <p class="hero-date" id="stdArea">Knutsford, Cheshire</p>
       <div class="divider" style="height:2rem;"></div>
       <div class="countdown" id="stdCountdown">
         <div class="countdown-unit"><span class="countdown-num" id="std-days">000</span><span class="countdown-label">Days</span></div>
@@ -616,7 +616,7 @@
       <div class="divider" style="height:2rem;"></div>
       <div class="cal-section">
         <p class="cal-eyebrow">Add to Calendar</p>
-        <div class="directions-wrap" id="stdCalWrap">
+        <div class="directions-wrap" id="stdCalWrap" style="position:relative;z-index:100;">
           <button class="directions-btn" onclick="toggleStdCalDropdown()" id="stdCalDropdownBtn">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
             Add to Calendar
@@ -1221,7 +1221,7 @@ function applyFrontEnd() {
   const stdNames = document.getElementById('stdNames');
   const fn = s.nameOrder==='reversed' ? s.brideFull : s.groomFull;
   const sn = s.nameOrder==='reversed' ? s.groomFull : s.brideFull;
-  if (stdNames) stdNames.textContent = fn + ' & ' + sn;
+  if (stdNames) stdNames.innerHTML = `${esc(fn)}<br><em>and</em><br>${esc(sn)}`;
   const stdDate = document.getElementById('stdDate');
   if (stdDate && clean.weddingDate) stdDate.textContent = new Date(clean.weddingDate+'T12:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
   const stdArea = document.getElementById('stdArea');
