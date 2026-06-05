@@ -102,9 +102,9 @@
     .hero-date { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.2em; color: var(--secondary); margin-bottom: 0.5rem; }
 
     /* countdown */
-    .countdown { display: flex; align-items: flex-start; gap: 1.5rem; flex-wrap: wrap; justify-content: center; }
+    .countdown { display: flex; align-items: flex-start; gap: clamp(0.75rem,3vw,1.5rem); flex-wrap: nowrap; justify-content: center; }
     .countdown-unit { display: flex; flex-direction: column; align-items: center; min-width: 2.5rem; }
-    .countdown-num { font-family: var(--font-serif); font-size: clamp(2.5rem,8vw,4rem); color: var(--primary); font-variant-numeric: tabular-nums; line-height: 1; }
+    .countdown-num { font-family: var(--font-serif); font-size: clamp(1.75rem,7vw,4rem); color: var(--primary); font-variant-numeric: tabular-nums; line-height: 1; }
     .countdown-label { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.15em; color: var(--secondary); margin-top: 0.5rem; }
     .countdown-sep { font-family: var(--font-serif); font-size: 2rem; color: hsl(150,20%,75%); margin-top: 0.5rem; }
 
@@ -559,8 +559,7 @@
         <div class="countdown-unit"><span class="countdown-num" id="cd-hours">00</span><span class="countdown-label">Hours</span></div>
         <span class="countdown-sep">·</span>
         <div class="countdown-unit"><span class="countdown-num" id="cd-mins">00</span><span class="countdown-label">Minutes</span></div>
-        <span class="countdown-sep">·</span>
-        <div class="countdown-unit"><span class="countdown-num" id="cd-secs">00</span><span class="countdown-label">Seconds</span></div>
+
       </div>
       <div class="divider" style="height:3rem;"></div>
       <div class="cal-section">
@@ -610,8 +609,7 @@
         <div class="countdown-unit"><span class="countdown-num" id="std-hours">00</span><span class="countdown-label">Hours</span></div>
         <span class="countdown-sep">·</span>
         <div class="countdown-unit"><span class="countdown-num" id="std-mins">00</span><span class="countdown-label">Minutes</span></div>
-        <span class="countdown-sep">·</span>
-        <div class="countdown-unit"><span class="countdown-num" id="std-secs">00</span><span class="countdown-label">Seconds</span></div>
+
       </div>
       <div class="divider" style="height:2rem;"></div>
       <div class="cal-section">
@@ -848,8 +846,7 @@ function updateCountdown() {
   if (cdHours) cdHours.textContent = String(hours).padStart(2,'0');
   const cdMins = document.getElementById('cd-mins');
   if (cdMins) cdMins.textContent = String(mins).padStart(2,'0');
-  const cdSecs = document.getElementById('cd-secs');
-  if (cdSecs) cdSecs.textContent = String(secs).padStart(2,'0');
+
   // Save the date countdown
   const stdDays = document.getElementById('std-days');
   if (stdDays) stdDays.textContent = String(days).padStart(3,'0');
@@ -857,8 +854,7 @@ function updateCountdown() {
   if (stdHours) stdHours.textContent = String(hours).padStart(2,'0');
   const stdMins = document.getElementById('std-mins');
   if (stdMins) stdMins.textContent = String(mins).padStart(2,'0');
-  const stdSecs = document.getElementById('std-secs');
-  if (stdSecs) stdSecs.textContent = String(secs).padStart(2,'0');
+
 }
 setInterval(updateCountdown, 1000);
 
@@ -973,7 +969,7 @@ const DEFAULT_TIMELINE = [
 
 
 function getAdminUrl() {
-  return 'https://script.google.com/macros/s/AKfycbyb9D3Rb4VXHMxRdr7KWuLqhHMJf-NSBSr_87IVa2m1N-lKeC99qSFBdozdVW6wZkRt/exec';
+  return 'https://script.google.com/macros/s/AKfycbxOM51kR0550_5e_CY961V-aW_3lXT6AZEqyqaklwvcE0YiwYkqrms-hv7Ir7_Tvu_m/exec';
 }
 
 function sanitiseDateFields(s) {
@@ -1410,7 +1406,7 @@ function renderLookupStep() {
 async function getExistingRSVP(code) {
   // Always fetch from Sheets — no localStorage
   try {
-    const res = await withTimeout(fetch(`https://script.google.com/macros/s/AKfycbwZwUoBgxuEQQe8TJ8vSwJDNAoH_QJqK-9yv-hj2QibthgNef2hLeXhNvC6PnIGKUTjfg/exec?action=get`));
+    const res = await withTimeout(fetch(`https://script.google.com/macros/s/AKfycbxBcYiGbwJ2OPGMTYs_NsKeUopBFevzu7pEdk0-iNs1WrkeSEj4SA2Od7BAnRzo4TuiQg/exec?action=get`));
     const json = await res.json();
     if (json.rows) {
       // Match on code first, then fall back to name match
@@ -1439,7 +1435,7 @@ async function lookupRSVPCode(isAddingAnother=false) {
   let guestList = memGet('wedding_guest_list', null);
   if (!guestList) {
     try {
-      const SITE_URL = 'https://script.google.com/macros/s/AKfycbwZwUoBgxuEQQe8TJ8vSwJDNAoH_QJqK-9yv-hj2QibthgNef2hLeXhNvC6PnIGKUTjfg/exec';
+      const SITE_URL = 'https://script.google.com/macros/s/AKfycbxBcYiGbwJ2OPGMTYs_NsKeUopBFevzu7pEdk0-iNs1WrkeSEj4SA2Od7BAnRzo4TuiQg/exec';
       const res = await withTimeout(fetch(`${SITE_URL}?action=get&type=guestlist`));
       const json = await res.json();
       if (json.data) { memSet('wedding_guest_list', json.data); guestList = json.data; }
@@ -1701,7 +1697,7 @@ async function submitRSVP() {
   const getCOpt = (cid,oid) => { const c=courses.find(x=>x.id===cid); return c?.options.find(o=>o.id===oid)?.name||oid; };
   const getCName = cid => courses.find(c=>c.id===cid)?.name||cid;
 
-  const sheetsUrl = 'https://script.google.com/macros/s/AKfycbwZwUoBgxuEQQe8TJ8vSwJDNAoH_QJqK-9yv-hj2QibthgNef2hLeXhNvC6PnIGKUTjfg/exec';
+  const sheetsUrl = 'https://script.google.com/macros/s/AKfycbxBcYiGbwJ2OPGMTYs_NsKeUopBFevzu7pEdk0-iNs1WrkeSEj4SA2Od7BAnRzo4TuiQg/exec';
   if (sheetsUrl) {
     try {
       // Build flat rows — one per guest
@@ -1782,7 +1778,7 @@ async function addAnotherGuestInline() {
   let guestList = memGet('wedding_guest_list', null);
   if (!guestList) {
     try {
-      const SITE_URL = 'https://script.google.com/macros/s/AKfycbwZwUoBgxuEQQe8TJ8vSwJDNAoH_QJqK-9yv-hj2QibthgNef2hLeXhNvC6PnIGKUTjfg/exec';
+      const SITE_URL = 'https://script.google.com/macros/s/AKfycbxBcYiGbwJ2OPGMTYs_NsKeUopBFevzu7pEdk0-iNs1WrkeSEj4SA2Od7BAnRzo4TuiQg/exec';
       const res = await withTimeout(fetch(`${SITE_URL}?action=get&type=guestlist`));
       const json = await res.json();
       if (json.data) { memSet('wedding_guest_list', json.data); guestList = json.data; }
@@ -1876,7 +1872,7 @@ async function showAdmin(section) {
   const nav = document.getElementById(`nav-${section}`);
   if (nav) nav.classList.add('active');
   const el = document.getElementById('adminContent');
-  const siteUrl = 'https://script.google.com/macros/s/AKfycbwZwUoBgxuEQQe8TJ8vSwJDNAoH_QJqK-9yv-hj2QibthgNef2hLeXhNvC6PnIGKUTjfg/exec';
+  const siteUrl = 'https://script.google.com/macros/s/AKfycbxBcYiGbwJ2OPGMTYs_NsKeUopBFevzu7pEdk0-iNs1WrkeSEj4SA2Od7BAnRzo4TuiQg/exec';
   const adminUrl = getAdminUrl();
 
   if (section === 'dashboard') {
@@ -1958,7 +1954,7 @@ function renderAdminDashboard() {
   const all = cache.flatMap(r=>r.guests||[{attending:r.attending==='Yes',name:r.name}]);
   const attending = all.filter(g=>g.attending===true||g.attending==='Yes').length;
   const declined = all.filter(g=>g.attending===false||g.attending==='No').length;
-  const hasSheets = !!'https://script.google.com/macros/s/AKfycbwZwUoBgxuEQQe8TJ8vSwJDNAoH_QJqK-9yv-hj2QibthgNef2hLeXhNvC6PnIGKUTjfg/exec';
+  const hasSheets = !!'https://script.google.com/macros/s/AKfycbxBcYiGbwJ2OPGMTYs_NsKeUopBFevzu7pEdk0-iNs1WrkeSEj4SA2Od7BAnRzo4TuiQg/exec';
   const recent = [...cache].reverse().slice(0,5);
   return `
     <h1 class="page-header">Dashboard Overview</h1>
@@ -1995,7 +1991,7 @@ async function lookupFromDone() {
   let guestList = memGet('wedding_guest_list', null);
   if (!guestList) {
     try {
-      const SITE_URL = 'https://script.google.com/macros/s/AKfycbwZwUoBgxuEQQe8TJ8vSwJDNAoH_QJqK-9yv-hj2QibthgNef2hLeXhNvC6PnIGKUTjfg/exec';
+      const SITE_URL = 'https://script.google.com/macros/s/AKfycbxBcYiGbwJ2OPGMTYs_NsKeUopBFevzu7pEdk0-iNs1WrkeSEj4SA2Od7BAnRzo4TuiQg/exec';
       const res = await withTimeout(fetch(`${SITE_URL}?action=get&type=guestlist`));
       const json = await res.json();
       if (json.data) { memSet('wedding_guest_list', json.data); guestList = json.data; }
@@ -2189,7 +2185,7 @@ let expandedRSVP = null;
 let rsvpsLoading = false;
 
 async function loadRSVPsFromSheets() {
-  const url = 'https://script.google.com/macros/s/AKfycbwZwUoBgxuEQQe8TJ8vSwJDNAoH_QJqK-9yv-hj2QibthgNef2hLeXhNvC6PnIGKUTjfg/exec';
+  const url = 'https://script.google.com/macros/s/AKfycbxBcYiGbwJ2OPGMTYs_NsKeUopBFevzu7pEdk0-iNs1WrkeSEj4SA2Od7BAnRzo4TuiQg/exec';
   if (!url) return;
   rsvpsLoading = true;
   document.getElementById('adminContent').innerHTML = renderAdminRSVPs();
@@ -2235,7 +2231,7 @@ function sortRSVPs(col) {
 
 function renderAdminRSVPs(filter) {
   rsvpFilter = filter || rsvpFilter;
-  const sheetsUrl = 'https://script.google.com/macros/s/AKfycbwZwUoBgxuEQQe8TJ8vSwJDNAoH_QJqK-9yv-hj2QibthgNef2hLeXhNvC6PnIGKUTjfg/exec';
+  const sheetsUrl = 'https://script.google.com/macros/s/AKfycbxBcYiGbwJ2OPGMTYs_NsKeUopBFevzu7pEdk0-iNs1WrkeSEj4SA2Od7BAnRzo4TuiQg/exec';
   const rsvps = memGet('wedding_rsvps_sheets_cache',[])||[];
   const courses = memGet('wedding_meal_courses',[])||[];
 
@@ -3432,7 +3428,7 @@ async function pushLocalToSheets(type, localKey, useAdminScript=false) {
     const data = get(localKey, null);
     if (data !== null) await pushAdminData(type, data);
   } else {
-    const siteUrl = 'https://script.google.com/macros/s/AKfycbwZwUoBgxuEQQe8TJ8vSwJDNAoH_QJqK-9yv-hj2QibthgNef2hLeXhNvC6PnIGKUTjfg/exec';
+    const siteUrl = 'https://script.google.com/macros/s/AKfycbxBcYiGbwJ2OPGMTYs_NsKeUopBFevzu7pEdk0-iNs1WrkeSEj4SA2Od7BAnRzo4TuiQg/exec';
     if (!siteUrl) { alert('Site Script URL not set in Site Settings.'); return; }
     const data = get(localKey, null);
     if (data !== null) await pushSiteData(type, data);
@@ -3442,7 +3438,7 @@ async function pushLocalToSheets(type, localKey, useAdminScript=false) {
 }
 
 async function pushSettingsToSheets(s) {
-  const url = s.sheetsUrl || 'https://script.google.com/macros/s/AKfycbwZwUoBgxuEQQe8TJ8vSwJDNAoH_QJqK-9yv-hj2QibthgNef2hLeXhNvC6PnIGKUTjfg/exec';
+  const url = s.sheetsUrl || 'https://script.google.com/macros/s/AKfycbxBcYiGbwJ2OPGMTYs_NsKeUopBFevzu7pEdk0-iNs1WrkeSEj4SA2Od7BAnRzo4TuiQg/exec';
   if (!url) return;
   // Strip large binary fields before sending
   const safe = {...s};
@@ -3469,7 +3465,7 @@ function withTimeout(promise, ms=12000) {
 
 async function loadSettingsFromSheets() {
   const local = get('wedding_site_settings', {});
-  const url = 'https://script.google.com/macros/s/AKfycbwZwUoBgxuEQQe8TJ8vSwJDNAoH_QJqK-9yv-hj2QibthgNef2hLeXhNvC6PnIGKUTjfg/exec';
+  const url = 'https://script.google.com/macros/s/AKfycbxBcYiGbwJ2OPGMTYs_NsKeUopBFevzu7pEdk0-iNs1WrkeSEj4SA2Od7BAnRzo4TuiQg/exec';
   if (!url) return;
   try {
     const res = await withTimeout(fetch(url + '?action=getSettings'));
@@ -3487,7 +3483,7 @@ async function loadSettingsFromSheets() {
   } catch(e) { console.warn('Failed to load settings from Sheets:', e); }
 
   // Also load public-facing data for guests
-  const siteUrl = 'https://script.google.com/macros/s/AKfycbwZwUoBgxuEQQe8TJ8vSwJDNAoH_QJqK-9yv-hj2QibthgNef2hLeXhNvC6PnIGKUTjfg/exec';
+  const siteUrl = 'https://script.google.com/macros/s/AKfycbxBcYiGbwJ2OPGMTYs_NsKeUopBFevzu7pEdk0-iNs1WrkeSEj4SA2Od7BAnRzo4TuiQg/exec';
   if (siteUrl) {
     try {
       const [tlRes, mealsRes] = await Promise.all([
@@ -3507,7 +3503,7 @@ async function loadSettingsFromSheets() {
 // ═══════════════════════════════════════════════
 // ── Script 1 (site script) — public-facing data ──
 async function pushSiteData(type, data) {
-  const url = 'https://script.google.com/macros/s/AKfycbwZwUoBgxuEQQe8TJ8vSwJDNAoH_QJqK-9yv-hj2QibthgNef2hLeXhNvC6PnIGKUTjfg/exec';
+  const url = 'https://script.google.com/macros/s/AKfycbxBcYiGbwJ2OPGMTYs_NsKeUopBFevzu7pEdk0-iNs1WrkeSEj4SA2Od7BAnRzo4TuiQg/exec';
   if (!url) return;
   try {
     await fetch(url, {
@@ -3520,7 +3516,7 @@ async function pushSiteData(type, data) {
 }
 
 async function pullSiteData(type, localKey, fallback) {
-  const url = 'https://script.google.com/macros/s/AKfycbwZwUoBgxuEQQe8TJ8vSwJDNAoH_QJqK-9yv-hj2QibthgNef2hLeXhNvC6PnIGKUTjfg/exec';
+  const url = 'https://script.google.com/macros/s/AKfycbxBcYiGbwJ2OPGMTYs_NsKeUopBFevzu7pEdk0-iNs1WrkeSEj4SA2Od7BAnRzo4TuiQg/exec';
   if (!url) return null;
   try {
     const res = await withTimeout(fetch(`${url}?action=get&type=${type}`));
