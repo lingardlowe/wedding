@@ -975,8 +975,7 @@ async function submitSTDForm() {
   }));
 
   try {
-    const SITE_URL = '${SITE_URL}';
-    await withTimeout(fetch(SITE_URL, {
+    await withTimeout(fetch('https://script.google.com/macros/s/AKfycbyfxbxup6hRLFUqUhuJaPGiqiCz48V9BsAww2Rt-6VFzzsgZEigf80pO2NBImrQwjbNaQ/exec', {
       method: 'POST',
       mode: 'no-cors',
       headers: { 'Content-Type': 'application/json' },
