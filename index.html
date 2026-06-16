@@ -773,6 +773,49 @@ function showSTDForm() {
   wrap.scrollIntoView({ behavior:'smooth', block:'nearest' });
 }
 
+function stdFormatName(val) {
+  return val.replace(/\b\w/g, c => c.toUpperCase());
+}
+
+function stdFormatPhone(val) {
+  let digits = val.replace(/\D/g,'');
+  if (digits.length <= 5) return digits;
+  return digits.slice(0,5) + ' ' + digits.slice(5,11);
+}
+
+function stdUpdatePerson(i, field, raw) {
+  let val = raw;
+  if (field === 'firstName' || field === 'lastName') val = stdFormatName(raw);
+  if (field === 'phone') val = stdFormatPhone(raw);
+  stdFormState.people[i][field] = val;
+  const emailEl = document.getElementById('std_email_'+i);
+  const phoneEl = document.getElementById('std_phone_'+i);
+  if (field === 'email' && emailEl) {
+    const valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
+    emailEl.style.borderColor = val && !valid ? 'var(--red)' : '';
+  }
+  if (field === 'phone' && phoneEl) {
+    const digits = val.replace(/\D/g,'');
+    phoneEl.style.borderColor = val && digits.length !== 11 ? 'var(--red)' : '';
+    phoneEl.value = val;
+  }
+  if ((field === 'firstName' || field === 'lastName')) {
+    const el = document.getElementById('std_' + (field === 'firstName' ? 'fn' : 'ln') + '_' + i);
+    if (el && el.value !== val) { const p = el.selectionStart; el.value = val; try { el.setSelectionRange(p,p); } catch(e) {} }
+  }
+}
+
+function stdUpdateAddr(field, raw) {
+  let val = raw;
+  if (field === 'town') val = stdFormatName(raw);
+  if (field === 'postcode') val = raw.toUpperCase();
+  stdFormState[field] = val;
+  if (field === 'town' || field === 'postcode') {
+    const el = document.getElementById('std_' + field);
+    if (el && el.value !== val) { const p = el.selectionStart; el.value = val; try { el.setSelectionRange(p,p); } catch(e) {} }
+  }
+}
+
 function renderSTDForm() {
   const wrap = document.getElementById('stdFormWrap');
   if (!wrap) return;
@@ -795,19 +838,19 @@ function renderSTDForm() {
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-bottom:1rem;">
         <div>
           <label class="field-label">First Name</label>
-          <input value="${esc(people[0].firstName)}" oninput="stdFormState.people[0].firstName=this.value" placeholder="Emma" />
+          <input value="${esc(people[0].firstName)}" id="std_fn_0" oninput="stdUpdatePerson(0,'firstName',this.value)" placeholder="Emma" />
         </div>
         <div>
           <label class="field-label">Last Name</label>
-          <input value="${esc(people[0].lastName)}" oninput="stdFormState.people[0].lastName=this.value" placeholder="Lingard" />
+          <input value="${esc(people[0].lastName)}" id="std_ln_0" oninput="stdUpdatePerson(0,'lastName',this.value)" placeholder="Lingard" />
         </div>
         <div>
           <label class="field-label">Email</label>
-          <input type="email" value="${esc(people[0].email)}" oninput="stdFormState.people[0].email=this.value" placeholder="emma@example.com" />
+          <input type="email" value="${esc(people[0].email)}" id="std_email_0" oninput="stdUpdatePerson(0,'email',this.value)" placeholder="emma@example.com" />
         </div>
         <div>
           <label class="field-label">Phone</label>
-          <input type="tel" value="${esc(people[0].phone)}" oninput="stdFormState.people[0].phone=this.value" placeholder="07700 900000" />
+          <input type="tel" value="${esc(people[0].phone)}" id="std_phone_0" oninput="stdUpdatePerson(0,'phone',this.value)" placeholder="07700 900000" maxlength="12" />
         </div>
       </div>
 
@@ -815,20 +858,20 @@ function renderSTDForm() {
       <div style="display:grid;gap:0.75rem;margin-bottom:1.5rem;">
         <div>
           <label class="field-label">Address Line 1</label>
-          <input id="std_addr1" value="${esc(stdFormState.addr1||'')}" oninput="stdFormState.addr1=this.value" placeholder="1 Example Street" />
+          <input id="std_addr1" value="${esc(stdFormState.addr1||'')}" oninput="stdUpdateAddr('addr1',this.value)" placeholder="1 Example Street" />
         </div>
         <div>
           <label class="field-label">Address Line 2 <span style="font-weight:400;color:hsl(210,15%,65%);">(optional)</span></label>
-          <input id="std_addr2" value="${esc(stdFormState.addr2||'')}" oninput="stdFormState.addr2=this.value" placeholder="Village" />
+          <input id="std_addr2" value="${esc(stdFormState.addr2||'')}" oninput="stdUpdateAddr('addr2',this.value)" placeholder="Village" />
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
           <div>
             <label class="field-label">Town / City</label>
-            <input id="std_town" value="${esc(stdFormState.town||'')}" oninput="stdFormState.town=this.value" placeholder="Manchester" />
+            <input id="std_town" value="${esc(stdFormState.town||'')}" oninput="stdUpdateAddr('town',this.value)" placeholder="Manchester" />
           </div>
           <div>
             <label class="field-label">Postcode</label>
-            <input id="std_postcode" value="${esc(stdFormState.postcode||'')}" oninput="stdFormState.postcode=this.value" placeholder="M1 1AA" style="text-transform:uppercase;" />
+            <input id="std_postcode" value="${esc(stdFormState.postcode||'')}" oninput="stdUpdateAddr('postcode',this.value)" placeholder="M1 1AA" />
           </div>
         </div>
       </div>
@@ -839,11 +882,11 @@ function renderSTDForm() {
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
           <div>
             <label class="field-label">First Name</label>
-            <input value="${esc(p.firstName)}" oninput="stdFormState.people[${i+1}].firstName=this.value" placeholder="Ian" />
+            <input value="${esc(p.firstName)}" oninput="stdUpdatePerson(i+1,'firstName',this.value)" placeholder="Ian" />
           </div>
           <div>
             <label class="field-label">Last Name</label>
-            <input value="${esc(p.lastName)}" oninput="stdFormState.people[${i+1}].lastName=this.value" placeholder="Lowe" />
+            <input value="${esc(p.lastName)}" oninput="stdUpdatePerson(i+1,'lastName',this.value)" placeholder="Lowe" />
           </div>
           <div>
             <label class="field-label">Email</label>
@@ -933,12 +976,12 @@ async function submitSTDForm() {
 
   try {
     const SITE_URL = '${SITE_URL}';
-    await fetch(SITE_URL, {
+    await withTimeout(fetch(SITE_URL, {
       method: 'POST',
       mode: 'no-cors',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'saveSTD', rows })
-    });
+    }));
     stdFormState.submitted = true;
     renderSTDForm();
   } catch(e) {
