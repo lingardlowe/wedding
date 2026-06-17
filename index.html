@@ -1997,15 +1997,17 @@ function renderNotesStep() {
       <span class="form-eyebrow">Final Details</span>
     </div>
     <div style="margin-bottom:1.5rem;">
-      <label class="field-label" style="text-transform:uppercase;letter-spacing:0.15em;">Dietary Requirements &amp; Notes</label>
-      <textarea id="rsvpNotes" style="min-height:7rem;margin-top:0.5rem;" placeholder="Please let us know about any dietary requirements or anything else we should know.">${esc(rsvpState.notes)}</textarea>
+      <label class="field-label" style="text-transform:uppercase;letter-spacing:0.15em;">Additional Notes</label>
+      <textarea id="rsvpNotes" style="min-height:7rem;margin-top:0.5rem;" placeholder="Anything else we should know?">${esc(rsvpState.notes)}</textarea>
     </div>
     <button class="btn btn-primary btn-full" onclick="submitRSVP()">Send Reply</button>
   </div>`;
 }
 
 async function submitRSVP() {
-  // notes captured on meals step via textarea
+  // Capture notes from textarea if on notes step
+  const notesEl = document.getElementById('rsvpNotes');
+  if (notesEl) rsvpState.notes = notesEl.value;
   const submitBtn = document.querySelector('#rsvpContent .btn-primary');
   if (submitBtn) { submitBtn.textContent = 'Sending…'; submitBtn.disabled = true; }
 
@@ -2019,7 +2021,7 @@ async function submitRSVP() {
       phone: g.phone.replace(/\s+/g,''),
       attending: g.attending === 'yes',
       guestType: g.guestType || rsvpState.guestType,
-      code: g.code || rsvpState.code,
+      code: g.isPlusOne ? (rsvpState.guests[g.isPlusOneOf]?.code || rsvpState.code) : (g.code || rsvpState.code),
       hasDietary: !!g.hasDietary,
       dietaryChoices: g.dietaryChoices || [],
       dietaryOther: g.dietaryOther || '',
