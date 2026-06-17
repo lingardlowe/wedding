@@ -975,7 +975,7 @@ async function submitSTDForm() {
   }));
 
   try {
-    await withTimeout(fetch('https://script.google.com/macros/s/AKfycbxkad8h6cVi30h2KRv7h3lDNuUx_6Vz4fJ93s_cnm2BJ8Z7doOhE8X7kgn0qlN-ZJp4/exec', {
+    await withTimeout(fetch('https://script.google.com/macros/s/AKfycbyBbRKd_MPfUr5lBke_Ix9gcz3q8l-MPvHwEGyVys64NAQUc2YjIYMPbbmAScGv47N3wQ/exec', {
       method: 'POST',
       mode: 'no-cors',
       headers: { 'Content-Type': 'application/json' },
@@ -1645,7 +1645,7 @@ function renderLookupStep() {
 async function getExistingRSVP(code) {
   // Always fetch from Sheets — no localStorage
   try {
-    const res = await withTimeout(fetch(`https://script.google.com/macros/s/AKfycbxkad8h6cVi30h2KRv7h3lDNuUx_6Vz4fJ93s_cnm2BJ8Z7doOhE8X7kgn0qlN-ZJp4/exec?action=get`));
+    const res = await withTimeout(fetch(`https://script.google.com/macros/s/AKfycbyBbRKd_MPfUr5lBke_Ix9gcz3q8l-MPvHwEGyVys64NAQUc2YjIYMPbbmAScGv47N3wQ/exec?action=get`));
     const json = await res.json();
     if (json.rows) {
       // Match on code first, then fall back to name match
@@ -1674,7 +1674,7 @@ async function lookupRSVPCode(isAddingAnother=false) {
   let guestList = memGet('wedding_guest_list', null);
   if (!guestList) {
     try {
-      const SITE_URL = 'https://script.google.com/macros/s/AKfycbxkad8h6cVi30h2KRv7h3lDNuUx_6Vz4fJ93s_cnm2BJ8Z7doOhE8X7kgn0qlN-ZJp4/exec';
+      const SITE_URL = 'https://script.google.com/macros/s/AKfycbyBbRKd_MPfUr5lBke_Ix9gcz3q8l-MPvHwEGyVys64NAQUc2YjIYMPbbmAScGv47N3wQ/exec';
       const res = await withTimeout(fetch(`${SITE_URL}?action=get&type=guestlist`));
       const json = await res.json();
       if (json.data) { memSet('wedding_guest_list', json.data); guestList = json.data; }
@@ -1711,7 +1711,7 @@ async function lookupRSVPCode(isAddingAnother=false) {
     rsvpState.guestEntry = entry;
     rsvpState.guestType = entry.type;
     rsvpState.code = code;
-    rsvpState.guests = [{name: entry.name, email:'', phone:'', attending:'', isExisting: !!existing, existingData: existing||null, plusOneAllowed: !!entry.plusOne}];
+    rsvpState.guests = [{name: entry.name, email:'', phone:'', attending:'', guestType: entry.type, isExisting: !!existing, existingData: existing||null, plusOneAllowed: !!entry.plusOne}];
     rsvpState.mealChoices = {};
     rsvpState.notes = '';
     rsvpState.step = 'guests';
@@ -1723,7 +1723,7 @@ async function lookupRSVPCode(isAddingAnother=false) {
   rsvpState.guestEntry = entry;
   rsvpState.guestType = entry.type;
   rsvpState.code = code;
-  rsvpState.guests = [{name: entry.name, email: existing?.email||'', phone: existing?.phone||'', attending: existing ? (existing.attending==='Yes' ? 'yes' : 'no') : '', isExisting: !!existing, existingData: existing||null, plusOneAllowed: !!entry.plusOne}];
+  rsvpState.guests = [{name: entry.name, email: existing?.email||'', phone: existing?.phone||'', attending: existing ? (existing.attending==='Yes' ? 'yes' : 'no') : '', guestType: entry.type, isExisting: !!existing, existingData: existing||null, plusOneAllowed: !!entry.plusOne}];
   rsvpState.mealChoices = {};
   rsvpState.notes = existing?.notes || '';
   rsvpState.step = 'guests';
@@ -1859,6 +1859,23 @@ function removeGuest(i) {
   renderRSVP();
 }
 
+function toggleDietary(i, val) {
+  rsvpState.guests[i].hasDietary = val;
+  if (!val) { rsvpState.guests[i].dietaryChoices = []; rsvpState.guests[i].dietaryOther = ''; }
+  renderRSVP();
+}
+
+function toggleDietaryChoice(i, opt, checked) {
+  if (!rsvpState.guests[i].dietaryChoices) rsvpState.guests[i].dietaryChoices = [];
+  if (checked) {
+    if (!rsvpState.guests[i].dietaryChoices.includes(opt)) rsvpState.guests[i].dietaryChoices.push(opt);
+  } else {
+    rsvpState.guests[i].dietaryChoices = rsvpState.guests[i].dietaryChoices.filter(o => o !== opt);
+    if (opt === 'Other') rsvpState.guests[i].dietaryOther = '';
+  }
+  renderRSVP();
+}
+
 function guestsNext() {
   const guests = rsvpState.guests;
   const errs = [];
@@ -1880,12 +1897,14 @@ function guestsNext() {
   const courses = memGet('wedding_meal_courses',[]);
   const dayAttending = guests.filter(g => g.attending === 'yes' && (g.guestType||rsvpState.guestType) === 'day');
   const hasMeals = courses.some(c => c.guestTypes.includes('day') && c.options.length > 0) && dayAttending.length > 0;
-  rsvpState.step = hasMeals ? 'meals' : 'notes';
-  renderRSVP();
+  rsvpState.step = hasMeals ? 'meals' : 'submit';
+  if (!hasMeals) submitRSVP();
+  else renderRSVP();
 }
 
 function renderMealsStep() {
-  const courses = memGet('wedding_meal_courses',[]).filter(c=>rsvpState.guestType && c.guestTypes.includes(rsvpState.guestType) && c.options.length>0);
+  const allCourses = memGet('wedding_meal_courses',[]).filter(c=>c.options.length>0);
+  const dayCourses = allCourses.filter(c=>c.guestTypes.includes('day'));
   const attending = rsvpState.guests.map((g,i)=>({g,i})).filter(({g})=>g.attending==='yes');
   return `<div class="form-card">
     <div class="form-card-header">
@@ -1898,7 +1917,8 @@ function renderMealsStep() {
     <div class="meal-guest-block">
       <div class="meal-guest-header">${esc(g.name)}</div>
       <div class="meal-guest-body">
-        ${courses.map(c => {
+        <p style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.15em;color:var(--secondary);margin-bottom:0.5rem;">Guest ${i+1} — ${(g.guestType||rsvpState.guestType)==='day'?'Day':'Evening'} Guest</p>
+      ${gCourses.map(c => {
           const hasErr = (rsvpState.mealErrors||new Set()).has(`${i}-${c.id}`);
           return `<div style="margin-bottom:1rem;">
             <div class="course-label">${esc(c.name)} ${hasErr?'<span class="course-error">Please make a selection</span>':''}</div>
@@ -1985,7 +2005,7 @@ async function submitRSVP() {
   const getCOpt = (cid,oid) => { const c=courses.find(x=>x.id===cid); return c?.options.find(o=>o.id===oid)?.name||oid; };
   const getCName = cid => courses.find(c=>c.id===cid)?.name||cid;
 
-  const sheetsUrl = 'https://script.google.com/macros/s/AKfycbxkad8h6cVi30h2KRv7h3lDNuUx_6Vz4fJ93s_cnm2BJ8Z7doOhE8X7kgn0qlN-ZJp4/exec';
+  const sheetsUrl = 'https://script.google.com/macros/s/AKfycbyBbRKd_MPfUr5lBke_Ix9gcz3q8l-MPvHwEGyVys64NAQUc2YjIYMPbbmAScGv47N3wQ/exec';
   if (sheetsUrl) {
     try {
       // Build flat rows — one per guest
@@ -1998,7 +2018,8 @@ async function submitRSVP() {
         email: g.email,
         phone: g.phone,
         attending: g.attending ? 'Yes' : 'No',
-        meals: Object.entries(g.mealChoices||{}).map(([cid,oid])=>getCName(cid)+': '+getCOpt(cid,oid)).join(' | '),
+        dietary: g.hasDietary ? [...(g.dietaryChoices||[]), ...(g.dietaryOther ? ['Other: '+g.dietaryOther] : [])].join(', ') : 'None',
+      meals: Object.entries(g.mealChoices||{}).map(([cid,oid])=>getCName(cid)+': '+getCOpt(cid,oid)).join(' | '),
         notes: entry.message
       }));
       await fetch(sheetsUrl, {
@@ -2066,7 +2087,7 @@ async function addAnotherGuestInline() {
   let guestList = memGet('wedding_guest_list', null);
   if (!guestList) {
     try {
-      const SITE_URL = 'https://script.google.com/macros/s/AKfycbxkad8h6cVi30h2KRv7h3lDNuUx_6Vz4fJ93s_cnm2BJ8Z7doOhE8X7kgn0qlN-ZJp4/exec';
+      const SITE_URL = 'https://script.google.com/macros/s/AKfycbyBbRKd_MPfUr5lBke_Ix9gcz3q8l-MPvHwEGyVys64NAQUc2YjIYMPbbmAScGv47N3wQ/exec';
       const res = await withTimeout(fetch(`${SITE_URL}?action=get&type=guestlist`));
       const json = await res.json();
       if (json.data) { memSet('wedding_guest_list', json.data); guestList = json.data; }
@@ -2164,7 +2185,7 @@ async function showAdmin(section) {
   const nav = document.getElementById(`nav-${section}`);
   if (nav) nav.classList.add('active');
   const el = document.getElementById('adminContent');
-  const siteUrl = 'https://script.google.com/macros/s/AKfycbxkad8h6cVi30h2KRv7h3lDNuUx_6Vz4fJ93s_cnm2BJ8Z7doOhE8X7kgn0qlN-ZJp4/exec';
+  const siteUrl = 'https://script.google.com/macros/s/AKfycbyBbRKd_MPfUr5lBke_Ix9gcz3q8l-MPvHwEGyVys64NAQUc2YjIYMPbbmAScGv47N3wQ/exec';
   const adminUrl = getAdminUrl();
 
   if (section === 'dashboard') {
@@ -2254,7 +2275,7 @@ function renderAdminDashboard() {
   const all = cache.flatMap(r=>r.guests||[{attending:r.attending==='Yes',name:r.name}]);
   const attending = all.filter(g=>g.attending===true||g.attending==='Yes').length;
   const declined = all.filter(g=>g.attending===false||g.attending==='No').length;
-  const hasSheets = !!'https://script.google.com/macros/s/AKfycbxkad8h6cVi30h2KRv7h3lDNuUx_6Vz4fJ93s_cnm2BJ8Z7doOhE8X7kgn0qlN-ZJp4/exec';
+  const hasSheets = !!'https://script.google.com/macros/s/AKfycbyBbRKd_MPfUr5lBke_Ix9gcz3q8l-MPvHwEGyVys64NAQUc2YjIYMPbbmAScGv47N3wQ/exec';
   const recent = [...cache].reverse().slice(0,5);
   return `
     <h1 class="page-header">Dashboard Overview</h1>
@@ -2291,7 +2312,7 @@ async function lookupFromDone() {
   let guestList = memGet('wedding_guest_list', null);
   if (!guestList) {
     try {
-      const SITE_URL = 'https://script.google.com/macros/s/AKfycbxkad8h6cVi30h2KRv7h3lDNuUx_6Vz4fJ93s_cnm2BJ8Z7doOhE8X7kgn0qlN-ZJp4/exec';
+      const SITE_URL = 'https://script.google.com/macros/s/AKfycbyBbRKd_MPfUr5lBke_Ix9gcz3q8l-MPvHwEGyVys64NAQUc2YjIYMPbbmAScGv47N3wQ/exec';
       const res = await withTimeout(fetch(`${SITE_URL}?action=get&type=guestlist`));
       const json = await res.json();
       if (json.data) { memSet('wedding_guest_list', json.data); guestList = json.data; }
@@ -2309,7 +2330,7 @@ async function lookupFromDone() {
   rsvpState.guestEntry = entry;
   rsvpState.guestType = entry.type;
   rsvpState.code = code;
-  rsvpState.guests = [{name: entry.name, email: existing?.email||'', phone: existing?.phone||'', attending: existing ? (existing.attending==='Yes'?'yes':'no') : '', isExisting: !!existing, existingData: existing||null, plusOneAllowed: !!entry.plusOne}];
+  rsvpState.guests = [{name: entry.name, email: existing?.email||'', phone: existing?.phone||'', attending: existing ? (existing.attending==='Yes'?'yes':'no') : '', guestType: entry.type, isExisting: !!existing, existingData: existing||null, plusOneAllowed: !!entry.plusOne}];
   rsvpState.mealChoices = {};
   rsvpState.notes = existing?.notes || '';
   rsvpState.completedEntries = prevCompleted;
@@ -2485,7 +2506,7 @@ let expandedRSVP = null;
 let rsvpsLoading = false;
 
 async function loadRSVPsFromSheets() {
-  const url = 'https://script.google.com/macros/s/AKfycbxkad8h6cVi30h2KRv7h3lDNuUx_6Vz4fJ93s_cnm2BJ8Z7doOhE8X7kgn0qlN-ZJp4/exec';
+  const url = 'https://script.google.com/macros/s/AKfycbyBbRKd_MPfUr5lBke_Ix9gcz3q8l-MPvHwEGyVys64NAQUc2YjIYMPbbmAScGv47N3wQ/exec';
   if (!url) return;
   rsvpsLoading = true;
   document.getElementById('adminContent').innerHTML = renderAdminRSVPs();
@@ -2531,7 +2552,7 @@ function sortRSVPs(col) {
 
 function renderAdminRSVPs(filter) {
   rsvpFilter = filter || rsvpFilter;
-  const sheetsUrl = 'https://script.google.com/macros/s/AKfycbxkad8h6cVi30h2KRv7h3lDNuUx_6Vz4fJ93s_cnm2BJ8Z7doOhE8X7kgn0qlN-ZJp4/exec';
+  const sheetsUrl = 'https://script.google.com/macros/s/AKfycbyBbRKd_MPfUr5lBke_Ix9gcz3q8l-MPvHwEGyVys64NAQUc2YjIYMPbbmAScGv47N3wQ/exec';
   const rsvps = memGet('wedding_rsvps_sheets_cache',[])||[];
   const courses = memGet('wedding_meal_courses',[])||[];
 
@@ -3733,7 +3754,7 @@ async function pushLocalToSheets(type, localKey, useAdminScript=false) {
     const data = get(localKey, null);
     if (data !== null) await pushAdminData(type, data);
   } else {
-    const siteUrl = 'https://script.google.com/macros/s/AKfycbxkad8h6cVi30h2KRv7h3lDNuUx_6Vz4fJ93s_cnm2BJ8Z7doOhE8X7kgn0qlN-ZJp4/exec';
+    const siteUrl = 'https://script.google.com/macros/s/AKfycbyBbRKd_MPfUr5lBke_Ix9gcz3q8l-MPvHwEGyVys64NAQUc2YjIYMPbbmAScGv47N3wQ/exec';
     if (!siteUrl) { alert('Site Script URL not set in Site Settings.'); return; }
     const data = get(localKey, null);
     if (data !== null) await pushSiteData(type, data);
@@ -3743,7 +3764,7 @@ async function pushLocalToSheets(type, localKey, useAdminScript=false) {
 }
 
 async function pushSettingsToSheets(s) {
-  const url = s.sheetsUrl || 'https://script.google.com/macros/s/AKfycbxkad8h6cVi30h2KRv7h3lDNuUx_6Vz4fJ93s_cnm2BJ8Z7doOhE8X7kgn0qlN-ZJp4/exec';
+  const url = s.sheetsUrl || 'https://script.google.com/macros/s/AKfycbyBbRKd_MPfUr5lBke_Ix9gcz3q8l-MPvHwEGyVys64NAQUc2YjIYMPbbmAScGv47N3wQ/exec';
   if (!url) return;
   // Strip large binary fields before sending
   const safe = {...s};
@@ -3770,7 +3791,7 @@ function withTimeout(promise, ms=12000) {
 
 async function loadSettingsFromSheets() {
   const local = get('wedding_site_settings', {});
-  const url = 'https://script.google.com/macros/s/AKfycbxkad8h6cVi30h2KRv7h3lDNuUx_6Vz4fJ93s_cnm2BJ8Z7doOhE8X7kgn0qlN-ZJp4/exec';
+  const url = 'https://script.google.com/macros/s/AKfycbyBbRKd_MPfUr5lBke_Ix9gcz3q8l-MPvHwEGyVys64NAQUc2YjIYMPbbmAScGv47N3wQ/exec';
   if (!url) return;
   try {
     const res = await withTimeout(fetch(url + '?action=getSettings'));
@@ -3788,7 +3809,7 @@ async function loadSettingsFromSheets() {
   } catch(e) { console.warn('Failed to load settings from Sheets:', e); }
 
   // Also load public-facing data for guests
-  const siteUrl = 'https://script.google.com/macros/s/AKfycbxkad8h6cVi30h2KRv7h3lDNuUx_6Vz4fJ93s_cnm2BJ8Z7doOhE8X7kgn0qlN-ZJp4/exec';
+  const siteUrl = 'https://script.google.com/macros/s/AKfycbyBbRKd_MPfUr5lBke_Ix9gcz3q8l-MPvHwEGyVys64NAQUc2YjIYMPbbmAScGv47N3wQ/exec';
   if (siteUrl) {
     try {
       const [tlRes, mealsRes] = await Promise.all([
@@ -3808,7 +3829,7 @@ async function loadSettingsFromSheets() {
 // ═══════════════════════════════════════════════
 // ── Script 1 (site script) — public-facing data ──
 async function pushSiteData(type, data) {
-  const url = 'https://script.google.com/macros/s/AKfycbxkad8h6cVi30h2KRv7h3lDNuUx_6Vz4fJ93s_cnm2BJ8Z7doOhE8X7kgn0qlN-ZJp4/exec';
+  const url = 'https://script.google.com/macros/s/AKfycbyBbRKd_MPfUr5lBke_Ix9gcz3q8l-MPvHwEGyVys64NAQUc2YjIYMPbbmAScGv47N3wQ/exec';
   if (!url) return;
   try {
     await fetch(url, {
@@ -3821,7 +3842,7 @@ async function pushSiteData(type, data) {
 }
 
 async function pullSiteData(type, localKey, fallback) {
-  const url = 'https://script.google.com/macros/s/AKfycbxkad8h6cVi30h2KRv7h3lDNuUx_6Vz4fJ93s_cnm2BJ8Z7doOhE8X7kgn0qlN-ZJp4/exec';
+  const url = 'https://script.google.com/macros/s/AKfycbyBbRKd_MPfUr5lBke_Ix9gcz3q8l-MPvHwEGyVys64NAQUc2YjIYMPbbmAScGv47N3wQ/exec';
   if (!url) return null;
   try {
     const res = await withTimeout(fetch(`${url}?action=get&type=${type}`));
