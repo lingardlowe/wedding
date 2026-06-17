@@ -1589,7 +1589,8 @@ function renderStepIndicator() {
   const labels = ['Details','Meals','Notes'];
   const cur = steps.indexOf(rsvpState.step);
   const courses = memGet('wedding_meal_courses',[]);
-  const hasMeals = courses.some(c => rsvpState.guestType && c.guestTypes.includes(rsvpState.guestType) && c.options.length > 0);
+  const hasDayGuests = rsvpState.guests.some(g => (g.guestType||rsvpState.guestType) === 'day' && g.attending !== 'no');
+  const hasMeals = hasDayGuests && courses.some(c => c.guestTypes.includes('day') && c.options.length > 0);
   const visSteps = hasMeals ? steps : steps.filter(s=>s!=='meals');
   const visLabels = hasMeals ? labels : labels.filter((_,i)=>i!==2);
   const visCur = visSteps.indexOf(rsvpState.step);
@@ -1735,7 +1736,7 @@ function renderGuestsStep() {
       <button class="back-btn" onclick="rsvpBack()">
         <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
       </button>
-      <span class="form-eyebrow">${rsvpState.guestType === 'day' ? 'Day' : 'Evening'} Guest${rsvpState.guestEntry ? ' — ' + rsvpState.code : ''}</span>
+      <span class="form-eyebrow">${rsvpState.guests.some(g=>(g.guestType||rsvpState.guestType)==='day') && rsvpState.guests.some(g=>(g.guestType||rsvpState.guestType)==='evening') ? 'Day & Evening' : rsvpState.guestType === 'day' ? 'Day' : 'Evening'} Guest${rsvpState.guestEntry ? ' — ' + rsvpState.code : ''}</span>
     </div>
     ${rsvpState.guests[0]&&rsvpState.guests[0].isExisting ? `
     <div style="background:hsl(38,100%,97%);border:1px solid hsl(38,85%,70%);padding:0.875rem 1.25rem;margin-bottom:1.25rem;font-size:0.8rem;color:hsl(32,80%,35%);">
@@ -1827,8 +1828,8 @@ function guestsNext() {
     return;
   }
   const courses = memGet('wedding_meal_courses',[]);
-  const attending = guests.filter(g=>g.attending==='yes');
-  const hasMeals = courses.some(c=>rsvpState.guestType && c.guestTypes.includes(rsvpState.guestType) && c.options.length>0) && attending.length>0;
+  const dayAttending = guests.filter(g => g.attending === 'yes' && (g.guestType||rsvpState.guestType) === 'day');
+  const hasMeals = courses.some(c => c.guestTypes.includes('day') && c.options.length > 0) && dayAttending.length > 0;
   rsvpState.step = hasMeals ? 'meals' : 'notes';
   renderRSVP();
 }
@@ -2043,6 +2044,8 @@ async function addAnotherGuestInline() {
     isExisting: !!existing,
     plusOneAllowed: !!entry.plusOne
   });
+  // Update session guestType to reflect mixed if needed
+  if (entry.type !== rsvpState.guestType) rsvpState.guestType = 'mixed';
 
   document.getElementById('rsvpExtraCode').value = '';
   renderRSVP();
@@ -3058,7 +3061,7 @@ function deleteCat(id) {
 function addCat() {
   const name=(document.getElementById('newCatName')||{}).value||'';
   const budget=parseFloat((document.getElementById('newCatBudget')||{}).value)||0;
-  if(!name.trim()||!budget)return;
+  if(!name.trim()) { alert('Please enter a category name.'); return; }
   adminSet('wedding_budget_categories',[...(memGet('wedding_budget_categories',INIT_CATS)),{id:Date.now().toString(),name:name.trim(),budgeted:budget}],'budget_categories');
   document.getElementById('adminContent').innerHTML=renderAdminBudget();
 }
