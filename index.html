@@ -1069,7 +1069,8 @@ const SETTINGS_DEFAULTS = {
 function updateCountdown() {
   const s = getSiteSettings();
   const cleanDate = sanitiseDateFields({weddingDate: s.weddingDate, ceremonyTime: s.ceremonyTime, rsvpDeadline: ''});
-  const target = new Date(cleanDate.weddingDate + 'T12:00:00').getTime();
+  const timeStr = (cleanDate.ceremonyTime||'13:00').substring(0,5);
+  const target = new Date(cleanDate.weddingDate + 'T' + timeStr + ':00').getTime();
   const now = Date.now();
   const diff = Math.max(0, target - now);
   const days = Math.floor(diff / 864e5);
@@ -1768,7 +1769,7 @@ function renderGuestsStep() {
       <button class="back-btn" onclick="rsvpBack()">
         <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
       </button>
-      <span class="form-eyebrow">${rsvpState.guests.some(g=>(g.guestType||rsvpState.guestType)==='day') && rsvpState.guests.some(g=>(g.guestType||rsvpState.guestType)==='evening') ? 'Day & Evening' : rsvpState.guestType === 'day' ? 'Day' : 'Evening'} Guest${rsvpState.guestEntry ? ' — ' + rsvpState.code : ''}</span>
+      <span class="form-eyebrow">${rsvpState.code ? rsvpState.code : 'Your Details'}</span>
     </div>
     ${rsvpState.guests[0]&&rsvpState.guests[0].isExisting ? `
     <div style="background:hsl(38,100%,97%);border:1px solid hsl(38,85%,70%);padding:0.875rem 1.25rem;margin-bottom:1.25rem;font-size:0.8rem;color:hsl(32,80%,35%);">
@@ -1794,7 +1795,7 @@ function renderGuestsStep() {
         </div>
         <div>
           <label class="field-label">Mobile Number</label>
-          <input id="g${i}_phone" value="${esc(g.phone)}" oninput="updateGuest(${i},'phone',this.value)" type="tel" placeholder="07700 123456" />
+          <input id="g${i}_phone" value="${esc(g.phone)}" oninput="updateGuest(${i},'phone',this.value)" type="tel" placeholder="07700 900000" maxlength="12" />
         </div>
         <div>
           <label class="field-label">Attendance</label>
@@ -1829,7 +1830,24 @@ function renderGuestsStep() {
 }
 
 function updateGuest(i, field, val) {
-  if (field === 'name') val = val.replace(/\b\w/g, c => c.toUpperCase());
+  if (field === 'name') {
+    val = val.replace(/\b\w/g, c => c.toUpperCase());
+    const el = document.getElementById('g'+i+'_name');
+    if (el && el.value !== val) { const p = el.selectionStart; el.value = val; try { el.setSelectionRange(p,p); } catch(e) {} }
+  }
+  if (field === 'phone') {
+    let digits = val.replace(/\D/g,'');
+    val = digits.length <= 5 ? digits : digits.slice(0,5) + ' ' + digits.slice(5,11);
+    const el = document.getElementById('g'+i+'_phone');
+    if (el) {
+      el.style.borderColor = val && digits.length !== 11 ? 'var(--red)' : '';
+      el.value = val;
+    }
+  }
+  if (field === 'email') {
+    const el = document.getElementById('g'+i+'_email');
+    if (el) el.style.borderColor = val && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val) ? 'var(--red)' : '';
+  }
   rsvpState.guests[i][field] = val;
 }
 function addGuest() {
