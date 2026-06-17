@@ -975,7 +975,7 @@ async function submitSTDForm() {
   }));
 
   try {
-    await withTimeout(fetch('https://script.google.com/macros/s/AKfycbyfxbxup6hRLFUqUhuJaPGiqiCz48V9BsAww2Rt-6VFzzsgZEigf80pO2NBImrQwjbNaQ/exec', {
+    await withTimeout(fetch('https://script.google.com/macros/s/AKfycbxkad8h6cVi30h2KRv7h3lDNuUx_6Vz4fJ93s_cnm2BJ8Z7doOhE8X7kgn0qlN-ZJp4/exec', {
       method: 'POST',
       mode: 'no-cors',
       headers: { 'Content-Type': 'application/json' },
@@ -1643,7 +1643,7 @@ function renderLookupStep() {
 async function getExistingRSVP(code) {
   // Always fetch from Sheets — no localStorage
   try {
-    const res = await withTimeout(fetch(`https://script.google.com/macros/s/AKfycbyfxbxup6hRLFUqUhuJaPGiqiCz48V9BsAww2Rt-6VFzzsgZEigf80pO2NBImrQwjbNaQ/exec?action=get`));
+    const res = await withTimeout(fetch(`https://script.google.com/macros/s/AKfycbxkad8h6cVi30h2KRv7h3lDNuUx_6Vz4fJ93s_cnm2BJ8Z7doOhE8X7kgn0qlN-ZJp4/exec?action=get`));
     const json = await res.json();
     if (json.rows) {
       // Match on code first, then fall back to name match
@@ -1672,7 +1672,7 @@ async function lookupRSVPCode(isAddingAnother=false) {
   let guestList = memGet('wedding_guest_list', null);
   if (!guestList) {
     try {
-      const SITE_URL = 'https://script.google.com/macros/s/AKfycbyfxbxup6hRLFUqUhuJaPGiqiCz48V9BsAww2Rt-6VFzzsgZEigf80pO2NBImrQwjbNaQ/exec';
+      const SITE_URL = 'https://script.google.com/macros/s/AKfycbxkad8h6cVi30h2KRv7h3lDNuUx_6Vz4fJ93s_cnm2BJ8Z7doOhE8X7kgn0qlN-ZJp4/exec';
       const res = await withTimeout(fetch(`${SITE_URL}?action=get&type=guestlist`));
       const json = await res.json();
       if (json.data) { memSet('wedding_guest_list', json.data); guestList = json.data; }
@@ -1934,7 +1934,7 @@ async function submitRSVP() {
   const getCOpt = (cid,oid) => { const c=courses.find(x=>x.id===cid); return c?.options.find(o=>o.id===oid)?.name||oid; };
   const getCName = cid => courses.find(c=>c.id===cid)?.name||cid;
 
-  const sheetsUrl = 'https://script.google.com/macros/s/AKfycbyfxbxup6hRLFUqUhuJaPGiqiCz48V9BsAww2Rt-6VFzzsgZEigf80pO2NBImrQwjbNaQ/exec';
+  const sheetsUrl = 'https://script.google.com/macros/s/AKfycbxkad8h6cVi30h2KRv7h3lDNuUx_6Vz4fJ93s_cnm2BJ8Z7doOhE8X7kgn0qlN-ZJp4/exec';
   if (sheetsUrl) {
     try {
       // Build flat rows — one per guest
@@ -2015,7 +2015,7 @@ async function addAnotherGuestInline() {
   let guestList = memGet('wedding_guest_list', null);
   if (!guestList) {
     try {
-      const SITE_URL = 'https://script.google.com/macros/s/AKfycbyfxbxup6hRLFUqUhuJaPGiqiCz48V9BsAww2Rt-6VFzzsgZEigf80pO2NBImrQwjbNaQ/exec';
+      const SITE_URL = 'https://script.google.com/macros/s/AKfycbxkad8h6cVi30h2KRv7h3lDNuUx_6Vz4fJ93s_cnm2BJ8Z7doOhE8X7kgn0qlN-ZJp4/exec';
       const res = await withTimeout(fetch(`${SITE_URL}?action=get&type=guestlist`));
       const json = await res.json();
       if (json.data) { memSet('wedding_guest_list', json.data); guestList = json.data; }
@@ -2109,7 +2109,7 @@ async function showAdmin(section) {
   const nav = document.getElementById(`nav-${section}`);
   if (nav) nav.classList.add('active');
   const el = document.getElementById('adminContent');
-  const siteUrl = 'https://script.google.com/macros/s/AKfycbyfxbxup6hRLFUqUhuJaPGiqiCz48V9BsAww2Rt-6VFzzsgZEigf80pO2NBImrQwjbNaQ/exec';
+  const siteUrl = 'https://script.google.com/macros/s/AKfycbxkad8h6cVi30h2KRv7h3lDNuUx_6Vz4fJ93s_cnm2BJ8Z7doOhE8X7kgn0qlN-ZJp4/exec';
   const adminUrl = getAdminUrl();
 
   if (section === 'dashboard') {
@@ -2199,7 +2199,7 @@ function renderAdminDashboard() {
   const all = cache.flatMap(r=>r.guests||[{attending:r.attending==='Yes',name:r.name}]);
   const attending = all.filter(g=>g.attending===true||g.attending==='Yes').length;
   const declined = all.filter(g=>g.attending===false||g.attending==='No').length;
-  const hasSheets = !!'https://script.google.com/macros/s/AKfycbyfxbxup6hRLFUqUhuJaPGiqiCz48V9BsAww2Rt-6VFzzsgZEigf80pO2NBImrQwjbNaQ/exec';
+  const hasSheets = !!'https://script.google.com/macros/s/AKfycbxkad8h6cVi30h2KRv7h3lDNuUx_6Vz4fJ93s_cnm2BJ8Z7doOhE8X7kgn0qlN-ZJp4/exec';
   const recent = [...cache].reverse().slice(0,5);
   return `
     <h1 class="page-header">Dashboard Overview</h1>
@@ -2236,7 +2236,7 @@ async function lookupFromDone() {
   let guestList = memGet('wedding_guest_list', null);
   if (!guestList) {
     try {
-      const SITE_URL = 'https://script.google.com/macros/s/AKfycbyfxbxup6hRLFUqUhuJaPGiqiCz48V9BsAww2Rt-6VFzzsgZEigf80pO2NBImrQwjbNaQ/exec';
+      const SITE_URL = 'https://script.google.com/macros/s/AKfycbxkad8h6cVi30h2KRv7h3lDNuUx_6Vz4fJ93s_cnm2BJ8Z7doOhE8X7kgn0qlN-ZJp4/exec';
       const res = await withTimeout(fetch(`${SITE_URL}?action=get&type=guestlist`));
       const json = await res.json();
       if (json.data) { memSet('wedding_guest_list', json.data); guestList = json.data; }
@@ -2430,7 +2430,7 @@ let expandedRSVP = null;
 let rsvpsLoading = false;
 
 async function loadRSVPsFromSheets() {
-  const url = 'https://script.google.com/macros/s/AKfycbyfxbxup6hRLFUqUhuJaPGiqiCz48V9BsAww2Rt-6VFzzsgZEigf80pO2NBImrQwjbNaQ/exec';
+  const url = 'https://script.google.com/macros/s/AKfycbxkad8h6cVi30h2KRv7h3lDNuUx_6Vz4fJ93s_cnm2BJ8Z7doOhE8X7kgn0qlN-ZJp4/exec';
   if (!url) return;
   rsvpsLoading = true;
   document.getElementById('adminContent').innerHTML = renderAdminRSVPs();
@@ -2476,7 +2476,7 @@ function sortRSVPs(col) {
 
 function renderAdminRSVPs(filter) {
   rsvpFilter = filter || rsvpFilter;
-  const sheetsUrl = 'https://script.google.com/macros/s/AKfycbyfxbxup6hRLFUqUhuJaPGiqiCz48V9BsAww2Rt-6VFzzsgZEigf80pO2NBImrQwjbNaQ/exec';
+  const sheetsUrl = 'https://script.google.com/macros/s/AKfycbxkad8h6cVi30h2KRv7h3lDNuUx_6Vz4fJ93s_cnm2BJ8Z7doOhE8X7kgn0qlN-ZJp4/exec';
   const rsvps = memGet('wedding_rsvps_sheets_cache',[])||[];
   const courses = memGet('wedding_meal_courses',[])||[];
 
@@ -3678,7 +3678,7 @@ async function pushLocalToSheets(type, localKey, useAdminScript=false) {
     const data = get(localKey, null);
     if (data !== null) await pushAdminData(type, data);
   } else {
-    const siteUrl = 'https://script.google.com/macros/s/AKfycbyfxbxup6hRLFUqUhuJaPGiqiCz48V9BsAww2Rt-6VFzzsgZEigf80pO2NBImrQwjbNaQ/exec';
+    const siteUrl = 'https://script.google.com/macros/s/AKfycbxkad8h6cVi30h2KRv7h3lDNuUx_6Vz4fJ93s_cnm2BJ8Z7doOhE8X7kgn0qlN-ZJp4/exec';
     if (!siteUrl) { alert('Site Script URL not set in Site Settings.'); return; }
     const data = get(localKey, null);
     if (data !== null) await pushSiteData(type, data);
@@ -3688,7 +3688,7 @@ async function pushLocalToSheets(type, localKey, useAdminScript=false) {
 }
 
 async function pushSettingsToSheets(s) {
-  const url = s.sheetsUrl || 'https://script.google.com/macros/s/AKfycbyfxbxup6hRLFUqUhuJaPGiqiCz48V9BsAww2Rt-6VFzzsgZEigf80pO2NBImrQwjbNaQ/exec';
+  const url = s.sheetsUrl || 'https://script.google.com/macros/s/AKfycbxkad8h6cVi30h2KRv7h3lDNuUx_6Vz4fJ93s_cnm2BJ8Z7doOhE8X7kgn0qlN-ZJp4/exec';
   if (!url) return;
   // Strip large binary fields before sending
   const safe = {...s};
@@ -3715,7 +3715,7 @@ function withTimeout(promise, ms=12000) {
 
 async function loadSettingsFromSheets() {
   const local = get('wedding_site_settings', {});
-  const url = 'https://script.google.com/macros/s/AKfycbyfxbxup6hRLFUqUhuJaPGiqiCz48V9BsAww2Rt-6VFzzsgZEigf80pO2NBImrQwjbNaQ/exec';
+  const url = 'https://script.google.com/macros/s/AKfycbxkad8h6cVi30h2KRv7h3lDNuUx_6Vz4fJ93s_cnm2BJ8Z7doOhE8X7kgn0qlN-ZJp4/exec';
   if (!url) return;
   try {
     const res = await withTimeout(fetch(url + '?action=getSettings'));
@@ -3733,7 +3733,7 @@ async function loadSettingsFromSheets() {
   } catch(e) { console.warn('Failed to load settings from Sheets:', e); }
 
   // Also load public-facing data for guests
-  const siteUrl = 'https://script.google.com/macros/s/AKfycbyfxbxup6hRLFUqUhuJaPGiqiCz48V9BsAww2Rt-6VFzzsgZEigf80pO2NBImrQwjbNaQ/exec';
+  const siteUrl = 'https://script.google.com/macros/s/AKfycbxkad8h6cVi30h2KRv7h3lDNuUx_6Vz4fJ93s_cnm2BJ8Z7doOhE8X7kgn0qlN-ZJp4/exec';
   if (siteUrl) {
     try {
       const [tlRes, mealsRes] = await Promise.all([
@@ -3753,7 +3753,7 @@ async function loadSettingsFromSheets() {
 // ═══════════════════════════════════════════════
 // ── Script 1 (site script) — public-facing data ──
 async function pushSiteData(type, data) {
-  const url = 'https://script.google.com/macros/s/AKfycbyfxbxup6hRLFUqUhuJaPGiqiCz48V9BsAww2Rt-6VFzzsgZEigf80pO2NBImrQwjbNaQ/exec';
+  const url = 'https://script.google.com/macros/s/AKfycbxkad8h6cVi30h2KRv7h3lDNuUx_6Vz4fJ93s_cnm2BJ8Z7doOhE8X7kgn0qlN-ZJp4/exec';
   if (!url) return;
   try {
     await fetch(url, {
@@ -3766,7 +3766,7 @@ async function pushSiteData(type, data) {
 }
 
 async function pullSiteData(type, localKey, fallback) {
-  const url = 'https://script.google.com/macros/s/AKfycbyfxbxup6hRLFUqUhuJaPGiqiCz48V9BsAww2Rt-6VFzzsgZEigf80pO2NBImrQwjbNaQ/exec';
+  const url = 'https://script.google.com/macros/s/AKfycbxkad8h6cVi30h2KRv7h3lDNuUx_6Vz4fJ93s_cnm2BJ8Z7doOhE8X7kgn0qlN-ZJp4/exec';
   if (!url) return null;
   try {
     const res = await withTimeout(fetch(`${url}?action=get&type=${type}`));
