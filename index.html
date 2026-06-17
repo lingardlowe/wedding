@@ -1897,15 +1897,61 @@ function guestsNext() {
   const courses = memGet('wedding_meal_courses',[]);
   const dayAttending = guests.filter(g => g.attending === 'yes' && (g.guestType||rsvpState.guestType) === 'day');
   const hasMeals = courses.some(c => c.guestTypes.includes('day') && c.options.length > 0) && dayAttending.length > 0;
-  rsvpState.step = hasMeals ? 'meals' : 'submit';
-  if (!hasMeals) submitRSVP();
-  else renderRSVP();
+  rsvpState.step = hasMeals ? 'meals' : 'notes';
+  renderRSVP();
 }
 
 function renderMealsStep() {
   const allCourses = memGet('wedding_meal_courses',[]).filter(c=>c.options.length>0);
   const dayCourses = allCourses.filter(c=>c.guestTypes.includes('day'));
-  const attending = rsvpState.guests.map((g,i)=>({g,i})).filter(({g})=>g.attending==='yes');
+  const attendingGuests = rsvpState.guests.map((g,i)=>({g,i})).filter(({g})=>g.attending==='yes');
+  const DIETARY_OPTS = ['Vegetarian','Vegan','Gluten-free','Dairy-free','Nut allergy','Halal','Kosher','Other'];
+
+  function dietaryBlock(g, i) {
+    return `<div style="margin-top:1rem;padding:0.875rem;background:hsl(150,10%,97%);border:1px solid var(--border);">
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <span style="font-size:0.75rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--secondary);">Dietary requirements</span>
+        <div style="display:flex;gap:0;border:1px solid var(--border);overflow:hidden;">
+          <button onclick="toggleDietary(${i},false)" style="padding:0.3rem 0.75rem;font-size:0.7rem;border:none;cursor:pointer;font-family:var(--font-sans);letter-spacing:0.1em;text-transform:uppercase;${!g.hasDietary?'background:var(--primary);color:#fff;':'background:transparent;color:var(--secondary);'}">No</button>
+          <button onclick="toggleDietary(${i},true)" style="padding:0.3rem 0.75rem;font-size:0.7rem;border:none;border-left:1px solid var(--border);cursor:pointer;font-family:var(--font-sans);letter-spacing:0.1em;text-transform:uppercase;${g.hasDietary?'background:var(--primary);color:#fff;':'background:transparent;color:var(--secondary);'}">Yes</button>
+        </div>
+      </div>
+      ${g.hasDietary ? `<div style="margin-top:0.875rem;display:flex;flex-wrap:wrap;gap:0.4rem;">
+        ${DIETARY_OPTS.map(opt => `<label style="display:flex;align-items:center;gap:0.3rem;font-size:0.8rem;cursor:pointer;background:var(--white);border:1px solid var(--border);padding:0.3rem 0.6rem;">
+          <input type="checkbox" ${(rsvpState.guests[i].dietaryChoices||[]).includes(opt)?'checked':''} onchange="toggleDietaryChoice(${i},'${opt}',this.checked)" style="width:auto;accent-color:var(--primary);" />${opt}</label>`).join('')}
+      </div>
+      ${(g.dietaryChoices||[]).includes('Other') ? `<input value="${esc(g.dietaryOther||'')}" oninput="rsvpState.guests[${i}].dietaryOther=this.value.charAt(0).toUpperCase()+this.value.slice(1)" placeholder="Please specify" style="margin-top:0.5rem;font-size:0.8rem;width:100%;box-sizing:border-box;" />` : ''}
+      ` : ''}
+    </div>`;
+  }
+
+  const blocks = attendingGuests.map(({g, i}) => {
+    const gType = g.guestType || rsvpState.guestType;
+    const gCourses = gType === 'day' ? dayCourses : [];
+    const hasErr = id => (rsvpState.mealErrors||new Set()).has(`${i}-${id}`);
+    return `<div class="meal-guest-block">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem;">
+        <span style="font-size:0.75rem;font-weight:500;">Guest ${i+1}${g.isPlusOne?' (Plus One)':''}</span>
+        <span class="badge badge-${gType==='day'?'day':'evening'}">${gType==='day'?'Day':'Evening'} Guest</span>
+      </div>
+      ${gCourses.length === 0 ? `<p style="font-size:0.8rem;color:var(--secondary);">No meal selection required for evening guests.</p>` :
+        gCourses.map(c => `<div style="margin-bottom:1rem;">
+          <div class="course-label">${esc(c.name)}${hasErr(c.id)?' <span class="course-error">Please make a selection</span>':''}</div>
+          <div class="option-pills">
+            ${c.options.map(o => {
+              const sel = (rsvpState.mealChoices[i]||{})[c.id] === o.id;
+              return `<label class="option-pill ${hasErr(c.id)&&!sel?'has-error':''}">
+                <input type="radio" name="meal_${i}_${c.id}" value="${o.id}" ${sel?'checked':''} onchange="setMealChoice(${i},'${c.id}','${o.id}')">
+                <span ${sel?'style="font-weight:500"':''}>${esc(o.name)}</span>
+                ${o.description?`<span style="font-size:0.7rem;opacity:0.6;margin-left:0.25rem;">— ${esc(o.description)}</span>`:''}
+              </label>`;
+            }).join('')}
+          </div>
+        </div>`).join('')}
+      ${dietaryBlock(g, i)}
+    </div>`;
+  }).join('');
+
   return `<div class="form-card">
     <div class="form-card-header">
       <button class="back-btn" onclick="rsvpBack()">
@@ -1913,31 +1959,13 @@ function renderMealsStep() {
       </button>
       <span class="form-eyebrow">Meal Choices</span>
     </div>
-    ${attending.map(({g,i}) => `
-    <div class="meal-guest-block">
-      <div class="meal-guest-header">${esc(g.name)}</div>
-      <div class="meal-guest-body">
-        <p style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.15em;color:var(--secondary);margin-bottom:0.5rem;">Guest ${i+1} — ${(g.guestType||rsvpState.guestType)==='day'?'Day':'Evening'} Guest</p>
-      ${gCourses.map(c => {
-          const hasErr = (rsvpState.mealErrors||new Set()).has(`${i}-${c.id}`);
-          return `<div style="margin-bottom:1rem;">
-            <div class="course-label">${esc(c.name)} ${hasErr?'<span class="course-error">Please make a selection</span>':''}</div>
-            <div class="option-pills">
-              ${c.options.map(o => {
-                const sel = (rsvpState.mealChoices[i]||{})[c.id] === o.id;
-                return `<label class="option-pill ${hasErr&&!sel?'has-error':''}">
-                  <input type="radio" name="meal_${i}_${c.id}" value="${o.id}" ${sel?'checked':''} onchange="setMealChoice(${i},'${c.id}','${o.id}')">
-                  <span ${sel?'style="font-weight:500"':''}>${esc(o.name)}</span>
-                  ${o.description?`<span style="font-size:0.7rem;opacity:0.6;margin-left:0.25rem;">— ${esc(o.description)}</span>`:''}
-                </label>`;
-              }).join('')}
-            </div>
-          </div>`;
-        }).join('')}
-      </div>
-    </div>`).join('')}
+    ${blocks}
     <div id="mealErrors"></div>
-    <button class="btn btn-primary btn-full" style="margin-top:1rem;" onclick="mealsNext()">Continue</button>
+    <div style="margin-top:1.5rem;padding-top:1.5rem;border-top:1px solid var(--border);">
+      <label class="field-label">Additional notes for the whole party</label>
+      <textarea oninput="rsvpState.notes=this.value" placeholder="Anything else we should know?" style="min-height:4rem;font-size:0.875rem;">${esc(rsvpState.notes||'')}</textarea>
+    </div>
+    <button class="btn btn-primary btn-full" style="margin-top:1.5rem;" onclick="mealsNext()">Continue</button>
   </div>`;
 }
 
