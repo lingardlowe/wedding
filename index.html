@@ -1781,7 +1781,10 @@ function renderGuestsStep() {
     ${guests.map((g,i) => `
     <div class="guest-block" id="guestBlock${i}">
       <div class="guest-header">
-        <span class="guest-label">Guest ${i+1}</span>
+        <div style="display:flex;align-items:center;gap:0.5rem;">
+          <span class="guest-label">Guest ${i+1}${g.isPlusOne?' (Plus One)':''}</span>
+          <span class="badge badge-${(g.guestType||rsvpState.guestType)==='day'?'day':'evening'}">${(g.guestType||rsvpState.guestType)==='day'?'Day':'Evening'} Guest</span>
+        </div>
         ${guests.length > 1 ? `<button class="remove-guest-btn" onclick="removeGuest(${i})">✕</button>` : ''}
       </div>
       <div class="guest-grid">
@@ -2006,7 +2009,7 @@ function renderNotesStep() {
 }
 
 async function submitRSVP() {
-  rsvpState.notes = document.getElementById('rsvpNotes').value;
+  // notes captured on meals step via textarea
   const submitBtn = document.querySelector('#rsvpContent .btn-primary');
   if (submitBtn) { submitBtn.textContent = 'Sending…'; submitBtn.disabled = true; }
 
@@ -2014,7 +2017,7 @@ async function submitRSVP() {
   const entry = {
     id: Date.now().toString(),
     code: rsvpState.code,
-    guestType: rsvpState.guestType,
+    guestType: rsvpState.guestType, // per-guest type set on each guest object
     guests: rsvpState.guests.map((g,i) => ({
       name: g.name.trim(), email: g.email.trim(),
       phone: g.phone.replace(/\s+/g,''),
@@ -2037,17 +2040,17 @@ async function submitRSVP() {
   if (sheetsUrl) {
     try {
       // Build flat rows — one per guest
-      const rows = entry.guests.map(g => ({
+      const rows = entry.guests.map((g,i) => ({
         submissionId: entry.id,
         submittedAt: entry.submittedAt,
-        guestType: entry.guestType,
+        guestType: g.guestType || entry.guestType,
         code: g.code || entry.code,
         name: g.name,
         email: g.email,
-        phone: g.phone,
+        phone: g.phone.startsWith('0') ? g.phone : '0' + g.phone,
         attending: g.attending ? 'Yes' : 'No',
         dietary: g.hasDietary ? [...(g.dietaryChoices||[]), ...(g.dietaryOther ? ['Other: '+g.dietaryOther] : [])].join(', ') : 'None',
-      meals: Object.entries(g.mealChoices||{}).map(([cid,oid])=>getCName(cid)+': '+getCOpt(cid,oid)).join(' | '),
+        meals: Object.entries(rsvpState.mealChoices[i]||{}).map(([cid,oid])=>getCName(cid)+': '+getCOpt(cid,oid)).join(' | '),
         notes: entry.message
       }));
       await fetch(sheetsUrl, {
