@@ -1729,6 +1729,38 @@ async function lookupRSVPCode(isAddingAnother=false) {
   renderRSVP();
 }
 
+function rsvpFormatName(val) {
+  return val.replace(/\b\w/g, c => c.toUpperCase());
+}
+
+function rsvpFormatPhone(val) {
+  let digits = val.replace(/\D/g,'');
+  if (digits.length <= 5) return digits;
+  return digits.slice(0,5) + ' ' + digits.slice(5,11);
+}
+
+function rsvpUpdateGuest(i, field, raw) {
+  let val = raw;
+  if (field === 'name') {
+    val = raw.replace(/\b\w/g, c => c.toUpperCase());
+    const el = document.getElementById('rsvp_name_'+i);
+    if (el && el.value !== val) { const p = el.selectionStart; el.value = val; try { el.setSelectionRange(p,p); } catch(e) {} }
+  }
+  if (field === 'phone') {
+    val = rsvpFormatPhone(raw);
+    const el = document.getElementById('rsvp_phone_'+i);
+    if (el) {
+      el.style.borderColor = val && val.replace(/\D/g,'').length !== 11 ? 'var(--red)' : '';
+      el.value = val;
+    }
+  }
+  if (field === 'email') {
+    const el = document.getElementById('rsvp_email_'+i);
+    if (el) el.style.borderColor = val && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val) ? 'var(--red)' : '';
+  }
+  rsvpState.guests[i][field] = val;
+}
+
 function renderGuestsStep() {
   const guests = rsvpState.guests;
   return `<div class="form-card">
@@ -2056,7 +2088,9 @@ function togglePlusOne(guestIndex, checked) {
     // Insert plus one immediately after the guest at guestIndex
     const plusOne = {name:'', email:'', phone:'', attending:'yes', isPlusOne:true, isPlusOneOf:guestIndex};
     const insertAt = guestIndex + 1;
-    rsvpState.guests.splice(insertAt, 0, plusOne);
+    // Plus one inherits guestType from lead
+  plusOne.guestType = rsvpState.guests[guestIndex].guestType || rsvpState.guestType;
+  rsvpState.guests.splice(insertAt, 0, plusOne);
     // Update isPlusOneOf indexes for any subsequent guests
     for (let i = insertAt + 1; i < rsvpState.guests.length; i++) {
       if (rsvpState.guests[i].isPlusOneOf >= insertAt) rsvpState.guests[i].isPlusOneOf++;
