@@ -1975,10 +1975,11 @@ function setMealChoice(gi, courseId, optionId) {
 }
 
 function mealsNext() {
-  const courses = memGet('wedding_meal_courses',[]).filter(c=>rsvpState.guestType && c.guestTypes.includes(rsvpState.guestType) && c.options.length>0);
-  const attending = rsvpState.guests.map((g,i)=>({g,i})).filter(({g})=>g.attending==='yes');
+  const allCourses = memGet('wedding_meal_courses',[]).filter(c=>c.options.length>0);
+  const dayCourses = allCourses.filter(c=>c.guestTypes.includes('day'));
+  const dayAttending = rsvpState.guests.map((g,i)=>({g,i})).filter(({g})=>g.attending==='yes' && (g.guestType||rsvpState.guestType)==='day');
   const missing = new Set();
-  attending.forEach(({i}) => courses.forEach(c => { if (!(rsvpState.mealChoices[i]||{})[c.id]) missing.add(`${i}-${c.id}`); }));
+  dayAttending.forEach(({i}) => dayCourses.forEach(c => { if (!(rsvpState.mealChoices[i]||{})[c.id]) missing.add(`${i}-${c.id}`); }));
   if (missing.size) {
     rsvpState.mealErrors = missing;
     renderRSVP();
@@ -1998,7 +1999,7 @@ function renderNotesStep() {
     </div>
     <div style="margin-bottom:1.5rem;">
       <label class="field-label" style="text-transform:uppercase;letter-spacing:0.15em;">Additional Notes</label>
-      <textarea id="rsvpNotes" style="min-height:7rem;margin-top:0.5rem;" placeholder="Anything else we should know?">${esc(rsvpState.notes)}</textarea>
+      <textarea id="rsvpNotes" style="min-height:7rem;margin-top:0.5rem;" placeholder="Anything else we should know?" oninput="rsvpState.notes=this.value">${esc(rsvpState.notes)}</textarea>
     </div>
     <button class="btn btn-primary btn-full" onclick="submitRSVP()">Send Reply</button>
   </div>`;
