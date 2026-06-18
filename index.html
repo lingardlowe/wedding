@@ -1933,25 +1933,29 @@ function renderMealsStep() {
     const gCourses = gType === 'day' ? dayCourses : [];
     const hasErr = id => (rsvpState.mealErrors||new Set()).has(`${i}-${id}`);
     return `<div class="meal-guest-block">
-      <div style="display:flex;justify-content:space-between;align-items:center;">
-        <span style="font-size:0.875rem;font-weight:500;">${esc(g.name||('Guest '+(i+1)))}${g.isPlusOne?' <span style=\"font-size:0.75rem;font-weight:400;color:var(--secondary);\">Plus One</span>':''}</span>
-        <span class="badge badge-${gType==='day'?'day':'evening'}">${gType==='day'?'Day':'Evening'} Guest</span>
+      <div class="meal-guest-header">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-size:0.875rem;font-weight:500;">${esc(g.name||('Guest '+(i+1)))}${g.isPlusOne?' <span style="font-size:0.75rem;font-weight:400;color:var(--secondary);">Plus One</span>':''}</span>
+          <span class="badge badge-${gType==='day'?'day':'evening'}">${gType==='day'?'Day':'Evening'} Guest</span>
+        </div>
       </div>
-      ${gCourses.length === 0 ? `<p style="font-size:0.8rem;color:var(--secondary);">No meal selection required for evening guests.</p>` :
-        gCourses.map(c => `<div style="margin-bottom:1rem;">
-          <div class="course-label">${esc(c.name)}${hasErr(c.id)?' <span class="course-error">Please make a selection</span>':''}</div>
-          <div class="option-pills">
-            ${c.options.map(o => {
-              const sel = (rsvpState.mealChoices[i]||{})[c.id] === o.id;
-              return `<label class="option-pill ${hasErr(c.id)&&!sel?'has-error':''}">
-                <input type="radio" name="meal_${i}_${c.id}" value="${o.id}" ${sel?'checked':''} onchange="setMealChoice(${i},'${c.id}','${o.id}')">
-                <span ${sel?'style="font-weight:500"':''}>${esc(o.name)}</span>
-                ${o.description?`<span style="font-size:0.7rem;opacity:0.6;margin-left:0.25rem;">— ${esc(o.description)}</span>`:''}
-              </label>`;
-            }).join('')}
-          </div>
-        </div>`).join('')}
-      ${dietaryBlock(g, i)}
+      <div class="meal-guest-body">
+        ${gCourses.length === 0 ? `<p style="font-size:0.875rem;color:var(--secondary);padding-bottom:1rem;">No meal selection required for evening guests.</p>` :
+          gCourses.map(c => `<div style="margin-bottom:1.25rem;">
+            <div class="course-label">${esc(c.name)}${hasErr(c.id)?` <span class="course-error">Please make a selection</span>`:''}</div>
+            <div class="option-pills">
+              ${c.options.map(o => {
+                const sel = (rsvpState.mealChoices[i]||{})[c.id] === o.id;
+                return `<label class="option-pill${hasErr(c.id)&&!sel?' has-error':''}">
+                  <input type="radio" name="meal_${i}_${c.id}" value="${o.id}" ${sel?'checked':''} onchange="setMealChoice(${i},'${c.id}','${o.id}')">
+                  <span>${esc(o.name)}</span>
+                  ${o.description?`<span style="font-size:0.75rem;color:var(--secondary);margin-left:0.25rem;">— ${esc(o.description)}</span>`:''}
+                </label>`;
+              }).join('')}
+            </div>
+          </div>`).join('')}
+        ${dietaryBlock(g, i)}
+      </div>
     </div>`;
   }).join('');
 
