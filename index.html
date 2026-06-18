@@ -183,13 +183,13 @@
     .error-box ul { list-style: none; }
     .error-box li { margin-top: 0.25rem; }
 
-    .meal-guest-block { border: 1px solid var(--border); margin-bottom: 1.25rem; overflow: hidden; border-radius: 0; }
-    .meal-guest-header { padding: 0.75rem 1rem; background: var(--muted); border-bottom: 1px solid var(--border); font-weight: 500; font-size: 0.875rem; }
-    .meal-guest-body { padding: 1.25rem; }
+    .meal-guest-block { background: var(--white); border: 1px solid var(--border); margin-bottom: 1.25rem; overflow: hidden; }
+    .meal-guest-header { padding: 0.875rem 1.25rem; background: hsl(150,10%,97%); border-bottom: 1px solid var(--border); }
+    .meal-guest-body { padding: 1.25rem 1.25rem 0.25rem; }
     .course-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.2em; color: var(--secondary); margin-bottom: 0.75rem; display: flex; justify-content: space-between; align-items: center; }
     .course-error { color: var(--red); font-size: 0.75rem; }
     .option-pills { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1.25rem; }
-    .option-pill { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.5rem 1rem; border: 1px solid var(--border); cursor: pointer; font-size: 0.875rem; transition: all 0.2s; line-height: 1.4; }
+    .option-pill { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.6rem 1.1rem; border: 1px solid var(--border); cursor: pointer; font-size: 0.875rem; transition: all 0.15s; background: var(--white); }
     .option-pill:has(input:checked) { border-color: var(--primary); background: var(--primary-light); color: var(--primary); font-weight: 500; }
     .option-pill.has-error { border-color: hsl(0,70%,80%); }
     .option-pill input { display: none; }
@@ -1920,7 +1920,7 @@ function renderMealsStep() {
         </div>
       </div>
       ${g.hasDietary ? `<div style="margin-top:0.875rem;display:flex;flex-wrap:wrap;gap:0.4rem;">
-        ${DIETARY_OPTS.map(opt => `<label style="display:flex;align-items:center;gap:0.3rem;font-size:0.8rem;cursor:pointer;background:var(--white);border:1px solid var(--border);padding:0.3rem 0.6rem;">
+        ${DIETARY_OPTS.map(opt => `<label style="display:flex;align-items:center;gap:0.4rem;font-size:0.875rem;cursor:pointer;background:var(--white);border:1px solid var(--border);padding:0.5rem 0.875rem;transition:all 0.15s;">
           <input type="checkbox" ${(rsvpState.guests[i].dietaryChoices||[]).includes(opt)?'checked':''} onchange="toggleDietaryChoice(${i},'${opt}',this.checked)" style="width:auto;accent-color:var(--primary);" />${opt}</label>`).join('')}
       </div>
       ${(g.dietaryChoices||[]).includes('Other') ? `<input value="${esc(g.dietaryOther||'')}" oninput="rsvpState.guests[${i}].dietaryOther=this.value.charAt(0).toUpperCase()+this.value.slice(1)" placeholder="Please specify" style="margin-top:0.5rem;font-size:0.8rem;width:100%;box-sizing:border-box;" />` : ''}
@@ -1933,8 +1933,8 @@ function renderMealsStep() {
     const gCourses = gType === 'day' ? dayCourses : [];
     const hasErr = id => (rsvpState.mealErrors||new Set()).has(`${i}-${id}`);
     return `<div class="meal-guest-block">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem;">
-        <span style="font-size:0.75rem;font-weight:500;">Guest ${i+1}${g.isPlusOne?' (Plus One)':''}</span>
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-size:0.875rem;font-weight:500;">${esc(g.name||('Guest '+(i+1)))}${g.isPlusOne?' <span style=\"font-size:0.75rem;font-weight:400;color:var(--secondary);\">Plus One</span>':''}</span>
         <span class="badge badge-${gType==='day'?'day':'evening'}">${gType==='day'?'Day':'Evening'} Guest</span>
       </div>
       ${gCourses.length === 0 ? `<p style="font-size:0.8rem;color:var(--secondary);">No meal selection required for evening guests.</p>` :
