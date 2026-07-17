@@ -435,15 +435,13 @@
     /* ── SAVE THE DATE ── */
     .std-hero { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 3rem 1.5rem; position: relative; overflow: visible; background: var(--bg); }
     .std-hero > * { position: relative; }
-    .std-fan-wrap { width: 100%; margin: 2rem 0; display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.5rem; align-items: end; }
-    .std-fan-img { width: 100%; aspect-ratio: 1; object-fit: cover; cursor: pointer; transition: transform 0.3s ease, box-shadow 0.3s ease, opacity 0.3s ease; display: block; }
-    .std-fan-img:hover { transform: translateY(-4px); box-shadow: 0 8px 20px rgba(0,0,0,0.15); }
-    .std-fan-img.active { transform: translateY(-8px); box-shadow: 0 12px 28px rgba(0,0,0,0.2); opacity: 1; }
-    .std-fan-img.inactive { opacity: 0.75; }
+    .std-fan-wrap { width: 100%; margin: 0; display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.4rem; }
+    .std-fan-img { width: 100%; aspect-ratio: 1; object-fit: cover; display: block; }
     @media (max-width: 600px) { .std-fan-wrap { display: none !important; } .std-swipe-wrap { display: block !important; } }
-    .std-swipe-wrap { display: none; width: 100%; position: relative; overflow: hidden; }
-    .std-swipe-track { display: flex; transition: transform 0.35s ease; will-change: transform; }
-    .std-swipe-img { width: 85%; flex-shrink: 0; aspect-ratio: 1; object-fit: cover; margin-right: 2.5%; }
+    .std-swipe-wrap { display: none; width: 100%; position: relative; overflow: hidden; padding: 0 10%; box-sizing: border-box; }
+    .std-swipe-track { display: flex; gap: 3%; transition: transform 0.35s ease; will-change: transform; }
+    .std-swipe-img { width: 80%; flex-shrink: 0; aspect-ratio: 1; object-fit: cover; transition: transform 0.35s ease, opacity 0.35s ease; opacity: 0.6; transform: scale(0.92); }
+    .std-swipe-img.active { opacity: 1; transform: scale(1); }
     .std-swipe-dots { display: flex; justify-content: center; gap: 0.4rem; padding: 0.75rem 0; }
     .std-swipe-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border); transition: background 0.2s; cursor: pointer; }
     .std-swipe-dot.active { background: var(--primary); }
@@ -1483,15 +1481,10 @@ function applyFrontEnd() {
       if (!fanWrap) return;
       fanWrap.innerHTML = fanPhotos.map((link, i) => {
         const isActive = i === active;
-        return `<img class="std-fan-img${isActive?' active':' inactive'}" src="${driveThumb(link)}" alt="" onclick="stdFanSelect(${i})" />`;
+        return `<img class="std-fan-img" src="${driveThumb(link)}" alt="" />`;
       }).join('');
       fanWrap.style.display = '';
     }
-
-    window.stdFanSelect = function(i) {
-      active = i;
-      renderFan();
-    };
 
     renderFan();
 
@@ -1501,7 +1494,6 @@ function applyFrontEnd() {
     const swipeDots = document.getElementById('stdSwipeDots');
     if (swipeTrack && photos.length > 0) {
       window._stdSwipeCurrent = window._stdSwipeCurrent || 0;
-      const imgWidth = 85; // % of container width, leaving peek of next
       swipeTrack.innerHTML = photos.map(link =>
         `<img class="std-swipe-img" src="${driveThumb(link)}" alt="" />`
       ).join('');
@@ -1510,14 +1502,25 @@ function applyFrontEnd() {
       ).join('');
       if (swipeWrap) swipeWrap.style.display = '';
 
+      function updateSwipe() {
+        const cur = window._stdSwipeCurrent;
+        // Each image is 80% wide + 3% gap = 83% per step, offset by 10% padding
+        const offset = cur * 83;
+        swipeTrack.style.transform = `translateX(-${offset}%)`;
+        // Active image styling
+        swipeTrack.querySelectorAll('.std-swipe-img').forEach((img, j) => {
+          img.classList.toggle('active', j === cur);
+        });
+        document.querySelectorAll('.std-swipe-dot').forEach((d,j) => d.classList.toggle('active', j===cur));
+      }
+
       window.stdSwipeTo = function(idx) {
         window._stdSwipeCurrent = Math.max(0, Math.min(idx, photos.length-1));
-        swipeTrack.style.transform = `translateX(-${window._stdSwipeCurrent * imgWidth}%)`;
-        document.querySelectorAll('.std-swipe-dot').forEach((d,j) => d.classList.toggle('active', j===window._stdSwipeCurrent));
+        updateSwipe();
       };
 
       // Set initial position
-      swipeTrack.style.transform = `translateX(-${window._stdSwipeCurrent * imgWidth}%)`;
+      updateSwipe();
 
       // Touch swipe support - re-attach each time
       const newWrap = swipeWrap.cloneNode(false);
