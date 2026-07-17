@@ -433,13 +433,16 @@
     /* ── SAVE THE DATE ── */
     .std-hero { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 3rem 1.5rem; position: relative; overflow: visible; background: var(--bg); }
     .std-hero > * { position: relative; }
-    .std-fan-wrap { width: 100%; margin: 2rem 0; position: relative; display: flex; justify-content: center; align-items: center; height: min(220px, 55vw); }
-    .std-fan-img { position: absolute; width: min(160px, 35vw); height: min(160px, 35vw); object-fit: cover; cursor: pointer; transition: transform 0.4s ease, box-shadow 0.4s ease; border: 3px solid #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.12); }
+    .std-fan-wrap { width: 100%; margin: 2rem 0; position: relative; display: flex; justify-content: center; align-items: center; height: min(320px, 70vw); }
+    .std-fan-img { position: absolute; width: min(220px, 44vw); height: min(220px, 44vw); object-fit: cover; cursor: pointer; transition: transform 0.4s ease, box-shadow 0.4s ease; border: 3px solid #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.12); }
     .std-fan-img:hover { box-shadow: 0 8px 24px rgba(0,0,0,0.2); }
-    @media (max-width: 600px) { .std-fan-wrap { display: none !important; } .std-scroll-wrap { display: flex !important; } }
-    .std-scroll-wrap { display: none; overflow-x: auto; gap: 0.5rem; padding: 1rem 0; margin: 1rem 0; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
-    .std-scroll-wrap::-webkit-scrollbar { display: none; }
-    .std-scroll-img { width: 130px; height: 130px; flex-shrink: 0; object-fit: cover; border: 3px solid #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    @media (max-width: 600px) { .std-fan-wrap { display: none !important; } .std-swipe-wrap { display: block !important; } }
+    .std-swipe-wrap { display: none; width: 100vw; margin-left: calc(-50vw + 50%); position: relative; overflow: hidden; }
+    .std-swipe-track { display: flex; transition: transform 0.35s ease; will-change: transform; }
+    .std-swipe-img { width: 100vw; height: 100vw; max-height: 500px; flex-shrink: 0; object-fit: cover; }
+    .std-swipe-dots { display: flex; justify-content: center; gap: 0.4rem; padding: 0.75rem 0; }
+    .std-swipe-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border); transition: background 0.2s; cursor: pointer; }
+    .std-swipe-dot.active { background: var(--primary); }
     .std-eyebrow { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.25em; color: var(--secondary); margin-bottom: 2rem; }
     .std-coming { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.25em; color: var(--secondary); margin-top: 2rem; opacity: 0.7; }
     .std-area { font-family: var(--font-serif); font-size: 1.1rem; color: var(--secondary); margin-top: 0.5rem; font-style: italic; }
@@ -608,7 +611,7 @@
       <p class="hero-names" id="stdNames">Emma Charlotte Lingard<br><em>and</em><br>Ian James Lowe</p>
       <div class="divider" style="height:2rem;"></div>
       <div class="std-fan-wrap" id="stdFanWrap" style="display:none;" aria-hidden="true"></div>
-      <div class="std-scroll-wrap" id="stdScrollWrap" style="display:none;"></div>
+      <div class="std-swipe-wrap" id="stdSwipeWrap" style="display:none;"><div class="std-swipe-track" id="stdSwipeTrack"></div><div class="std-swipe-dots" id="stdSwipeDots"></div></div>
       <p class="hero-date" id="stdDate">17th July 2027</p>
       <p class="hero-date" id="stdArea">Knutsford, Cheshire</p>
       <div class="divider" style="height:2rem;"></div>
@@ -1463,19 +1466,30 @@ function applyFrontEnd() {
     // ── Fan layout positions for 1-5 photos (centred on index 2) ──
     // Each entry: [translateX%, translateY%, scale, zIndex, rotate]
     const configs = [
-      [[-4, 0, 0.72, 1, -6]],
-      [[-8, 0, 0.72, 1, -6], [8, 0, 0.72, 2, 6]],
-      [[-18, 2, 0.68, 1, -8], [0, 0, 1, 3, 0], [18, 2, 0.68, 2, 8]],
-      [[-24, 3, 0.65, 1, -10], [-9, 1, 0.82, 2, -4], [9, 1, 0.82, 3, 4], [24, 3, 0.65, 2, 10]],
-      [[-30, 4, 0.62, 1, -12], [-14, 2, 0.78, 2, -6], [0, 0, 1, 3, 0], [14, 2, 0.78, 4, 6], [30, 4, 0.62, 3, 12]]
+      [[-4, 0, 0.75, 1, -4]],
+      [[-12, 0, 0.75, 1, -6], [12, 0, 0.75, 2, 6]],
+      [[-26, 3, 0.7, 1, -8], [0, 0, 1, 3, 0], [26, 3, 0.7, 2, 8]],
+      [[-34, 4, 0.67, 1, -10], [-13, 1, 0.84, 2, -5], [13, 1, 0.84, 3, 5], [34, 4, 0.67, 2, 10]],
+      [[-42, 5, 0.63, 1, -12], [-20, 2, 0.8, 2, -6], [0, 0, 1, 3, 0], [20, 2, 0.8, 4, 6], [42, 5, 0.63, 3, 12]]
     ];
 
     const cfg = configs[Math.min(photos.length, 5) - 1];
     let active = Math.floor(photos.length / 2); // default centre
 
+    // Reorder for desktop: image 1 centre, then 2,3 right, 4,5 left
+    // Desktop order: [photo5, photo4, photo1, photo2, photo3]
+    const desktopOrder = photos.length === 5
+      ? [photos[4], photos[3], photos[0], photos[1], photos[2]]
+      : photos.length === 4
+      ? [photos[3], photos[0], photos[1], photos[2]]
+      : photos.length === 3
+      ? [photos[2], photos[0], photos[1]]
+      : photos;
+    const fanPhotos = desktopOrder;
+
     function renderFan() {
       if (!fanWrap) return;
-      fanWrap.innerHTML = photos.map((link, i) => {
+      fanWrap.innerHTML = fanPhotos.map((link, i) => {
         const [tx, ty, scale, z, rot] = cfg[i];
         const isActive = i === active;
         const activeScale = isActive ? 1 : scale;
@@ -1495,12 +1509,33 @@ function applyFrontEnd() {
 
     renderFan();
 
-    // ── Mobile scroll layout ──
-    if (scrollWrap) {
-      scrollWrap.innerHTML = photos.map(link =>
-        `<img class="std-scroll-img" src="${driveThumb(link)}" alt="" />`
+    // ── Mobile swipe layout (order: 1,2,3,4,5) ──
+    const swipeWrap = document.getElementById('stdSwipeWrap');
+    const swipeTrack = document.getElementById('stdSwipeTrack');
+    const swipeDots = document.getElementById('stdSwipeDots');
+    if (swipeTrack && photos.length > 0) {
+      let swipeCurrent = 0;
+      swipeTrack.innerHTML = photos.map(link =>
+        `<img class="std-swipe-img" src="${driveThumb(link)}" alt="" />`
       ).join('');
-      scrollWrap.style.display = '';
+      swipeDots.innerHTML = photos.map((_,i) =>
+        `<div class="std-swipe-dot${i===0?' active':''}" onclick="stdSwipeTo(${i})"></div>`
+      ).join('');
+      if (swipeWrap) swipeWrap.style.display = '';
+
+      window.stdSwipeTo = function(i) {
+        swipeCurrent = Math.max(0, Math.min(i, photos.length-1));
+        swipeTrack.style.transform = `translateX(-${swipeCurrent * 100}vw)`;
+        document.querySelectorAll('.std-swipe-dot').forEach((d,j) => d.classList.toggle('active', j===swipeCurrent));
+      };
+
+      // Touch swipe support
+      let touchStartX = 0;
+      swipeWrap.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; }, {passive:true});
+      swipeWrap.addEventListener('touchend', e => {
+        const dx = e.changedTouches[0].clientX - touchStartX;
+        if (Math.abs(dx) > 40) stdSwipeTo(swipeCurrent + (dx < 0 ? 1 : -1));
+      }, {passive:true});
     }
   } else {
     if (fanWrap) fanWrap.style.display = 'none';
