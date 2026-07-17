@@ -439,9 +439,9 @@
     .std-fan-img { width: 100%; aspect-ratio: 1; object-fit: cover; display: block; }
     @media (max-width: 600px) { .std-fan-wrap { display: none !important; } .std-swipe-wrap { display: block !important; } }
     .std-swipe-wrap { display: none; width: 100%; position: relative; overflow: hidden; }
-    .std-swipe-track { display: flex; gap: 3%; transition: transform 0.35s ease; will-change: transform; }
-    .std-swipe-img { width: 78vw; flex-shrink: 0; aspect-ratio: 1; object-fit: cover; transition: transform 0.35s ease, opacity 0.35s ease; opacity: 0.6; transform: scale(0.92); margin: 0 1vw; }
-    .std-swipe-img.active { opacity: 1; transform: scale(1); }
+    .std-swipe-track { display: flex; transition: transform 0.35s ease; will-change: transform; }
+    .std-swipe-img { width: 76vw; flex-shrink: 0; aspect-ratio: 1; object-fit: cover; transition: opacity 0.35s ease; opacity: 0.55; margin: 0 2vw; }
+    .std-swipe-img.active { opacity: 1; }
     .std-swipe-dots { display: flex; justify-content: center; gap: 0.4rem; padding: 0.75rem 0; }
     .std-swipe-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border); transition: background 0.2s; cursor: pointer; }
     .std-swipe-dot.active { background: var(--primary); }
@@ -618,7 +618,9 @@
       <div class="std-fan-wrap" id="stdFanWrap" style="display:none;" aria-hidden="true"></div>
       <div class="std-swipe-wrap" id="stdSwipeWrap" style="display:none;"><div class="std-swipe-track" id="stdSwipeTrack"></div><div class="std-swipe-dots" id="stdSwipeDots"></div></div>
 
-      <div style="height:2rem;display:flex;align-items:center;justify-content:center;"><div style="width:2rem;height:1px;background:var(--border);"></div></div>
+      <div class="divider" style="height:2rem;"></div>
+      <div style="width:1px;height:2rem;background:var(--border);margin:0 auto;"></div>
+      <div class="divider" style="height:1rem;"></div>
 
       <p class="hero-date" id="stdDate">17th July 2027</p>
       <p class="hero-date" id="stdArea">Knutsford, Cheshire</p>
@@ -1512,11 +1514,15 @@ function applyFrontEnd() {
 
       function updateSwipe() {
         const cur = window._stdSwipeCurrent;
-        const wrap = document.getElementById('stdSwipeWrap');
+        const wrap = document.getElementById('stdSwipeWrap') || newWrap;
         const wrapWidth = wrap ? wrap.offsetWidth : window.innerWidth;
-        const imgWidth = wrapWidth * 0.78 + wrapWidth * 0.02; // 78vw + 2vw margin each side
-        // Centre the active image
-        const offset = cur * imgWidth - (wrapWidth - wrapWidth * 0.78) / 2;
+        // Each image: 76vw wide + 4vw total margin (2vw each side)
+        const imgW = wrapWidth * 0.76;
+        const imgMargin = wrapWidth * 0.02;
+        const imgTotal = imgW + imgMargin * 2;
+        // Offset so active image is perfectly centred in wrapWidth
+        const centreOffset = (wrapWidth - imgW) / 2;
+        const offset = cur * imgTotal - centreOffset;
         swipeTrack.style.transform = `translateX(-${offset}px)`;
         swipeTrack.querySelectorAll('.std-swipe-img').forEach((img, j) => {
           img.classList.toggle('active', j === cur);
