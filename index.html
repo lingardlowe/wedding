@@ -433,11 +433,13 @@
     /* ── SAVE THE DATE ── */
     .std-hero { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 3rem 1.5rem; position: relative; overflow: visible; background: var(--bg); }
     .std-hero > * { position: relative; }
-    .std-carousel-wrap { width: 100%; overflow: hidden; margin: 1.5rem 0; position: relative; }
-    .std-carousel-track { display: flex; gap: 0.5rem; animation: carouselSlide 20s linear infinite; will-change: transform; }
-    .std-carousel-track:hover { animation-play-state: paused; }
-    .std-photo { width: min(180px, 40vw); height: min(180px, 40vw); flex-shrink: 0; object-fit: cover; display: block; }
-    @keyframes carouselSlide { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+    .std-fan-wrap { width: 100%; margin: 2rem 0; position: relative; display: flex; justify-content: center; align-items: center; height: min(220px, 55vw); }
+    .std-fan-img { position: absolute; width: min(160px, 35vw); height: min(160px, 35vw); object-fit: cover; cursor: pointer; transition: transform 0.4s ease, box-shadow 0.4s ease; border: 3px solid #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.12); }
+    .std-fan-img:hover { box-shadow: 0 8px 24px rgba(0,0,0,0.2); }
+    @media (max-width: 600px) { .std-fan-wrap { display: none !important; } .std-scroll-wrap { display: flex !important; } }
+    .std-scroll-wrap { display: none; overflow-x: auto; gap: 0.5rem; padding: 1rem 0; margin: 1rem 0; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+    .std-scroll-wrap::-webkit-scrollbar { display: none; }
+    .std-scroll-img { width: 130px; height: 130px; flex-shrink: 0; object-fit: cover; border: 3px solid #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
     .std-eyebrow { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.25em; color: var(--secondary); margin-bottom: 2rem; }
     .std-coming { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.25em; color: var(--secondary); margin-top: 2rem; opacity: 0.7; }
     .std-area { font-family: var(--font-serif); font-size: 1.1rem; color: var(--secondary); margin-top: 0.5rem; font-style: italic; }
@@ -605,9 +607,8 @@
       <div id="stdTitleArea"><img src="https://lh3.googleusercontent.com/d/1Fv5uIZhy3TJfZo7fjszpRaly3q7DPYeB" alt="E &amp; I" style="max-width:clamp(14rem,45vw,24rem);max-height:clamp(10rem,25vw,16rem);object-fit:contain;opacity:0.95;" /></div>
       <p class="hero-names" id="stdNames">Emma Charlotte Lingard<br><em>and</em><br>Ian James Lowe</p>
       <div class="divider" style="height:2rem;"></div>
-      <div class="std-carousel-wrap" id="stdCarouselWrap" style="display:none;">
-        <div class="std-carousel-track" id="stdCarouselTrack"></div>
-      </div>
+      <div class="std-fan-wrap" id="stdFanWrap" style="display:none;" aria-hidden="true"></div>
+      <div class="std-scroll-wrap" id="stdScrollWrap" style="display:none;"></div>
       <p class="hero-date" id="stdDate">17th July 2027</p>
       <p class="hero-date" id="stdArea">Knutsford, Cheshire</p>
       <div class="divider" style="height:2rem;"></div>
@@ -797,13 +798,15 @@ function stdFormatName(val) {
 function stdUpdatePerson(i, field, raw) {
   let val = raw;
   if (field === 'firstName' || field === 'lastName') val = stdFormatName(raw);
+  if (field === 'email') val = raw.toLowerCase();
   stdFormState.people[i][field] = val;
   const emailEl = document.getElementById('std_email_'+i);
   if (field === 'email' && emailEl) {
     const valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
     emailEl.style.borderColor = val && !valid ? 'var(--red)' : '';
+    if (emailEl.value !== val) emailEl.value = val;
   }
-  if ((field === 'firstName' || field === 'lastName')) {
+  if (field === 'firstName' || field === 'lastName') {
     const el = document.getElementById('std_' + (field === 'firstName' ? 'fn' : 'ln') + '_' + i);
     if (el && el.value !== val) { const p = el.selectionStart; el.value = val; try { el.setSelectionRange(p,p); } catch(e) {} }
   }
@@ -943,8 +946,8 @@ async function submitSTDForm() {
   });
 
   if (errs.length) {
-    errEl.style.display = 'block';
-    errEl.innerHTML = errs.map(e => `<div>${e}</div>`).join('');
+    if (errEl) { errEl.style.display = 'block'; errEl.innerHTML = errs.map(e => `<div>${e}</div>`).join(''); }
+    else alert(errs.join('\n'));
     return;
   }
 
@@ -1448,22 +1451,60 @@ function applyFrontEnd() {
   if (stdTitle) stdTitle.innerHTML = `<img src="${HARDCODED_MONOGRAM_URL}" alt="${esc(shortMono)}" style="max-width:clamp(14rem,45vw,24rem);max-height:clamp(10rem,25vw,16rem);object-fit:contain;opacity:0.95;" />`;
   // ── STD photo carousel ──
   const photos = [s.stdPhoto1, s.stdPhoto2, s.stdPhoto3, s.stdPhoto4, s.stdPhoto5].filter(Boolean);
-  const carouselWrap = document.getElementById('stdCarouselWrap');
-  const carouselTrack = document.getElementById('stdCarouselTrack');
-  if (carouselTrack && photos.length > 0) {
-    // Duplicate photos for seamless loop
-    const allPhotos = [...photos, ...photos];
-    carouselTrack.innerHTML = allPhotos.map(link => {
-      const id = (link.match(/\/d\/([a-zA-Z0-9_-]+)/) || [])[1];
-      const src = id ? `https://lh3.googleusercontent.com/d/${id}` : link;
-      return `<img class="std-photo" src="${src}" alt="" />`;
-    }).join('');
-    if (carouselWrap) carouselWrap.style.display = '';
-    // Adjust animation duration based on photo count
-    const duration = Math.max(15, photos.length * 5);
-    carouselTrack.style.animationDuration = duration + 's';
-  } else if (carouselWrap) {
-    carouselWrap.style.display = 'none';
+  const fanWrap = document.getElementById('stdFanWrap');
+  const scrollWrap = document.getElementById('stdScrollWrap');
+
+  function driveThumb(link) {
+    const m = (link||'').match(/\/d\/([a-zA-Z0-9_-]+)/);
+    return m ? `https://lh3.googleusercontent.com/d/${m[1]}` : link;
+  }
+
+  if (photos.length > 0) {
+    // ── Fan layout positions for 1-5 photos (centred on index 2) ──
+    // Each entry: [translateX%, translateY%, scale, zIndex, rotate]
+    const configs = [
+      [[-4, 0, 0.72, 1, -6]],
+      [[-8, 0, 0.72, 1, -6], [8, 0, 0.72, 2, 6]],
+      [[-18, 2, 0.68, 1, -8], [0, 0, 1, 3, 0], [18, 2, 0.68, 2, 8]],
+      [[-24, 3, 0.65, 1, -10], [-9, 1, 0.82, 2, -4], [9, 1, 0.82, 3, 4], [24, 3, 0.65, 2, 10]],
+      [[-30, 4, 0.62, 1, -12], [-14, 2, 0.78, 2, -6], [0, 0, 1, 3, 0], [14, 2, 0.78, 4, 6], [30, 4, 0.62, 3, 12]]
+    ];
+
+    const cfg = configs[Math.min(photos.length, 5) - 1];
+    let active = Math.floor(photos.length / 2); // default centre
+
+    function renderFan() {
+      if (!fanWrap) return;
+      fanWrap.innerHTML = photos.map((link, i) => {
+        const [tx, ty, scale, z, rot] = cfg[i];
+        const isActive = i === active;
+        const activeScale = isActive ? 1 : scale;
+        const activeZ = isActive ? 10 : z;
+        const activeShadow = isActive ? '0 12px 32px rgba(0,0,0,0.22)' : '0 4px 12px rgba(0,0,0,0.12)';
+        return `<img class="std-fan-img" src="${driveThumb(link)}" alt="" 
+          style="transform:translateX(${tx}%) translateY(${ty}%) scale(${activeScale}) rotate(${rot}deg);z-index:${activeZ};box-shadow:${activeShadow};"
+          onclick="stdFanSelect(${i})" />`;
+      }).join('');
+      fanWrap.style.display = '';
+    }
+
+    window.stdFanSelect = function(i) {
+      active = i;
+      renderFan();
+    };
+
+    renderFan();
+
+    // ── Mobile scroll layout ──
+    if (scrollWrap) {
+      scrollWrap.innerHTML = photos.map(link =>
+        `<img class="std-scroll-img" src="${driveThumb(link)}" alt="" />`
+      ).join('');
+      scrollWrap.style.display = '';
+    }
+  } else {
+    if (fanWrap) fanWrap.style.display = 'none';
+    if (scrollWrap) scrollWrap.style.display = 'none';
   }
 
   const stdNames = document.getElementById('stdNames');
