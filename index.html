@@ -433,6 +433,11 @@
     /* ── SAVE THE DATE ── */
     .std-hero { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 3rem 1.5rem; position: relative; overflow: visible; background: var(--bg); }
     .std-hero > * { position: relative; }
+    .std-carousel-wrap { width: 100%; overflow: hidden; margin: 1.5rem 0; position: relative; }
+    .std-carousel-track { display: flex; gap: 0.5rem; animation: carouselSlide 20s linear infinite; will-change: transform; }
+    .std-carousel-track:hover { animation-play-state: paused; }
+    .std-photo { width: min(180px, 40vw); height: min(180px, 40vw); flex-shrink: 0; object-fit: cover; display: block; }
+    @keyframes carouselSlide { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
     .std-eyebrow { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.25em; color: var(--secondary); margin-bottom: 2rem; }
     .std-coming { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.25em; color: var(--secondary); margin-top: 2rem; opacity: 0.7; }
     .std-area { font-family: var(--font-serif); font-size: 1.1rem; color: var(--secondary); margin-top: 0.5rem; font-style: italic; }
@@ -600,6 +605,9 @@
       <div id="stdTitleArea"><img src="https://lh3.googleusercontent.com/d/1Fv5uIZhy3TJfZo7fjszpRaly3q7DPYeB" alt="E &amp; I" style="max-width:clamp(14rem,45vw,24rem);max-height:clamp(10rem,25vw,16rem);object-fit:contain;opacity:0.95;" /></div>
       <p class="hero-names" id="stdNames">Emma Charlotte Lingard<br><em>and</em><br>Ian James Lowe</p>
       <div class="divider" style="height:2rem;"></div>
+      <div class="std-carousel-wrap" id="stdCarouselWrap" style="display:none;">
+        <div class="std-carousel-track" id="stdCarouselTrack"></div>
+      </div>
       <p class="hero-date" id="stdDate">17th July 2027</p>
       <p class="hero-date" id="stdArea">Knutsford, Cheshire</p>
       <div class="divider" style="height:2rem;"></div>
@@ -627,7 +635,7 @@
       <div class="divider" style="height:1.5rem;"></div>
       <p style="font-size:0.8rem;color:var(--secondary);max-width:24rem;text-align:center;line-height:1.7;">Please note this is an adults-only celebration, with the exception of a small number of children from the immediate family.</p>
       <div class="divider" style="height:1.5rem;"></div>
-      <button class="nav-btn" style="padding:0.6rem 1.5rem;font-size:0.75rem;" onclick="showSTDForm()">Register Your Details</button>
+      <button class="nav-btn" id="stdRegisterBtn" style="padding:0.6rem 1.5rem;font-size:0.75rem;" onclick="showSTDForm()">Register Your Details</button>
       <div id="stdFormWrap" style="display:none;width:100%;max-width:28rem;margin-top:2rem;"></div>
       <p class="std-coming">Formal invitation to follow</p>
     </section>
@@ -766,10 +774,19 @@ let stdFormState = { people: [], submitted: false };
 
 function showSTDForm() {
   const wrap = document.getElementById('stdFormWrap');
+  const btn = document.getElementById('stdRegisterBtn');
   if (!wrap) return;
+  if (wrap.style.display === 'block') {
+    wrap.style.display = 'none';
+    if (btn) btn.textContent = 'Register Your Details';
+    return;
+  }
   wrap.style.display = 'block';
-  stdFormState = { people: [{ firstName:'', lastName:'', email:'', phone:'' }], submitted: false };
-  renderSTDForm();
+  if (btn) btn.textContent = 'Close';
+  if (!stdFormState.submitted) {
+    stdFormState = { people: [{ firstName:'', lastName:'', email:'' }], submitted: false };
+    renderSTDForm();
+  }
   wrap.scrollIntoView({ behavior:'smooth', block:'nearest' });
 }
 
@@ -777,27 +794,14 @@ function stdFormatName(val) {
   return val.replace(/\b\w/g, c => c.toUpperCase());
 }
 
-function stdFormatPhone(val) {
-  let digits = val.replace(/\D/g,'');
-  if (digits.length <= 5) return digits;
-  return digits.slice(0,5) + ' ' + digits.slice(5,11);
-}
-
 function stdUpdatePerson(i, field, raw) {
   let val = raw;
   if (field === 'firstName' || field === 'lastName') val = stdFormatName(raw);
-  if (field === 'phone') val = stdFormatPhone(raw);
   stdFormState.people[i][field] = val;
   const emailEl = document.getElementById('std_email_'+i);
-  const phoneEl = document.getElementById('std_phone_'+i);
   if (field === 'email' && emailEl) {
     const valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
     emailEl.style.borderColor = val && !valid ? 'var(--red)' : '';
-  }
-  if (field === 'phone' && phoneEl) {
-    const digits = val.replace(/\D/g,'');
-    phoneEl.style.borderColor = val && digits.length !== 11 ? 'var(--red)' : '';
-    phoneEl.value = val;
   }
   if ((field === 'firstName' || field === 'lastName')) {
     const el = document.getElementById('std_' + (field === 'firstName' ? 'fn' : 'ln') + '_' + i);
@@ -848,10 +852,7 @@ function renderSTDForm() {
           <label class="field-label">Email</label>
           <input type="email" value="${esc(people[0].email)}" id="std_email_0" oninput="stdUpdatePerson(0,'email',this.value)" placeholder="emma@example.com" />
         </div>
-        <div>
-          <label class="field-label">Phone</label>
-          <input type="tel" value="${esc(people[0].phone)}" id="std_phone_0" oninput="stdUpdatePerson(0,'phone',this.value)" placeholder="07700 900000" maxlength="12" />
-        </div>
+
       </div>
 
       <p style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.2em;color:var(--secondary);margin-bottom:0.75rem;">Your Address</p>
@@ -892,10 +893,7 @@ function renderSTDForm() {
             <label class="field-label">Email</label>
             <input type="email" value="${esc(p.email)}" oninput="stdFormState.people[${i+1}].email=this.value" placeholder="ian@example.com" />
           </div>
-          <div>
-            <label class="field-label">Phone</label>
-            <input type="tel" value="${esc(p.phone)}" oninput="stdFormState.people[${i+1}].phone=this.value" placeholder="07700 900000" />
-          </div>
+
         </div>
         <button onclick="removeSTDPerson(${i+1})" style="background:none;border:none;color:var(--secondary);font-size:0.75rem;cursor:pointer;margin-top:0.5rem;font-family:var(--font-sans);">Remove</button>
       </div>`).join('')}
@@ -913,7 +911,7 @@ function renderSTDForm() {
 }
 
 function addSTDPerson() {
-  stdFormState.people.push({ firstName:'', lastName:'', email:'', phone:'' });
+  stdFormState.people.push({ firstName:'', lastName:'', email:'' });
   renderSTDForm();
 }
 
@@ -933,7 +931,6 @@ async function submitSTDForm() {
   if (!people[0].lastName.trim()) errs.push('Last name is required.');
   if (!people[0].email.trim()) errs.push('Email address is required.');
   else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(people[0].email.trim())) errs.push('Please enter a valid email address.');
-  if (!people[0].phone.trim()) errs.push('Phone number is required.');
   if (!stdFormState.addr1?.trim()) errs.push('Address line 1 is required.');
   if (!stdFormState.town?.trim()) errs.push('Town is required.');
   if (!stdFormState.postcode?.trim()) errs.push('Postcode is required.');
@@ -945,7 +942,6 @@ async function submitSTDForm() {
     if (!p.lastName.trim()) errs.push(`${label}: last name is required.`);
     if (!p.email.trim()) errs.push(`${label}: email is required.`);
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(p.email.trim())) errs.push(`${label}: please enter a valid email.`);
-    if (!p.phone.trim()) errs.push(`${label}: phone is required.`);
   });
 
   if (errs.length) {
@@ -1061,6 +1057,7 @@ const SETTINGS_DEFAULTS = {
     saveTheDateMode: false,
     venueArea: 'Knutsford, Cheshire',
     galleryImages: [],
+    stdPhoto1: '', stdPhoto2: '', stdPhoto3: '', stdPhoto4: '', stdPhoto5: '',
 };
 
 // ═══════════════════════════════════════════════
@@ -1451,6 +1448,26 @@ function applyFrontEnd() {
   const clean = sanitiseDateFields({weddingDate: s.weddingDate, ceremonyTime: s.ceremonyTime||'13:00', rsvpDeadline: ''});
   const stdTitle = document.querySelector('#saveDatePage #stdTitleArea');
   if (stdTitle) stdTitle.innerHTML = `<img src="${HARDCODED_MONOGRAM_URL}" alt="${esc(shortMono)}" style="max-width:clamp(14rem,45vw,24rem);max-height:clamp(10rem,25vw,16rem);object-fit:contain;opacity:0.95;" />`;
+  // ── STD photo carousel ──
+  const photos = [s.stdPhoto1, s.stdPhoto2, s.stdPhoto3, s.stdPhoto4, s.stdPhoto5].filter(Boolean);
+  const carouselWrap = document.getElementById('stdCarouselWrap');
+  const carouselTrack = document.getElementById('stdCarouselTrack');
+  if (carouselTrack && photos.length > 0) {
+    // Duplicate photos for seamless loop
+    const allPhotos = [...photos, ...photos];
+    carouselTrack.innerHTML = allPhotos.map(link => {
+      const id = (link.match(/\/d\/([a-zA-Z0-9_-]+)/) || [])[1];
+      const src = id ? `https://lh3.googleusercontent.com/d/${id}` : link;
+      return `<img class="std-photo" src="${src}" alt="" />`;
+    }).join('');
+    if (carouselWrap) carouselWrap.style.display = '';
+    // Adjust animation duration based on photo count
+    const duration = Math.max(15, photos.length * 5);
+    carouselTrack.style.animationDuration = duration + 's';
+  } else if (carouselWrap) {
+    carouselWrap.style.display = 'none';
+  }
+
   const stdNames = document.getElementById('stdNames');
   const fn = s.nameOrder==='reversed' ? s.brideFull : s.groomFull;
   const sn = s.nameOrder==='reversed' ? s.groomFull : s.brideFull;
@@ -1711,7 +1728,7 @@ async function lookupRSVPCode(isAddingAnother=false) {
     rsvpState.guestEntry = entry;
     rsvpState.guestType = entry.type;
     rsvpState.code = code;
-    rsvpState.guests = [{name: entry.name, email:'', phone:'', attending:'', guestType: entry.type, isExisting: !!existing, existingData: existing||null, plusOneAllowed: !!entry.plusOne}];
+    rsvpState.guests = [{name: entry.name, email:'', attending:'', guestType: entry.type, isExisting: !!existing, existingData: existing||null, plusOneAllowed: !!entry.plusOne}];
     rsvpState.mealChoices = {};
     rsvpState.notes = '';
     rsvpState.step = 'guests';
@@ -1723,7 +1740,7 @@ async function lookupRSVPCode(isAddingAnother=false) {
   rsvpState.guestEntry = entry;
   rsvpState.guestType = entry.type;
   rsvpState.code = code;
-  rsvpState.guests = [{name: entry.name, email: existing?.email||'', phone: existing?.phone||'', attending: existing ? (existing.attending==='Yes' ? 'yes' : 'no') : '', guestType: entry.type, isExisting: !!existing, existingData: existing||null, plusOneAllowed: !!entry.plusOne}];
+  rsvpState.guests = [{name: entry.name, email: existing?.email||'', attending: existing ? (existing.attending==='Yes' ? 'yes' : 'no') : '', guestType: entry.type, isExisting: !!existing, existingData: existing||null, plusOneAllowed: !!entry.plusOne}];
   rsvpState.mealChoices = {};
   rsvpState.notes = existing?.notes || '';
   rsvpState.step = 'guests';
@@ -1747,14 +1764,7 @@ function rsvpUpdateGuest(i, field, raw) {
     const el = document.getElementById('rsvp_name_'+i);
     if (el && el.value !== val) { const p = el.selectionStart; el.value = val; try { el.setSelectionRange(p,p); } catch(e) {} }
   }
-  if (field === 'phone') {
-    val = rsvpFormatPhone(raw);
-    const el = document.getElementById('rsvp_phone_'+i);
-    if (el) {
-      el.style.borderColor = val && val.replace(/\D/g,'').length !== 11 ? 'var(--red)' : '';
-      el.value = val;
-    }
-  }
+
   if (field === 'email') {
     const el = document.getElementById('rsvp_email_'+i);
     if (el) el.style.borderColor = val && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val) ? 'var(--red)' : '';
@@ -1838,15 +1848,7 @@ function updateGuest(i, field, val) {
     const el = document.getElementById('g'+i+'_name');
     if (el && el.value !== val) { const p = el.selectionStart; el.value = val; try { el.setSelectionRange(p,p); } catch(e) {} }
   }
-  if (field === 'phone') {
-    let digits = val.replace(/\D/g,'');
-    val = digits.length <= 5 ? digits : digits.slice(0,5) + ' ' + digits.slice(5,11);
-    const el = document.getElementById('g'+i+'_phone');
-    if (el) {
-      el.style.borderColor = val && digits.length !== 11 ? 'var(--red)' : '';
-      el.value = val;
-    }
-  }
+
   if (field === 'email') {
     const el = document.getElementById('g'+i+'_email');
     if (el) el.style.borderColor = val && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val) ? 'var(--red)' : '';
@@ -1854,7 +1856,7 @@ function updateGuest(i, field, val) {
   rsvpState.guests[i][field] = val;
 }
 function addGuest() {
-  rsvpState.guests.push({name:'',email:'',phone:'',attending:''});
+  rsvpState.guests.push({name:'',email:'',attending:''});
   renderRSVP();
 }
 function removeGuest(i) {
@@ -1889,8 +1891,6 @@ function guestsNext() {
     else if (nm.split(/\s+/).filter(Boolean).length < 2) errs.push(`${nm}: please enter first and last name.`);
     if (!g.email.trim()) errs.push(`${label}: email is required.`);
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(g.email.trim())) errs.push(`${label}: please enter a valid email.`);
-    if (!g.phone.trim()) errs.push(`${label}: mobile number is required.`);
-    else if (!/^07\d{9}$/.test(g.phone.replace(/\s+/g,''))) errs.push(`${label}: mobile must be 11 digits starting 07.`);
     if (!g.attending) errs.push(`${label}: please select Accept or Decline.`);
   });
   if (errs.length) {
@@ -2055,8 +2055,7 @@ async function submitRSVP() {
         code: g.code || entry.code,
         name: g.name,
         email: g.email,
-        phone: g.phone.startsWith('0') ? g.phone : '0' + g.phone,
-        attending: g.attending ? 'Yes' : 'No',
+          attending: g.attending ? 'Yes' : 'No',
         dietary: g.hasDietary ? [...(g.dietaryChoices||[]), ...(g.dietaryOther ? ['Other: '+g.dietaryOther] : [])].join(', ') : 'None',
         meals: Object.entries(g.mealChoices||{}).map(([cid,oid])=>getCName(cid)+': '+getCOpt(cid,oid)).join(' | '),
         notes: entry.message
@@ -2164,7 +2163,7 @@ async function addAnotherGuestInline() {
 function togglePlusOne(guestIndex, checked) {
   if (checked) {
     // Insert plus one immediately after the guest at guestIndex
-    const plusOne = {name:'', email:'', phone:'', attending:'yes', isPlusOne:true, isPlusOneOf:guestIndex};
+    const plusOne = {name:'', email:'', attending:'yes', isPlusOne:true, isPlusOneOf:guestIndex};
     const insertAt = guestIndex + 1;
     // Plus one inherits guestType from lead
   plusOne.guestType = rsvpState.guests[guestIndex].guestType || rsvpState.guestType;
@@ -2369,7 +2368,7 @@ async function lookupFromDone() {
   rsvpState.guestEntry = entry;
   rsvpState.guestType = entry.type;
   rsvpState.code = code;
-  rsvpState.guests = [{name: entry.name, email: existing?.email||'', phone: existing?.phone||'', attending: existing ? (existing.attending==='Yes'?'yes':'no') : '', guestType: entry.type, isExisting: !!existing, existingData: existing||null, plusOneAllowed: !!entry.plusOne}];
+  rsvpState.guests = [{name: entry.name, email: existing?.email||'', attending: existing ? (existing.attending==='Yes'?'yes':'no') : '', guestType: entry.type, isExisting: !!existing, existingData: existing||null, plusOneAllowed: !!entry.plusOne}];
   rsvpState.mealChoices = {};
   rsvpState.notes = existing?.notes || '';
   rsvpState.completedEntries = prevCompleted;
@@ -3749,6 +3748,10 @@ function saveSettings(section) {
     s.saveTheDateMode = modeEl ? modeEl.value === 'std' : false;
   } else if (section === 'story') {
     s.story = (document.getElementById('ss_story')||{}).value || s.story;
+  } else if (section === 'stdPhotos') {
+    [1,2,3,4,5].forEach(n => {
+      s['stdPhoto'+n] = (document.getElementById('ss_stdPhoto'+n)||{}).value?.trim() || '';
+    });
   } else if (section === 'practical') {
     s.breakfast = (document.getElementById('ss_breakfast')||{}).value?.trim() || '';
     s.parking = (document.getElementById('ss_parking')||{}).value?.trim() || '';
