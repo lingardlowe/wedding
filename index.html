@@ -3601,6 +3601,21 @@ function renderAdminSettings() {
     </div>
 
     <div class="settings-section">
+      <div class="settings-section-title">Save the Date — Photos</div>
+      <div class="settings-grid single" style="padding-bottom:0;">
+        ${[1,2,3,4,5].map(n => `
+        <div class="settings-field">
+          <label>Photo ${n} — Google Drive link</label>
+          <input id="ss_stdPhoto${n}" value="${esc(s['stdPhoto'+n]||'')}" placeholder="https://drive.google.com/file/d/..." />
+        </div>`).join('')}
+      </div>
+      <div class="settings-save-row">
+        <button class="btn btn-primary btn-sm" onclick="saveSettings('stdPhotos')">Save</button>
+        <span class="settings-saved" id="saved_stdPhotos">Saved ✓</span>
+      </div>
+    </div>
+
+    <div class="settings-section">
       <div class="settings-section-title">Photo Gallery <span style="font-weight:400;text-transform:none;letter-spacing:normal;font-size:0.7rem;">(shown on home page)</span></div>
       <div id="galleryAdminList" style="padding:1rem 1.5rem 0;">
         ${getGalleryTemp().map((img,i) => `
