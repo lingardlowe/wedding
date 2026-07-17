@@ -433,14 +433,14 @@
     @keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
 
     /* ── SAVE THE DATE ── */
-    .std-hero { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 3rem 1.5rem; position: relative; overflow: visible; background: var(--bg); }
+    .std-hero { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 3rem 0; position: relative; overflow: visible; background: var(--bg); }
     .std-hero > * { position: relative; }
-    .std-fan-wrap { width: 100%; margin: 0; display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.4rem; }
+    .std-fan-wrap { width: 100%; margin: 0; display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.4rem; padding: 0; }
     .std-fan-img { width: 100%; aspect-ratio: 1; object-fit: cover; display: block; }
     @media (max-width: 600px) { .std-fan-wrap { display: none !important; } .std-swipe-wrap { display: block !important; } }
-    .std-swipe-wrap { display: none; width: 100%; position: relative; overflow: hidden; padding: 0 10%; box-sizing: border-box; }
+    .std-swipe-wrap { display: none; width: 100%; position: relative; overflow: hidden; }
     .std-swipe-track { display: flex; gap: 3%; transition: transform 0.35s ease; will-change: transform; }
-    .std-swipe-img { width: 80%; flex-shrink: 0; aspect-ratio: 1; object-fit: cover; transition: transform 0.35s ease, opacity 0.35s ease; opacity: 0.6; transform: scale(0.92); }
+    .std-swipe-img { width: 78vw; flex-shrink: 0; aspect-ratio: 1; object-fit: cover; transition: transform 0.35s ease, opacity 0.35s ease; opacity: 0.6; transform: scale(0.92); margin: 0 1vw; }
     .std-swipe-img.active { opacity: 1; transform: scale(1); }
     .std-swipe-dots { display: flex; justify-content: center; gap: 0.4rem; padding: 0.75rem 0; }
     .std-swipe-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border); transition: background 0.2s; cursor: pointer; }
@@ -610,12 +610,19 @@
       <div class="hero-monogram" id="stdMonogramWrap"><span class="hero-monogram-text"></span></div>
       <p class="std-eyebrow">Save the Date</p>
       <div id="stdTitleArea"><img src="https://lh3.googleusercontent.com/d/1Fv5uIZhy3TJfZo7fjszpRaly3q7DPYeB" alt="E &amp; I" style="max-width:clamp(14rem,45vw,24rem);max-height:clamp(10rem,25vw,16rem);object-fit:contain;opacity:0.95;" /></div>
+
       <p class="hero-names" id="stdNames">Emma Charlotte Lingard<br><em>and</em><br>Ian James Lowe</p>
-      <div class="divider" style="height:2rem;"></div>
+
+      <div class="divider" style="height:2.5rem;"></div>
+
       <div class="std-fan-wrap" id="stdFanWrap" style="display:none;" aria-hidden="true"></div>
       <div class="std-swipe-wrap" id="stdSwipeWrap" style="display:none;"><div class="std-swipe-track" id="stdSwipeTrack"></div><div class="std-swipe-dots" id="stdSwipeDots"></div></div>
+
+      <div style="height:2rem;display:flex;align-items:center;justify-content:center;"><div style="width:2rem;height:1px;background:var(--border);"></div></div>
+
       <p class="hero-date" id="stdDate">17th July 2027</p>
       <p class="hero-date" id="stdArea">Knutsford, Cheshire</p>
+
       <div class="divider" style="height:2rem;"></div>
       <div class="countdown" id="stdCountdown">
         <div class="countdown-unit"><span class="countdown-num" id="std-days">000</span><span class="countdown-label">Days</span></div>
@@ -623,8 +630,8 @@
         <div class="countdown-unit"><span class="countdown-num" id="std-hours">00</span><span class="countdown-label">Hours</span></div>
         <span class="countdown-sep">·</span>
         <div class="countdown-unit"><span class="countdown-num" id="std-mins">00</span><span class="countdown-label">Minutes</span></div>
-
       </div>
+
       <div class="divider" style="height:2rem;"></div>
       <div class="cal-section">
         <div class="directions-wrap" id="stdCalWrap" style="position:relative;z-index:100;">
@@ -638,6 +645,7 @@
           </div>
         </div>
       </div>
+
       <div class="divider" style="height:1.5rem;"></div>
       <p style="font-size:0.8rem;color:var(--secondary);max-width:24rem;text-align:center;line-height:1.7;">Please note this is an adults-only celebration, with the exception of a small number of children from the immediate family.</p>
       <div class="divider" style="height:1.5rem;"></div>
@@ -1504,10 +1512,12 @@ function applyFrontEnd() {
 
       function updateSwipe() {
         const cur = window._stdSwipeCurrent;
-        // Each image is 80% wide + 3% gap = 83% per step, offset by 10% padding
-        const offset = cur * 83;
-        swipeTrack.style.transform = `translateX(-${offset}%)`;
-        // Active image styling
+        const wrap = document.getElementById('stdSwipeWrap');
+        const wrapWidth = wrap ? wrap.offsetWidth : window.innerWidth;
+        const imgWidth = wrapWidth * 0.78 + wrapWidth * 0.02; // 78vw + 2vw margin each side
+        // Centre the active image
+        const offset = cur * imgWidth - (wrapWidth - wrapWidth * 0.78) / 2;
+        swipeTrack.style.transform = `translateX(-${offset}px)`;
         swipeTrack.querySelectorAll('.std-swipe-img').forEach((img, j) => {
           img.classList.toggle('active', j === cur);
         });
