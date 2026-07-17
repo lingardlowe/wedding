@@ -435,13 +435,15 @@
     /* ── SAVE THE DATE ── */
     .std-hero { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 3rem 1.5rem; position: relative; overflow: visible; background: var(--bg); }
     .std-hero > * { position: relative; }
-    .std-fan-wrap { width: 100%; margin: 2rem 0; position: relative; display: flex; justify-content: center; align-items: center; height: min(320px, 70vw); }
-    .std-fan-img { position: absolute; width: min(220px, 44vw); height: min(220px, 44vw); object-fit: cover; cursor: pointer; transition: transform 0.4s ease, box-shadow 0.4s ease; border: 3px solid #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.12); }
-    .std-fan-img:hover { box-shadow: 0 8px 24px rgba(0,0,0,0.2); }
+    .std-fan-wrap { width: 100%; margin: 2rem 0; display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.5rem; align-items: end; }
+    .std-fan-img { width: 100%; aspect-ratio: 1; object-fit: cover; cursor: pointer; transition: transform 0.3s ease, box-shadow 0.3s ease, opacity 0.3s ease; display: block; }
+    .std-fan-img:hover { transform: translateY(-4px); box-shadow: 0 8px 20px rgba(0,0,0,0.15); }
+    .std-fan-img.active { transform: translateY(-8px); box-shadow: 0 12px 28px rgba(0,0,0,0.2); opacity: 1; }
+    .std-fan-img.inactive { opacity: 0.75; }
     @media (max-width: 600px) { .std-fan-wrap { display: none !important; } .std-swipe-wrap { display: block !important; } }
-    .std-swipe-wrap { display: none; width: 100vw; margin-left: calc(-50vw + 50%); position: relative; overflow: hidden; }
+    .std-swipe-wrap { display: none; width: 100%; position: relative; overflow: hidden; }
     .std-swipe-track { display: flex; transition: transform 0.35s ease; will-change: transform; }
-    .std-swipe-img { width: 100vw; height: 100vw; max-height: 500px; flex-shrink: 0; object-fit: cover; }
+    .std-swipe-img { width: 85%; flex-shrink: 0; aspect-ratio: 1; object-fit: cover; margin-right: 2.5%; }
     .std-swipe-dots { display: flex; justify-content: center; gap: 0.4rem; padding: 0.75rem 0; }
     .std-swipe-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border); transition: background 0.2s; cursor: pointer; }
     .std-swipe-dot.active { background: var(--primary); }
@@ -890,16 +892,16 @@ function renderSTDForm() {
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
           <div>
             <label class="field-label">First Name</label>
-            <input value="${esc(p.firstName)}" oninput="stdUpdatePerson(${i+1},'firstName',this.value)" placeholder="Ian" />
+<input value="${esc(p.firstName)}" oninput="stdUpdatePerson(${i+1},'firstName',this.value)" placeholder="Ian" id="std_fn_${i+1}" />
           </div>
           <div>
             <label class="field-label">Last Name</label>
-            <input value="${esc(p.lastName)}" oninput="stdUpdatePerson(${i+1},'lastName',this.value)" placeholder="Lowe" />
+<input value="${esc(p.lastName)}" oninput="stdUpdatePerson(${i+1},'lastName',this.value)" placeholder="Lowe" id="std_ln_${i+1}" />
           </div>
         </div>
         <div style="margin-top:0.75rem;">
           <label class="field-label">Email</label>
-          <input type="email" value="${esc(p.email)}" oninput="stdFormState.people[${i+1}].email=this.value" placeholder="ian@example.com" style="width:100%;box-sizing:border-box;" />
+          <input type="email" id="std_email_${i+1}" value="${esc(p.email)}" oninput="stdUpdatePerson(${i+1},'email',this.value)" placeholder="ian@example.com" style="width:100%;box-sizing:border-box;" />
         </div>
         <button onclick="removeSTDPerson(${i+1})" style="background:none;border:none;color:var(--secondary);font-size:0.75rem;cursor:pointer;margin-top:0.5rem;font-family:var(--font-sans);">Remove</button>
       </div>`).join('')}
@@ -970,7 +972,6 @@ async function submitSTDForm() {
     firstName: p.firstName.trim(),
     lastName: p.lastName.trim(),
     email: p.email.trim(),
-    phone: p.phone.trim(),
     address: i === 0 ? address : '',
     submittedAt: new Date().toISOString(),
     household: people[0].firstName.trim() + ' ' + people[0].lastName.trim()
@@ -1465,17 +1466,6 @@ function applyFrontEnd() {
   }
 
   if (photos.length > 0) {
-    // ── Fan layout positions for 1-5 photos (centred on index 2) ──
-    // Each entry: [translateX%, translateY%, scale, zIndex, rotate]
-    const configs = [
-      [[-4, 0, 0.75, 1, -4]],
-      [[-12, 0, 0.75, 1, -6], [12, 0, 0.75, 2, 6]],
-      [[-26, 3, 0.7, 1, -8], [0, 0, 1, 3, 0], [26, 3, 0.7, 2, 8]],
-      [[-34, 4, 0.67, 1, -10], [-13, 1, 0.84, 2, -5], [13, 1, 0.84, 3, 5], [34, 4, 0.67, 2, 10]],
-      [[-42, 5, 0.63, 1, -12], [-20, 2, 0.8, 2, -6], [0, 0, 1, 3, 0], [20, 2, 0.8, 4, 6], [42, 5, 0.63, 3, 12]]
-    ];
-
-    const cfg = configs[Math.min(photos.length, 5) - 1];
     let active = Math.floor(photos.length / 2); // default centre
 
     // Reorder for desktop: image 1 centre, then 2,3 right, 4,5 left
@@ -1492,14 +1482,8 @@ function applyFrontEnd() {
     function renderFan() {
       if (!fanWrap) return;
       fanWrap.innerHTML = fanPhotos.map((link, i) => {
-        const [tx, ty, scale, z, rot] = cfg[i];
         const isActive = i === active;
-        const activeScale = isActive ? 1 : scale;
-        const activeZ = isActive ? 10 : z;
-        const activeShadow = isActive ? '0 12px 32px rgba(0,0,0,0.22)' : '0 4px 12px rgba(0,0,0,0.12)';
-        return `<img class="std-fan-img" src="${driveThumb(link)}" alt="" 
-          style="transform:translateX(${tx}%) translateY(${ty}%) scale(${activeScale}) rotate(${rot}deg);z-index:${activeZ};box-shadow:${activeShadow};"
-          onclick="stdFanSelect(${i})" />`;
+        return `<img class="std-fan-img${isActive?' active':' inactive'}" src="${driveThumb(link)}" alt="" onclick="stdFanSelect(${i})" />`;
       }).join('');
       fanWrap.style.display = '';
     }
@@ -1516,27 +1500,34 @@ function applyFrontEnd() {
     const swipeTrack = document.getElementById('stdSwipeTrack');
     const swipeDots = document.getElementById('stdSwipeDots');
     if (swipeTrack && photos.length > 0) {
-      let swipeCurrent = 0;
+      window._stdSwipeCurrent = window._stdSwipeCurrent || 0;
+      const imgWidth = 85; // % of container width, leaving peek of next
       swipeTrack.innerHTML = photos.map(link =>
         `<img class="std-swipe-img" src="${driveThumb(link)}" alt="" />`
       ).join('');
       swipeDots.innerHTML = photos.map((_,i) =>
-        `<div class="std-swipe-dot${i===0?' active':''}" onclick="stdSwipeTo(${i})"></div>`
+        `<div class="std-swipe-dot${i===window._stdSwipeCurrent?' active':''}" onclick="stdSwipeTo(${i})"></div>`
       ).join('');
       if (swipeWrap) swipeWrap.style.display = '';
 
-      window.stdSwipeTo = function(i) {
-        swipeCurrent = Math.max(0, Math.min(i, photos.length-1));
-        swipeTrack.style.transform = `translateX(-${swipeCurrent * 100}vw)`;
-        document.querySelectorAll('.std-swipe-dot').forEach((d,j) => d.classList.toggle('active', j===swipeCurrent));
+      window.stdSwipeTo = function(idx) {
+        window._stdSwipeCurrent = Math.max(0, Math.min(idx, photos.length-1));
+        swipeTrack.style.transform = `translateX(-${window._stdSwipeCurrent * imgWidth}%)`;
+        document.querySelectorAll('.std-swipe-dot').forEach((d,j) => d.classList.toggle('active', j===window._stdSwipeCurrent));
       };
 
-      // Touch swipe support
+      // Set initial position
+      swipeTrack.style.transform = `translateX(-${window._stdSwipeCurrent * imgWidth}%)`;
+
+      // Touch swipe support - re-attach each time
+      const newWrap = swipeWrap.cloneNode(false);
+      while (swipeWrap.firstChild) newWrap.appendChild(swipeWrap.firstChild);
+      swipeWrap.parentNode.replaceChild(newWrap, swipeWrap);
       let touchStartX = 0;
-      swipeWrap.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; }, {passive:true});
-      swipeWrap.addEventListener('touchend', e => {
+      newWrap.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; }, {passive:true});
+      newWrap.addEventListener('touchend', e => {
         const dx = e.changedTouches[0].clientX - touchStartX;
-        if (Math.abs(dx) > 40) stdSwipeTo(swipeCurrent + (dx < 0 ? 1 : -1));
+        if (Math.abs(dx) > 40) stdSwipeTo(window._stdSwipeCurrent + (dx < 0 ? 1 : -1));
       }, {passive:true});
     }
   } else {
