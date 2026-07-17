@@ -613,14 +613,14 @@
 
       <p class="hero-names" id="stdNames">Emma Charlotte Lingard<br><em>and</em><br>Ian James Lowe</p>
 
-      <div class="divider" style="height:2.5rem;"></div>
+      <div style="height:2.5rem;"></div>
 
       <div class="std-fan-wrap" id="stdFanWrap" style="display:none;" aria-hidden="true"></div>
       <div class="std-swipe-wrap" id="stdSwipeWrap" style="display:none;"><div class="std-swipe-track" id="stdSwipeTrack"></div><div class="std-swipe-dots" id="stdSwipeDots"></div></div>
 
-      <div class="divider" style="height:2rem;"></div>
-      <div style="width:1px;height:2rem;background:var(--border);margin:0 auto;"></div>
-      <div class="divider" style="height:1rem;"></div>
+      <div style="height:2rem;"></div>
+      <div class="divider" style="height:2.5rem;"></div>
+      <div style="height:1rem;"></div>
 
       <p class="hero-date" id="stdDate">17th July 2027</p>
       <p class="hero-date" id="stdArea">Knutsford, Cheshire</p>
@@ -1516,14 +1516,12 @@ function applyFrontEnd() {
         const cur = window._stdSwipeCurrent;
         const wrap = document.getElementById('stdSwipeWrap') || newWrap;
         const wrapWidth = wrap ? wrap.offsetWidth : window.innerWidth;
-        // Each image: 76vw wide + 4vw total margin (2vw each side)
         const imgW = wrapWidth * 0.76;
         const imgMargin = wrapWidth * 0.02;
         const imgTotal = imgW + imgMargin * 2;
-        // Offset so active image is perfectly centred in wrapWidth
-        const centreOffset = (wrapWidth - imgW) / 2;
+        const centreOffset = (wrapWidth - imgW) / 2 - imgMargin;
         const offset = cur * imgTotal - centreOffset;
-        swipeTrack.style.transform = `translateX(-${offset}px)`;
+        swipeTrack.style.transform = `translateX(${-offset}px)`;
         swipeTrack.querySelectorAll('.std-swipe-img').forEach((img, j) => {
           img.classList.toggle('active', j === cur);
         });
